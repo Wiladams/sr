@@ -14,7 +14,7 @@ private:
 public:
     DrawingContext(FrameBuffer &fb)
     :fb(fb), 
-    strokePix(colors.white), 
+    strokePix(colors.black), 
     fillPix(colors.white),
     bgPix(colors.gray50)
     {
@@ -68,9 +68,29 @@ public:
         return true;
     }
 
+    bool strokeHorizontalLine(GRCOORD x, GRCOORD y, GRSIZE width)
+    {
+        GRCOORD idx = x;
+        while (idx < x+width)
+        {
+            this->fb.setPixel(idx, y, this->strokePix);
+            idx = idx + 1;
+        }
+
+        return true;
+    }
+
+    bool strokeVerticalLine(GRCOORD x, GRCOORD y, GRSIZE length)
+    {
+        GRCOORD idx = y;
+        while (idx < y+length) {
+            this->fb.setPixel(x, idx, this->strokePix);
+            idx = idx + 1;
+        }
+        return true;
+    }
+
     // drawLine(FBCOORD x1, FBCOORD y1, FBCOORD x2, FBCOORD y2)
-    // drawHorizontalLine(FBCOORD x, FBCOORD y, FBSIZE length)
-    // drawVerticalLine(FBCOORD x, FBCOORD y, FBSIZE length)
     // drawPolyLine()
     // drawCubicBezier()
 
