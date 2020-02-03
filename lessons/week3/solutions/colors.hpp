@@ -1,4 +1,6 @@
-#include "grtypes.h"
+#pragma once
+
+#include "grtypes.hpp"
 
 class colors 
 {

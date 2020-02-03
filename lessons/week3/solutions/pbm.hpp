@@ -1,7 +1,8 @@
 
+#pragma once
 
-#include "grtypes.h"
-#include "FrameBuffer.h"
+#include "grtypes.hpp"
+#include "FrameBuffer.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -20,5 +20,7 @@ typedef struct RGBA_t {
     };
 } PixRGBA;
 
-
+// Some well known types
+typedef uint32_t GRSIZE;
+typedef uint16_t GRCOORD;
 
