@@ -19,6 +19,10 @@ public:
 
     const PixRGBA gray50        = {0xff707070};
 
+    // If you want to initialize in the following way
+    // you need to includ /std:c++latest flag on the command
+    // line with the msvc compiler
+    //const PixRGBA gray75        = {.r=75,.g=75,.b=75,.a=255};
 } colors;
 
 

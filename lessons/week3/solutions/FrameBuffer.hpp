@@ -5,8 +5,6 @@
 
 #include "grtypes.hpp"
 
-
-
 /*
     This is a class that represents a framebuffer.
     A framebuffer is the most rudimentary graphics
@@ -30,7 +28,6 @@ public:
     FrameBuffer(GRSIZE width, GRSIZE height)
         : width(width), height(height)
     {
-
         data = {new PixRGBA[width*height]{}};
     }
 
@@ -42,8 +39,12 @@ public:
     }
 
     // Set the value of a single pixel
-    bool setPixel(GRCOORD x, GRCOORD y, PixRGBA pix)
+    bool setPixel(GRCOORD x, GRCOORD y, const PixRGBA pix)
     {
+        if (x>= this->width || y>=this->height) 
+        {
+            return false;   // outside bounds
+        }
         size_t offset = y * width + x;
         this->data[offset] = pix;
 
@@ -59,7 +60,9 @@ public:
         return this->data[offset];
     }
 
-    // set the values of an array of pixels
+    // setPixels()
+    // 
+    // set the values of a contiguous set of pixels
     bool setPixels(GRCOORD x, GRCOORD y, const GRSIZE width, const PixRGBA * pix)
     {
         // BUGBUG - be mindful of the size of things
@@ -69,8 +72,6 @@ public:
         // size_t is a good choice, as it's typically the machine's largest
         // unsigned int
         size_t offset = y * this->width + x;
-
-        //printf("setPixels: x: %d y: %d width: %d  offset: %d\n", x, y, width, offset);
 
         for (GRSIZE i=0; i<width; i++) 
         {
@@ -83,6 +84,8 @@ public:
 
     // setAllPixels()
     // Set all the pixels in the framebuffer to the value specified
+    // This is done here in case a framebuffer has a way of doing it
+    // really fast.
     bool setAllPixels(const PixRGBA value)
     {
         for (GRSIZE row=0; row<this->height; row++) {
@@ -95,10 +98,15 @@ public:
         return true;
     }
 
-    // Retrieve attributes
+    // Retrieve various attribute
     GRSIZE getWidth() const { return this->width;}
     GRSIZE getHeight() const { return this->height;}
-    PixRGBA * getData() const {return this->data;}
+
+    // We should not do the following as it allows
+    // the data pointer to escape our control
+    // it also allows unrestricted access to the data itself
+    // which breaks encapsulation.
+    // PixRGBA * getData() const {return this->data;}
 
 private:
     // private default constructor, so this can not

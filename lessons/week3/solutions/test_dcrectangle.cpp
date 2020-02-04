@@ -1,3 +1,7 @@
+/*
+    In this case, we exercise various of the rectangle drawing routines.
+*/
+
 #include "FrameBuffer.hpp"
 #include "DrawingContext.hpp"
 #include "colors.hpp"
@@ -11,7 +15,7 @@ void main()
     dc.clear();
 
     // default white fill color
-    dc.fillRectangle(10,10, 400,400);
+    dc.drawRectangle(10,10, 400,400);
 
     dc.setFill(colors.blue);
     dc.fillRectangle(64,64, 300, 300);

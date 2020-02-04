@@ -21,6 +21,19 @@ typedef struct RGBA_t {
 } PixRGBA;
 
 // Some well known types
+typedef float	float32;
+typedef double	float64;
+typedef float32 REAL;
+typedef float coord;
+
 typedef uint32_t GRSIZE;
 typedef uint16_t GRCOORD;
 
+// Some useful routines
+// returns the sign of the value
+// value  < 0 --> -1
+// value  > 0 -->  1
+// value == 0 -->  0
+// this will only work in cases where 0 represents false
+// and 1 represents true
+inline int sgn(REAL val) { return ((0 < val) - (val < 0)); }
