@@ -1,4 +1,4 @@
-#include "FrameBuffer.hpp"
+
 #include "DrawingContext.hpp"
 #include "colors.hpp"
 #include "pbm.hpp"

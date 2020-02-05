@@ -53,7 +53,7 @@ struct Point2D {
     // to zero?
     Point2D operator + (const Point2D &b) {return Point2D{GRCOORD(x + b.x), GRCOORD(y + b.y)};}
     Point2D operator += (const Point2D &b) { x = x + b.x; y=y+b.y; return *this;}
-    Point2D operator - (const Point2D &b) {return Point2D{x - b.x, y - b.y};}
+    Point2D operator - (const Point2D &b) {return Point2D{GRCOORD(x - b.x), GRCOORD(y - b.y)};}
     Point2D operator -= (const Point2D &b) { x = x - b.x; y=y-b.y; return *this;}
     Point2D operator - () {return Point2D(-x, -y);}
 };

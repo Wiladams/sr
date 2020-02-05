@@ -2,12 +2,11 @@
 #pragma once
 
 #include "grtypes.hpp"
-#include "FrameBuffer.hpp"
+#include "PixelBuffer.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
-//#include <sys/types.h>
-//#include <sys/stat.h>
+
 
 /*
 int write_PPM_ascii(const char *filename, PixelBuffer *fb)
@@ -46,7 +45,7 @@ int write_PPM_ascii(const char *filename, PixelBuffer *fb)
 class PBM
 {
 public:
-	static bool writePPMBinary(const char *filename, const FrameBuffer &pb)
+	static bool writePPMBinary(const char *filename, const PixelBuffer &pb)
 	{
 		FILE * fp = fopen(filename, "wb");
 	

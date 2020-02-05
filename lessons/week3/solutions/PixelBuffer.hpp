@@ -21,7 +21,7 @@ public:
         :width(awidth), height(aheight)
     {}
 
-    virtual ~PixelBuffer() = 0;
+    virtual ~PixelBuffer() = 0 {};
 
     // Sub-classes MUST implement the following
     // Set a single pixel value at the specified location

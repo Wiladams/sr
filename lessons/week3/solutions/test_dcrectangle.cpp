@@ -2,14 +2,14 @@
     In this case, we exercise various of the rectangle drawing routines.
 */
 
-#include "FrameBuffer.hpp"
+#include "PixelBufferRGBA32.hpp"
 #include "DrawingContext.hpp"
 #include "colors.hpp"
 #include "pbm.hpp"
 
 void main()
 {
-    FrameBuffer fb(640, 480);
+    PixelBufferRGBA32 fb(640, 480);
     DrawingContext dc(fb);
 
     dc.clear();

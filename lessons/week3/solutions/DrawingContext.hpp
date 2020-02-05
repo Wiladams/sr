@@ -65,7 +65,7 @@ public:
     // Should be able to apply a drawing operator
     bool fillPixel(GRCOORD x, GRCOORD y)
     {
-        this->fb.setPixel(x, y, this->fillPix);
+        pb.setPixel(x, y, fillPix);
         return true;
     }
 
@@ -74,7 +74,7 @@ public:
         GRCOORD idx = x;
         while (idx < x+width)
         {
-            this->fb.setPixel(idx, y, this->strokePix);
+            pb.setPixel(idx, y, strokePix);
             idx = idx + 1;
         }
 
@@ -85,7 +85,7 @@ public:
     {
         GRCOORD idx = y;
         while (idx < y+length) {
-            this->fb.setPixel(x, idx, this->strokePix);
+            this->pb.setPixel(x, idx, this->strokePix);
             idx = idx + 1;
         }
         return true;
@@ -95,7 +95,8 @@ public:
     strokeLine()
 
     Stroke a line using the current stroking pixel.
-    Uses Bresenham line drawing.  Does not check for clipping.
+    Uses Bresenham line drawing.  Does not check for clipping,
+    but the underlying PixelBuffer might.
 
     Note: an easy optimization would be to use the specialized
     horizontal and vertical line drawing routines when necessary
@@ -116,7 +117,7 @@ public:
         px = x1;
         py = y1;
 
-        this->fb.setPixel(x1, y1, this->strokePix);
+        this->pb.setPixel(x1, y1, this->strokePix);
 
         if (dxabs >= dyabs) // the line is more horizontal than vertical
         {
@@ -129,7 +130,7 @@ public:
                     py = py + sdy;
                 }
                 px = px + sdx;
-                this->fb.setPixel(px, py, this->strokePix);
+                this->pb.setPixel(px, py, this->strokePix);
             }
         } else // the line is more vertical than horizontal
         {
@@ -142,7 +143,7 @@ public:
                     px += sdx;
                 }
                 py += sdy;
-                this->fb.setPixel(px, py, this->strokePix);
+                this->pb.setPixel(px, py, this->strokePix);
             }
         }
 
@@ -179,7 +180,7 @@ public:
         // use that scratch line to fill all lines of the rectangle
         for (GRSIZE idx = 0; idx<height; idx++)
         {
-            this->fb.setPixels(x, y+idx, width, this->scratch);
+            this->pb.setSpan(x, y+idx, width, this->scratch);
         }
 
         return true;

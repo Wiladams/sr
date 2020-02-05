@@ -1,11 +1,11 @@
-#include "FrameBuffer.hpp"
+#include "PixelBufferRGBA32.hpp"
 #include "DrawingContext.hpp"
 #include "colors.hpp"
 #include "pbm.hpp"
 
 void main()
 {
-    FrameBuffer fb(1920, 1280);
+    PixelBufferRGBA32 fb(1920, 1280);
     DrawingContext dc(fb);
 
     GRSIZE width = fb.getWidth();

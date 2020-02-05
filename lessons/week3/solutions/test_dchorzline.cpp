@@ -1,11 +1,11 @@
-#include "FrameBuffer.hpp"
+#include "PixelBufferRGBA32.hpp"
 #include "DrawingContext.hpp"
 #include "colors.hpp"
 #include "pbm.hpp"
 
 void main()
 {
-    FrameBuffer fb(640, 640);
+    PixelBufferRGBA32 fb(640, 640);
     DrawingContext dc(fb);
 
     dc.setBackground(colors.white);
