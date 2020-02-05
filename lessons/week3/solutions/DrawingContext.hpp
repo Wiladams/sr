@@ -1,27 +1,27 @@
-#include "FrameBuffer.hpp"
+#include "PixelBuffer.hpp"
 #include "colors.hpp"
 #include <math.h>
 
 class DrawingContext {
 
 private:
-    FrameBuffer &fb;
-    PixRGBA strokePix;
-    PixRGBA fillPix;
-    PixRGBA bgPix;
+    PixelBuffer &pb;        // The pixel buffer we will be drawing into
+    PixRGBA strokePix;      // pixel color for stroking
+    PixRGBA fillPix;        // pixel color for filling
+    PixRGBA bgPix;          // pixel color for background
 
     PixRGBA *scratch;
 
 public:
-    DrawingContext(FrameBuffer &fb)
-    :fb(fb), 
+    DrawingContext(PixelBuffer &pb)
+    :pb(pb), 
     strokePix(colors.black), 
     fillPix(colors.white),
     bgPix(colors.gray50)
     {
         // create a scratch row for better optimization
         // of copy operators
-        this->scratch = {new PixRGBA[fb.getWidth()]{}};
+        this->scratch = {new PixRGBA[pb.getWidth()]{}};
     }
 
     virtual ~DrawingContext()
@@ -29,18 +29,18 @@ public:
         delete [] scratch;
     }
 
-    bool setBackground(PixRGBA pix)
+    bool setBackground(const PixRGBA pix)
     {
-        this->bgPix = pix;
+        bgPix = pix;
         return true;
     }
 
     bool setFill(const PixRGBA pix)
     {
-        this->fillPix = pix;
+        fillPix = pix;
         
         // Fill up a single row of pixels
-        for (GRSIZE idx=0;idx < this->fb.getWidth();idx++)
+        for (GRSIZE idx=0;idx < pb.getWidth();idx++)
         {
             this->scratch[idx] = pix;
         }
@@ -50,14 +50,14 @@ public:
 
     bool setStroke(const PixRGBA pix)
     {
-        this->strokePix = pix;
+        strokePix = pix;
         return true;
     }
 
     // clear the canvas to the background color
     bool clear()
     {
-        this->fb.setAllPixels(this->bgPix);
+        pb.setAllPixels(bgPix);
         return true;
     }
 
@@ -208,9 +208,9 @@ public:
     // strokeTriangle()
     bool strokeTriangle(const GRTriangle &geo)
     {
-        strokeLine(geo.x1, geo.y1, geo.x2, geo.y2);
-        strokeLine(geo.x2, geo.y2, geo.x3, geo.y3);
-        strokeLine(geo.x3, geo.y3, geo.x1, geo.y1);
+        strokeLine(geo.verts[0].x, geo.verts[0].y, geo.verts[1].x, geo.verts[1].y);
+        strokeLine(geo.verts[1].x, geo.verts[1].y, geo.verts[2].x, geo.verts[2].y);
+        strokeLine(geo.verts[2].x, geo.verts[2].y, geo.verts[0].x, geo.verts[0].y);
 
         return true;
     }

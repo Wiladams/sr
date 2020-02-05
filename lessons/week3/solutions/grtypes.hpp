@@ -42,9 +42,19 @@ struct Point2D {
     // default constructor
     Point2D() :x(0), y(0) {}
 
+    // Operator Overloads
+    // If you do not specify the GRCOORD, you should get an error regarding the need
+    // for a narrowing conversion.  This is because the result of x + b.x is
+    // an int, and GRCOORD might be some unsigned value.
 
-    Point2D operator + (const Point2D &b) {return Point2D{this->x + b.x, this->y + b.y};}
-    Point2D operator - (const Point2D &b) {return Point2D{this->x - b.x, this->y - b.y};}
+    // This causes an interesting design consideration.  If we leave GRCOORD as unsigned
+    // then we need to consider what happens when we perform addition or subtraction beyond
+    // the range of the values.  If the result is negative, for example, should we clip
+    // to zero?
+    Point2D operator + (const Point2D &b) {return Point2D{GRCOORD(x + b.x), GRCOORD(y + b.y)};}
+    Point2D operator += (const Point2D &b) { x = x + b.x; y=y+b.y; return *this;}
+    Point2D operator - (const Point2D &b) {return Point2D{x - b.x, y - b.y};}
+    Point2D operator -= (const Point2D &b) { x = x - b.x; y=y-b.y; return *this;}
     Point2D operator - () {return Point2D(-x, -y);}
 };
 

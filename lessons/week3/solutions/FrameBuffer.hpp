@@ -1,9 +1,8 @@
 #pragma once
 
 #include <stdint.h>
-#include <stdio.h>
 
-#include "grtypes.hpp"
+#include "PixelBuffer.hpp"
 
 /*
     This is a class that represents a framebuffer.
@@ -20,13 +19,13 @@
 
     The format of a FrameBuffer is 32-bit pixels.
 */
-class FrameBuffer {
+class FrameBuffer : public PixelBuffer {
 public:
     // Public constructor
     // must assign to const fields using ':'
     // mechanism.
     FrameBuffer(GRSIZE width, GRSIZE height)
-        : width(width), height(height)
+        : PixelBuffer(width, height)
     {
         data = {new PixRGBA[width*height]{}};
     }
@@ -41,12 +40,12 @@ public:
     // Set the value of a single pixel
     bool setPixel(GRCOORD x, GRCOORD y, const PixRGBA pix)
     {
-        if (x>= this->width || y>=this->height) 
+        if (x>= getWidth() || y >= getHeight()) 
         {
             return false;   // outside bounds
         }
-        size_t offset = y * width + x;
-        this->data[offset] = pix;
+        size_t offset = y * getWidth() + x;
+        data[offset] = pix;
 
         return true;
     }
@@ -56,7 +55,7 @@ public:
     // of the FrameBuffer
     PixRGBA getPixel(GRCOORD x, GRCOORD y) const
     {
-        size_t offset = y * width + x;
+        size_t offset = y * getWidth() + x;
         return this->data[offset];
     }
 
@@ -71,11 +70,16 @@ public:
 
         // size_t is a good choice, as it's typically the machine's largest
         // unsigned int
-        size_t offset = y * this->width + x;
+        size_t offset = y * getWidth() + x;
+        
+        // BUGBUG
+        // we can do clipping here by reducing width to whatever
+        // is remaining on the line, rather than fulfilling the
+        // entire 'width' request
 
         for (GRSIZE i=0; i<width; i++) 
         {
-            this->data[offset+i] = pix[i];
+            data[offset+i] = pix[i];
         }
 
         return true;
@@ -88,19 +92,14 @@ public:
     // really fast.
     bool setAllPixels(const PixRGBA value)
     {
-        for (GRSIZE row=0; row<this->height; row++) {
-            for (GRSIZE col=0; col<this->width; col++) {
-                size_t offset = row * this->width + col;
-                this->data[offset] = value;
-            }
+        size_t nPixels = getWidth() * getHeight();
+        while (nPixels > 0){
+            data[nPixels-1] = value;
+            nPixels = nPixels - 1;
         }
 
         return true;
     }
-
-    // Retrieve various attribute
-    GRSIZE getWidth() const { return this->width;}
-    GRSIZE getHeight() const { return this->height;}
 
     // We should not do the following as it allows
     // the data pointer to escape our control
@@ -113,11 +112,5 @@ private:
     // be an un-initialized element in an array 
     FrameBuffer();
 
-    // The width and height are const because
-    // you don't want them to ever change
-    const GRSIZE width;   //how many pixels wide
-    const GRSIZE height;  // how many pixels tall
-
     PixRGBA * data;         // a pointer to the actual pixel data
-    PixRGBA * scratch;      // a single row used for optimized drawing
 };

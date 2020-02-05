@@ -3,21 +3,25 @@ Focus
 
 Structures II, more focus on data structures as classes.
 
+Lessons
+* Using this->
+* Reducing the usage of this->
+
 Keywords
 --------
 
 Object Oriented Programming
 ---------------------------
-Encapsulation
-Polymorphism
-Abstraction
-Inheritance
+Encapsulation - has-a
+Polymorphism - can be-a
+Abstraction - is like-a
+Inheritance - is-a
 
-    Class
-    Object
-    Constructor
-    Destructor
-    Inheritance
+* Class
+* Object
+* Constructor
+* Destructor
+* Inheritance
 
 Extras
 ------
