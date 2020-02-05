@@ -204,10 +204,32 @@ public:
     // strokeEllipse()
     // fillEllipse()
 
-    // drawTriangle()
-    // strokeTriangle()
-    // fillTriangle()
 
+    // strokeTriangle()
+    bool strokeTriangle(const GRTriangle &geo)
+    {
+        strokeLine(geo.x1, geo.y1, geo.x2, geo.y2);
+        strokeLine(geo.x2, geo.y2, geo.x3, geo.y3);
+        strokeLine(geo.x3, geo.y3, geo.x1, geo.y1);
+
+        return true;
+    }
+
+    // fillTriangle()
+    bool fillTriangle(const GRTriangle &geo)
+    {
+        return false;
+    }
+
+    // drawTriangle()
+    bool drawTriangle(const GRTriangle geo)
+    {
+        fillTriangle(geo);
+        strokeTriangle(geo);
+
+        return true;
+    }
+    
     // drawPolygon()
     // strokePolygon()
     // fillPolygon()

@@ -61,8 +61,7 @@ public:
 		{
 			for (size_t col = 0; col < pb.getWidth(); col++)
 			{
-				int idx = row *pb.getWidth()+col;
-				fwrite(pb.getData()[idx].data, 3, 1, fp);
+				fwrite(pb.getPixel(col, row).data, 3, 1, fp);
 			}
 		}
 
