@@ -50,28 +50,30 @@ LRESULT MsgHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 
 
-typedef void(*EventObserverHandler)();
+typedef void(*WinMSGObserver)(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+typedef void(*WinEventHandler)();
 
-static EventObserverHandler gmouseOnMovedHandler = nullptr;
+static WinMSGObserver gKeyboardHandler = nullptr;
+static WinMSGObserver gMouseHandler = nullptr;
+
+static WinEventHandler gMouseMovedHandler = nullptr;
 
 class Window {
 public:
     ATOM fwinclass;
     HWND fHandle;
 
-    static void setOnMouseMovedHandler(EventObserverHandler handler)
-    {
-	    gmouseOnMovedHandler = handler;
-    }
 
     static void setupEventHandlers()
     {
         // we're going to look within our own module
-        // to find handlers
+        // to find handler functions
         HMODULE hInst = GetModuleHandleA(NULL);
-        FARPROC hMouseMoved = GetProcAddress(hInst, "mouseMoved");
 
-        setOnMouseMovedHandler((EventObserverHandler)hMouseMoved);
+        gMouseHandler = (WinMSGObserver)GetProcAddress(hInst, "mouseHandler");
+        gMouseMovedHandler = (WinEventHandler)GetProcAddress(hInst, "mouseMoved");
+
+
         
         //printf("movedMouse: %p\n", hMouseMoved);
     }

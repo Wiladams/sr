@@ -2,6 +2,11 @@
 #include "NativeWindow.hpp"
 #include <stdio.h>
 
+void mouseHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+
+}
+
 void mouseMoved()
 {
     printf("MOUSE MOVED\n");
