@@ -30,7 +30,7 @@ ATOM RegisterWindowClass(const char *wndclassname, WNDPROC msgproc, int style)
 
 LRESULT MsgHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    printf("MSG: 0x%04x\n", msg);
+    //printf("MSG: 0x%04x\n", msg);
     LRESULT res = 0;
 
     switch(msg) {
@@ -48,10 +48,33 @@ LRESULT MsgHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 
+
+
+typedef void(*EventObserverHandler)();
+
+static EventObserverHandler gmouseOnMovedHandler = nullptr;
+
 class Window {
 public:
     ATOM fwinclass;
     HWND fHandle;
+
+    static void setOnMouseMovedHandler(EventObserverHandler handler)
+    {
+	    gmouseOnMovedHandler = handler;
+    }
+
+    static void setupEventHandlers()
+    {
+        // we're going to look within our own module
+        // to find handlers
+        HMODULE hInst = GetModuleHandleA(NULL);
+        FARPROC hMouseMoved = GetProcAddress(hInst, "mouseMoved");
+
+        setOnMouseMovedHandler((EventObserverHandler)hMouseMoved);
+        
+        //printf("movedMouse: %p\n", hMouseMoved);
+    }
 
     Window(const char *title, int width, int height)
     {
@@ -73,12 +96,15 @@ public:
 		    hInst,
 		    NULL);
 
+        setupEventHandlers();
     }
 
     virtual ~Window(){
-        printf("~Window()");
+        //printf("~Window()");
         DestroyWindow(fHandle);
     }
+
+
 
     // All the methods that are useful
     bool isValid() {return fHandle != NULL;}
@@ -117,11 +143,43 @@ public:
                 }
 
                 res = TranslateMessage(&msg);
-
-                printf("MSG: 0x%04x\n", msg.message);
-
                 res = DispatchMessageA(&msg);
             }
         }
     }
+
+
 };
+
+
+// We need this export so when the user defines their functions
+// they will be listed as exports, and then at runtime we can 
+// load their pointers from the module
+#define WIN_EXPORT __declspec(dllexport)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// These should be implemented by a module to be loaded
+WIN_EXPORT void draw();
+WIN_EXPORT void loop();
+WIN_EXPORT void setup();
+
+
+// IO Event Handlers
+WIN_EXPORT void keyPressed();
+WIN_EXPORT void keyReleased();
+WIN_EXPORT void keyTyped();
+
+WIN_EXPORT void mouseClicked();
+WIN_EXPORT void mouseDragged();
+WIN_EXPORT void mouseMoved();
+WIN_EXPORT void mousePressed();
+WIN_EXPORT void mouseReleased();
+WIN_EXPORT void mouseWheel();
+
+#ifdef __cplusplus
+}
+#endif
+

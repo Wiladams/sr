@@ -73,6 +73,15 @@ extern "C" {
 
 #endif
 
+#ifdef _WIN64
+typedef INT_PTR ( __stdcall *FARPROC)();
+typedef INT_PTR ( __stdcall *NEARPROC)();
+typedef INT_PTR (__stdcall *PROC)();
+#else
+typedef int ( __stdcall *FARPROC)();
+typedef int ( __stdcall *NEARPROC)();
+typedef int ( __stdcall *PROC)();
+#endif
 
 typedef void * LPVOID;
 
@@ -95,8 +104,9 @@ typedef void *HANDLE;
 typedef BYTE *      PBYTE;
 typedef ULONG *     PULONG;
 
-
-
+// winnt
+typedef  const CHAR *LPCSTR, *PCSTR;
+typedef  const PCSTR *PCZPCSTR;
 
 static const int MINCHAR    = 0x80;        
 static const int MAXCHAR    = 0x7f;        
@@ -654,7 +664,7 @@ BOOL __stdcall RegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT u
 typedef HANDLE HMODULE;
 
 HMODULE  GetModuleHandleA(const char * lpModuleName);
-
+FARPROC __stdcall GetProcAddress(HMODULE hModule, LPCSTR lpProcName);
 
 // profileapi
 
