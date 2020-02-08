@@ -785,69 +785,6 @@ CloseGestureInfoHandle(
 //function exports.GID_ROTATE_ANGLE_FROM_ARGUMENT(_arg_)   ((((double)(_arg_) / 65535.0) * 4.0 * 3.14159265) - 2.0 * 3.14159265)
 
 
-/*
-// Convenience functions
-function exports.RegisterWindowClass(wndclassname, msgproc, style)
-	msgproc = msgproc or C.DefWindowProcA;
-	--style = style or bor(C.CS_HREDRAW,C.CS_VREDRAW, C.CS_OWNDC); -- can't use OWNDC with LAYERED
-	style = style or bor(C.CS_HREDRAW,C.CS_VREDRAW);
-
-	local hInst = C.GetModuleHandleA(nil);
-
-	local wcex = ffi.new("WNDCLASSEXA");
-    wcex.cbSize = ffi.sizeof("WNDCLASSEXA");
-    wcex.style          = style;
-    wcex.lpfnWndProc    = msgproc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInst;
-    wcex.hIcon          = nil;		-- LoadIcon(hInst, MAKEINTRESOURCE(IDI_APPLICATION));
-    wcex.hCursor        = nil;		-- LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground  = nil;      -- ffi.cast("HBRUSH", C.COLOR_WINDOW+1);;		-- (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = nil;		-- NULL;
-    wcex.lpszClassName  = wndclassname;
-    wcex.hIconSm        = nil;		-- LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_APPLICATION));
-
-	local classAtom = C.RegisterClassExA(wcex);
-
-	if classAtom == nil then
-    	return false, "Call to RegistrationClassEx failed."
-    end
-
-	return classAtom;
-end
-
--- create a simple window handle
-function exports.CreateWindowHandle(params)
-    params.title = params.title or "Window";
-    params.winstyle = params.winstyle or C.WS_OVERLAPPEDWINDOW;
-    params.winxstyle = params.winxstyle or 0;
-    params.x = params.x or C.CW_USEDEFAULT;
-    params.y = params.y or C.CW_USEDEFAULT;
-
-	local hInst = C.GetModuleHandleA(nil);
-	local hWnd = C.CreateWindowExA(
-		params.winxstyle,
-		params.winclass,
-		params.title,
-		params.winstyle,
-        params.x, params.y,
-        params.width, params.height,
-		nil,	
-		nil,	
-		hInst,
-		nil);
-
-	if hWnd == nil then
-		return false, C.GetLastError()
-	end
-
-    ffi.gc(hWnd, C.DestroyWindow)
-
-	return hWnd;
-end
-*/
-
 #ifdef __cplusplus
 }
 #endif

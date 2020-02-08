@@ -2,14 +2,40 @@
 #include "NativeWindow.hpp"
 #include <stdio.h>
 
-void mouseHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+void printEvent(const char *title, const MouseEvent &e)
 {
-
+    printf("%s: %d  At: %d %d\n", title, e.activity, e.x, e.y);
 }
 
-void mouseMoved()
+
+void mouseMoved(const MouseEvent &e)
 {
-    printf("MOUSE MOVED\n");
+    printEvent("MOUSEMOVED", e);
+}
+
+void mousePressed(const MouseEvent &e)
+{
+    printEvent("MOUSEPRESSED", e);
+}
+
+void mouseReleased(const MouseEvent &e)
+{
+    printEvent("MOUSERELEASED", e);
+}
+
+void mouseWheel(const MouseEvent &e)
+{
+    printEvent("MOUSEWHEEL", e);
+}
+
+void mouseClicked(const MouseEvent &e)
+{
+    printEvent("MOUSECLICKED", e);
+}
+
+void mouseDragged(const MouseEvent &e)
+{
+    printEvent("MOUSEDRAGGED", e);
 }
 
 // Easiest test case, just show a window
