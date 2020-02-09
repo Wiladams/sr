@@ -17,6 +17,12 @@
 
 // Basic type to encapsulate a mouse event
 enum {
+    KEYPRESSED,
+    KEYRELEASED,
+    KEYTYPED
+};
+
+enum {
     MOUSEMOVED,
     MOUSEPRESSED,
     MOUSERELEASED,
@@ -40,15 +46,24 @@ struct MouseEvent {
     bool xbutton2;
 };
 
+struct KeyEvent {
+    int activity;
+    int keyCode;        // wparam
+    int repeatCount;    // 0 - 15
+    int scanCode;       // 16 - 23
+    bool isExtended;    // 24
+    bool wasDown;       // 30
+};
+
 // Some globals to set event handlers
 typedef LRESULT (*WinMSGObserver)(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-typedef void (* WinEventHandler)();
+typedef void (* KeyEventHandler)(const KeyEvent &e);
 typedef void (* MouseEventHandler)(const MouseEvent &e);
 
 static WinMSGObserver gKeyboardHandler = nullptr;
-static WinEventHandler gKeyPressedHandler = nullptr;
-static WinEventHandler gKeyReleasedHandler = nullptr;
-static WinEventHandler gKeyTypedHandler = nullptr;
+static KeyEventHandler gKeyPressedHandler = nullptr;
+static KeyEventHandler gKeyReleasedHandler = nullptr;
+static KeyEventHandler gKeyTypedHandler = nullptr;
 
 
 static WinMSGObserver gMouseHandler = nullptr;
@@ -58,6 +73,9 @@ static MouseEventHandler gMousePressedHandler = nullptr;
 static MouseEventHandler gMouseReleasedHandler = nullptr;
 static MouseEventHandler gMouseWheelHandler = nullptr;
 static MouseEventHandler gMouseDraggedHandler = nullptr;
+
+static WinMSGObserver gTouchHandler = nullptr;
+
 
 // We need this export so when the user defines their functions
 // they will be listed as exports, and then at runtime we can 
@@ -76,9 +94,9 @@ WIN_EXPORT void setup();
 
 // IO Event Handlers
 WIN_EXPORT LRESULT keyboardHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-WIN_EXPORT void keyPressed();
-WIN_EXPORT void keyReleased();
-WIN_EXPORT void keyTyped();
+WIN_EXPORT void keyPressed(const KeyEvent &e);
+WIN_EXPORT void keyReleased(const KeyEvent &e);
+WIN_EXPORT void keyTyped(const KeyEvent &e);
 
 WIN_EXPORT LRESULT mouseHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 WIN_EXPORT void mouseClicked(const MouseEvent &e);
@@ -92,13 +110,60 @@ WIN_EXPORT void mouseWheel(const MouseEvent &e);
 }
 #endif
 
+static int keyCode = 0;
+static int keyChar = 0;
+
+LRESULT HandleKeyboardEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT res = 0;
+    KeyEvent e;
+    e.keyCode = (int)wParam;
+    e.repeatCount =LOWORD(lParam);  // 0 - 15
+    e.scanCode = ((lParam & 0xff0000) >> 16);        // 16 - 23
+    e.isExtended = (lParam & 0x1000000) != 0;    // 24
+    e.wasDown = (lParam & 0x40000000) != 0;    // 30
+
+//printf("HandleKeyboardEvent: %04x\n", msg);
+
+    switch(msg) {
+
+        case WM_KEYDOWN:
+        case WM_SYSKEYDOWN:
+            e.activity = KEYPRESSED;
+            keyCode = e.keyCode;
+            if (gKeyPressedHandler) {
+                gKeyPressedHandler(e);
+            }
+            break;
+        case WM_KEYUP:
+        case WM_SYSKEYUP:
+            e.activity = KEYRELEASED;
+            keyCode = e.keyCode;
+            if (gKeyReleasedHandler) {
+                gKeyReleasedHandler(e);
+            }
+            break;
+        case WM_CHAR:
+        case WM_SYSCHAR:
+            keyChar = (int)wParam;
+            e.activity = KEYTYPED;
+
+            if (gKeyTypedHandler) {
+                gKeyTypedHandler(e);
+            }
+            break;
+    }
+
+    return res;
+}
+
 static bool mouseIsPressed = false;
 static int mouseX = 0;
 static int mouseY = 0;
 static int pmouseX = 0;
 static int pmouseY = 0;
 
-LRESULT mouseHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT HandleMouseEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     LRESULT res = 0;
     
@@ -127,6 +192,11 @@ LRESULT mouseHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     mouseIsPressed = e.lbutton || e.rbutton || e.mbutton;
 
     switch(msg) {
+        case WM_LBUTTONDBLCLK:
+	    case WM_MBUTTONDBLCLK:
+	    case WM_RBUTTONDBLCLK:
+            break;
+
         case WM_MOUSEMOVE:
             e.activity = MOUSEMOVED;
 
@@ -176,6 +246,64 @@ LRESULT mouseHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return res;
 }
 
+LRESULT HandleTouchEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT res = 0;
+
+    // cInputs could be set to a maximum value (10) and
+    // we could reuse the same allocated array each time
+    // rather than allocating a new one each time.
+    //print("wm_touch_event 0.0: ", wparam)
+    int cInputs = LOWORD(wParam);
+        
+        //print("wm_touch_event 1.0: ", cInputs)
+        
+        TOUCHINPUT *pInputs = {new TOUCHINPUT[cInputs]{}};
+        int cbSize = sizeof("TOUCHINPUT");
+
+        //print("wm_touch_event 2.0: ", pInputs, cbSize)
+        BOOL bResult = GetTouchInputInfo((HTOUCHINPUT)lParam, cInputs, pInputs,cbSize);
+        //print("wm_touch_event 3.0: ", bResult)
+
+        if (bResult == 0) {
+            return 0; // C.GetLastError()
+        }
+        //print("wm_touch_event 4.0: ", bResult)
+/*
+        -- Construct an event with all the given information
+        local events = {}
+
+        POINT PT;
+        for (int i=0; i<cInputs; i++) {
+            PT.x = pInputs[i].x/100;
+            PT.y = pInputs[i].y/100;
+            //print("wm_touch_event 4.1: ", PT.x, PT.y)
+            local bResult = C.ScreenToClient(hwnd, PT)
+            --print("wm_touch_event 4.2: ", bResult, PT.x, PT.y)
+            local event = {
+                ID = pInputs[i].dwID;
+                x = PT.x;
+                y = PT.y;
+                rawX = pInputs[i].x;
+                rawY = pInputs[i].y;
+            }
+
+            if band(pInputs[i].dwMask, C.TOUCHINPUTMASKF_CONTACTAREA) ~= 0 then
+                event.rawWidth = pInputs[i].cxContact;
+                event.rawHeight = pInputs[i].cyContact;
+                event.width = event.rawWidth/100;
+                event.height = event.rawHeight/100;
+            end
+
+            table.insert(events, event)
+        }
+        //print("wm_touch_event 5.0: ", bResult)
+
+        return events
+*/
+    return res;
+}
+
 LRESULT MsgHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     //printf("MSG: 0x%04x\n", msg);
@@ -183,61 +311,41 @@ LRESULT MsgHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	PAINTSTRUCT ps;
 	HDC hdc;
 
-    switch(msg) {
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            return 0;
-        break;
 
-	    case WM_LBUTTONDBLCLK:
-	    case WM_MBUTTONDBLCLK:
-	    case WM_RBUTTONDBLCLK:
-		    if (gMouseHandler != nullptr) {
-			    return gMouseHandler(hWnd, msg, wParam, lParam);
-		    }
-		break;
-
-	    case WM_MOUSEWHEEL:
-            //printf("WM_MOUSEWHEEL\n");
-		    if (gMouseHandler != nullptr) {
-			    return gMouseHandler(hWnd, msg, wParam, lParam);
-		    }
-		break;
-
-	    case WM_MOUSEMOVE:
-	    case WM_LBUTTONDOWN:
-	    case WM_MBUTTONDOWN:
-	    case WM_RBUTTONDOWN:
-	    case WM_LBUTTONUP:
-	    case WM_MBUTTONUP:
-	    case WM_RBUTTONUP:
-		    if (gMouseHandler != nullptr) {
-			    return gMouseHandler(hWnd, msg, wParam, lParam);
-		    }
-		break;
-	    
-        case WM_PAINT:
-		    hdc = BeginPaint(hWnd, &ps);
+    if (msg == WM_DESTROY) {
+        PostQuitMessage(0);
+        return 0;
+    } else if ((msg >= WM_MOUSEFIRST) && (msg <= WM_MOUSELAST)) {
+		if (gMouseHandler != nullptr) {
+			return gMouseHandler(hWnd, msg, wParam, lParam);
+		}
+    } else if ((msg >= WM_KEYFIRST) && (msg <= WM_KEYLAST)) {
+        if (gKeyboardHandler != nullptr) {
+            gKeyboardHandler(hWnd, msg, wParam, lParam);
+        }
+    } else if (msg == WM_TOUCH) {
+        if (gTouchHandler != nullptr) {
+            gTouchHandler(hWnd, msg, wParam, lParam);
+        }
+            //res = TouchActivity(hwnd, msg, wparam, lparam)
+    } else if (msg == WM_PAINT) {
+		hdc = BeginPaint(hWnd, &ps);
 
 		    // bitblt bmhandle to client area
 		    // we should actually look at the paint struct
 		    // and only blit the part that needs to be drawn
             /*
-		    if ((NULL != dcBuffer) && (nullptr != gPixelData)) {
-			    ret = ::BitBlt(hdc,
-				    ps.rcPaint.left, ps.rcPaint.top,
-				    ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top,
-				    dcBuffer,
-				    ps.rcPaint.left, ps.rcPaint.top,
-				    SRCCOPY);
-		    }
+            int pResult = StretchDIBits(hdc,
+                0,0,
+                imgSize.w,imgSize.h,
+                0,0,
+                imgSize.w, imgSize.h,
+                surface.pixelData.data,surface.info,
+                DIB_RGB_COLORS,SRCCOPY)
             */
-		    EndPaint(hWnd, &ps);
-		break;
-
-        default:
-            res = DefWindowProcA(hWnd, msg, wParam, lParam);
-        break;
+		EndPaint(hWnd, &ps);
+    } else {
+        res = DefWindowProcA(hWnd, msg, wParam, lParam);
     }
 
     return res;
@@ -258,9 +366,34 @@ public:
         // to find handler functions
         HMODULE hInst = GetModuleHandleA(NULL);
 
-        gMouseHandler = (WinMSGObserver)GetProcAddress(hInst, "mouseHandler");
-        //printf("mouseHandler: %p\n", gMouseHandler);
+        // Start with our default handlers
+        gKeyboardHandler = HandleKeyboardEvent;
+        gMouseHandler = HandleMouseEvent;
+        gTouchHandler = HandleTouchEvent;
 
+
+        // The user can specify their own handlers for keyboard
+        // and mouse events.
+        WinMSGObserver handler = (WinMSGObserver)GetProcAddress(hInst, "keyboardHandler");
+
+        if (handler != nullptr) {
+                    printf("key handler: %p\n", handler);
+            gKeyboardHandler = handler;
+        }
+
+        handler = (WinMSGObserver)GetProcAddress(hInst, "mouseHandler");
+        if (handler != nullptr) {
+            gMouseHandler = handler;
+        }
+
+        handler = (WinMSGObserver)GetProcAddress(hInst, "touchHandler");
+        if (handler != nullptr) {
+            gTouchHandler = handler;
+        }
+
+        //printf("mouseHandler: %p\n", gMouseHandler);
+        // If the user implements various event handlers, they will 
+        // be called automatically
         gMouseMovedHandler = (MouseEventHandler)GetProcAddress(hInst, "mouseMoved");
         gMouseClickedHandler = (MouseEventHandler)GetProcAddress(hInst, "mouseClicked");
         gMousePressedHandler = (MouseEventHandler)GetProcAddress(hInst, "mousePressed");
@@ -268,6 +401,12 @@ public:
         gMouseWheelHandler = (MouseEventHandler)GetProcAddress(hInst, "mouseWheel");
         gMouseDraggedHandler = (MouseEventHandler)GetProcAddress(hInst, "mouseDragged");
 
+        // Keyboard event handling
+        gKeyPressedHandler = (KeyEventHandler)GetProcAddress(hInst, "keyPressed");
+        gKeyReleasedHandler = (KeyEventHandler)GetProcAddress(hInst, "keyReleased");
+        gKeyTypedHandler = (KeyEventHandler)GetProcAddress(hInst, "keyTyped");
+
+        // Touch event handling
     }
 
     /*
@@ -341,7 +480,7 @@ public:
     }
 
     // A basic Windows event loop
-    
+
     virtual void run()
     {
         // Do a typical Windows message pump
