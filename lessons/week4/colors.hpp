@@ -1,0 +1,29 @@
+#pragma once
+
+#include "grtypes.hpp"
+
+class colors 
+{
+public:
+    const PixRGBA transparent   = {0x00000000};
+    const PixRGBA black         = {0xff000000};
+    
+    const PixRGBA red           = {0xff0000ff};
+    const PixRGBA green         = {0xff00ff00};
+    const PixRGBA blue          = {0xffff0000};
+    
+    const PixRGBA yellow        = {0xff00ffff};
+    const PixRGBA cyan          = {0xffffff00};
+
+    const PixRGBA white         = {0xffffffff};
+
+    const PixRGBA gray50        = {0xff707070};
+
+    // If you want to initialize in the following way
+    // you need to includ /std:c++latest flag on the command
+    // line with the msvc compiler
+    //const PixRGBA gray75        = {.r=75,.g=75,.b=75,.a=255};
+} colors;
+
+
+
