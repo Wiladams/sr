@@ -1,4 +1,5 @@
 #pragma once
+#pragma comment(lib, "user32.lib")
 
 /*
     This file, and the Window class represent the connection to the Win32 
@@ -172,8 +173,8 @@ LRESULT HandleMouseEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     pmouseY = mouseY;
 
     // assign new mouse position
-    mouseX = LOWORD(lParam);
-    mouseY = HIWORD(lParam);
+    mouseX = GET_X_LPARAM(lParam);
+    mouseY = GET_Y_LPARAM(lParam);
 
     //printf("mouseHandler: 0x%04x  %d %d\n", msg, mouseX, mouseY);
 

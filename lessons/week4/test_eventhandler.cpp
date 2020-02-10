@@ -7,12 +7,12 @@ void printEvent(const char *title, const MouseEvent &e)
     printf("%s: %d  At: %d %d\n", title, e.activity, e.x, e.y);
 }
 
-/*
+
 void mouseMoved(const MouseEvent &e)
 {
     printEvent("MOUSEMOVED", e);
 }
-*/
+
 
 void mousePressed(const MouseEvent &e)
 {
