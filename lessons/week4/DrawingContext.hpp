@@ -2,6 +2,36 @@
 #include "colors.hpp"
 #include <math.h>
 
+
+typedef void(* EllipseHandler)(PixelBuffer &pb, GRCOORD cx, GRCOORD cy, GRCOORD x, GRCOORD y, const PixRGBA color);
+
+void Plot4EllipsePoints(PixelBuffer &pb, GRCOORD cx, GRCOORD cy, GRCOORD x, GRCOORD y, const PixRGBA color)
+{
+    pb.setPixel(cx + x, cy + y, color);
+    pb.setPixel(cx - x, cy + y, color);
+    pb.setPixel(cx - x, cy - y, color);
+    pb.setPixel(cx + x, cy - y, color);
+}
+
+void fill2EllipseLines(PixelBuffer &pb, GRCOORD cx, GRCOORD cy, GRCOORD x, GRCOORD y, const PixRGBA color)
+{
+	int x1 = cx - x;
+	int y1 = cy+y;
+	int x2 = cx + x;
+	int y2 = cy+y;
+
+	//if (clipLine(pb->frame, x1, y1, x2, y2)) {
+        pb.setPixels(x1, y1, x2-x1, color);
+	//}
+	
+	y1 = cy - y;
+	y2 = cy - y;
+	//if (clipLine(pb->frame, x1, y1, x2, y2)) {
+		pb.setPixels(x1, y2, x2 - x1, color);
+	//}
+}
+
+
 class DrawingContext {
 
 private:
@@ -201,9 +231,90 @@ public:
     // strokeRoundedRectangle()
     // fillRoundedRectangle()
 
-    // drawEllipse()
+    /*
+        Ellipse drawing
+    */
+    void raster_rgba_ellipse(GRCOORD cx, GRCOORD cy, size_t xradius, size_t yradius, const PixRGBA color, EllipseHandler handler)
+    {
+        int twoasquare = 2 * xradius*xradius;
+        int twobsquare = 2 * yradius*yradius;
+
+	    int x = xradius;
+	    int y = 0;
+
+        int xchange = yradius*yradius*(1 - 2 * xradius);
+        int ychange = xradius*xradius;
+        int ellipseerror = 0;
+        int stoppingx = twobsquare*xradius;
+        int stoppingy = 0;
+
+        // first set of points, sides
+        while (stoppingx >= stoppingy)
+        {
+            handler(pb, cx, cy, x, y, color);
+            y = y + 1;
+            stoppingy = stoppingy + twoasquare;
+            ellipseerror += ychange;
+            ychange += twoasquare;
+
+            if ((2 * ellipseerror + xchange) > 0) {
+                x--;
+                stoppingx -= twobsquare;
+                ellipseerror += xchange;
+                xchange += twobsquare;
+            }
+        }
+
+        // second set of points, top and bottom
+        x = 0;
+        y = yradius;
+        xchange = yradius*yradius;
+        ychange = xradius*xradius*(1 - 2 * yradius);
+        ellipseerror = 0;
+        stoppingx = 0;
+        stoppingy = twoasquare*yradius;
+
+        while (stoppingx <= stoppingy) {
+            handler(pb, cx, cy, x, y, color);
+            x = x + 1;
+            stoppingx = stoppingx + twobsquare;
+            ellipseerror = ellipseerror + xchange;
+            xchange = xchange + twobsquare;
+            
+            if ((2 * ellipseerror + ychange) > 0) {
+                y = y - 1;
+                stoppingy -= twoasquare;
+                ellipseerror += ychange;
+                ychange += twoasquare;
+            }
+        }
+    }
+
     // strokeEllipse()
+    bool strokeEllipse(GRCOORD cx, GRCOORD cy, size_t xradius, size_t yradius)
+    {
+        raster_rgba_ellipse(cx, cy, xradius, yradius, strokePix, Plot4EllipsePoints);
+        
+        return true;
+    }
+
     // fillEllipse()
+    bool fillEllipse(GRCOORD cx, GRCOORD cy, size_t xradius, size_t yradius)
+    {
+        raster_rgba_ellipse(cx, cy, xradius, yradius, fillPix, fill2EllipseLines);
+        return false;
+    }
+    
+    bool drawEllipse(GRCOORD cx, GRCOORD cy, size_t xradius, size_t yradius)
+    {
+        fillEllipse(cx, cy, xradius, yradius);
+        strokeEllipse(cx, cy, xradius, yradius);
+
+        return true;
+    }
+
+    // drawEllipse()
+
 
 
     // strokeTriangle()

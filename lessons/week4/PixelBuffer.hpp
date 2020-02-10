@@ -30,6 +30,13 @@ public:
     // Retrieve a single pixel value from the specified location 
     virtual PixRGBA getPixel(GRCOORD x, GRCOORD y) const = 0;
     
+    // Draw a horizontal line
+    virtual void setPixels(GRCOORD x, GRCOORD y, GRSIZE width, const PixRGBA pix) {
+        for (int col=x; col<x+width; col++) {
+            setPixel(col,y, pix);
+        }
+    }
+
     // Copy the span of pixels into the pixel buffer
     virtual bool setSpan(GRCOORD x, GRCOORD y, const GRSIZE width, const PixRGBA * pix) = 0;
     
