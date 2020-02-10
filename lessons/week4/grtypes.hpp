@@ -114,3 +114,11 @@ struct GRTriangle  {
 inline int sgn(REAL val) { return ((0 < val) - (val < 0)); }
 #define swap16(a, b) { int16_t t = a; a = b; b = t; }
 
+inline int MAPI(int x, int olow, int ohigh, int rlow, int rhigh) 
+{
+    int odiff = ohigh-olow;
+    int rdiff = rhigh-rlow;
+
+    return (int)(rlow + (x-olow)*((float)rdiff/odiff));
+}
+
