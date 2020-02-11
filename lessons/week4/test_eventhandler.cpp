@@ -1,6 +1,8 @@
 
-#include "NativeWindow.hpp"
 #include <stdio.h>
+
+#include "NativeWindow.hpp"
+
 
 void printEvent(const char *title, const MouseEvent &e)
 {
@@ -26,7 +28,7 @@ void mouseReleased(const MouseEvent &e)
 
 void mouseWheel(const MouseEvent &e)
 {
-    printEvent("MOUSEWHEEL", e);
+    printf("MOUSEWHEEL: delta: %d\n", e.delta);
 }
 
 void mouseClicked(const MouseEvent &e)

@@ -784,6 +784,8 @@ CloseGestureInfoHandle(
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp)) 
 #define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp)) 
 
+#define GET_WHEEL_DELTA_WPARAM(w) (short)HIWORD(w)
+
 // Conversion of touch input coordinates to pixels
 //function exports.TOUCH_COORD_TO_PIXEL(l) return ((l) / 100) end
 

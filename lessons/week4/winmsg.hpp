@@ -24,6 +24,7 @@ struct MouseEvent {
     int activity;
     int x;
     int y;
+    int delta;
     bool control;
     bool shift;
     bool lbutton;
@@ -121,18 +122,13 @@ static int pmouseY = 0;
 LRESULT HandleMouseEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     LRESULT res = 0;
-    
-    // assign previous mouse position
-    pmouseX = mouseX;
-    pmouseY = mouseY;
+    MouseEvent e;
 
-    // assign new mouse position
-    mouseX = GET_X_LPARAM(lParam);
-    mouseY = GET_Y_LPARAM(lParam);
+    e.x = GET_X_LPARAM(lParam);
+    e.y = GET_Y_LPARAM(lParam);
 
     //printf("mouseHandler: 0x%04x  %d %d\n", msg, mouseX, mouseY);
 
-    MouseEvent e;
     e.x = mouseX;
     e.y = mouseY;
     e.control = (wParam & MK_CONTROL) != 0;
@@ -144,6 +140,14 @@ LRESULT HandleMouseEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     e.xbutton2 = (wParam & MK_XBUTTON2) != 0;
     
 
+    // assign new mouse position
+    // BUGBUG - having these globals here might not be a good idea
+    // maybe they should be application specific
+    // assign previous mouse position
+    pmouseX = mouseX;
+    pmouseY = mouseY;
+    mouseX = e.x;
+    mouseY = e.y;
     mouseIsPressed = e.lbutton || e.rbutton || e.mbutton;
 
     switch(msg) {
@@ -186,6 +190,7 @@ LRESULT HandleMouseEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
         case WM_MOUSEWHEEL:
             e.activity = MOUSEWHEEL;
+            e.delta = GET_WHEEL_DELTA_WPARAM(wParam);
 
             if (gMouseWheelHandler != nullptr) {
                 gMouseWheelHandler(e);
@@ -269,6 +274,7 @@ WIN_EXPORT void draw();
 WIN_EXPORT void loop();
 WIN_EXPORT void setup();
 
+WIN_EXPORT LRESULT onPaint(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // IO Event Handlers
 WIN_EXPORT LRESULT keyboardHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -304,7 +310,7 @@ WIN_EXPORT void mouseWheel(const MouseEvent &e);
 
         // The user can specify their own handlers for io and
         // painting
-        WinMSGObserver handler = (WinMSGObserver)GetProcAddress(hInst, "paintHandler");
+        WinMSGObserver handler = (WinMSGObserver)GetProcAddress(hInst, "onPaint");
         if (handler != nullptr) {
             gPaintHandler = handler;
         }
@@ -369,6 +375,15 @@ LRESULT MsgHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             gTouchHandler(hWnd, msg, wParam, lParam);
         }
             //res = TouchActivity(hwnd, msg, wparam, lparam)
+    } else if (msg == WM_ERASEBKGND) {
+        printf("WM_ERASEBKGND\n");
+        HDC hdc = HDC(wParam); 
+        if (gPaintHandler != nullptr) {
+            gPaintHandler(hWnd, msg, wParam, lParam);
+        }
+
+        // return non-zero indicating we erase the background
+        res = 1;
     } else if (msg == WM_PAINT) {
         if (gPaintHandler != nullptr) {
             gPaintHandler(hWnd, msg, wParam, lParam);
@@ -384,6 +399,12 @@ LRESULT MsgHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return res;
 }
 
+void forceDraw()
+{
+    // force the window to draw as soon as possible
+    printf("forceDraw\n");
+    InvalidateRect();
+}
 
 // A basic Windows event loop
 void run()
