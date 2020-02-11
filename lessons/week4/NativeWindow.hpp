@@ -15,7 +15,6 @@
 #include <stdio.h>
 
 #include "w32.hpp"
-#include "winmsg.hpp"
 #include "PixelBufferRGBA32.hpp"
 
 /*
@@ -49,7 +48,7 @@ public:
         create window handle
         initialize event handling
     */
-    Window(const char *title, int width, int height, WNDPROC handler = MsgHandler)
+    Window(const char *title, int width, int height, WNDPROC handler = nullptr)
         : fBackground(nullptr)
     {
         HMODULE hInst = GetModuleHandleA(NULL);
@@ -59,7 +58,7 @@ public:
         WNDCLASSEXA wcex;
         wcex.cbSize = sizeof(WNDCLASSEXA);
         wcex.style          = CS_HREDRAW | CS_VREDRAW;
-        wcex.lpfnWndProc    = MsgHandler;
+        wcex.lpfnWndProc    = handler;
         wcex.cbClsExtra     = 0;
         wcex.cbWndExtra     = 0;
         wcex.hInstance      = hInst;
@@ -116,7 +115,3 @@ public:
         fBackground = pb;
     }
 };
-
-
-
-

@@ -1,6 +1,10 @@
 
-#include "NativeWindow.hpp"
 #include <stdio.h>
+
+#include "NativeWindow.hpp"
+#include "winmsg.hpp"
+
+
 
 void printEvent(const char *title, const KeyEvent &e)
 {

@@ -1,6 +1,13 @@
 #pragma once
 
+#include <stdio.h>
+
+#include "NativeWindow.hpp"
 #include "w32.hpp"
+#include "PixelBufferRGBA32.hpp"
+#include "DrawingContext.hpp"
+#include "colors.hpp"
+#include "pbm.hpp"
 
 // Basic type to encapsulate a mouse event
 enum {
@@ -47,15 +54,25 @@ struct KeyEvent {
 typedef LRESULT (*WinMSGObserver)(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 typedef void (* KeyEventHandler)(const KeyEvent &e);
 typedef void (* MouseEventHandler)(const MouseEvent &e);
+typedef void (* VOIDROUTINE)();
 
+// Application routines
+static VOIDROUTINE gDrawHandler = nullptr;
+static VOIDROUTINE gLoopHandler = nullptr;
+static VOIDROUTINE gSetupHandler = nullptr;
+static VOIDROUTINE gPreSetupHandler = nullptr;
+
+
+// Painting
 static WinMSGObserver gPaintHandler = nullptr;
 
+// Keyboard
 static WinMSGObserver gKeyboardHandler = nullptr;
 static KeyEventHandler gKeyPressedHandler = nullptr;
 static KeyEventHandler gKeyReleasedHandler = nullptr;
 static KeyEventHandler gKeyTypedHandler = nullptr;
 
-
+// Mouse
 static WinMSGObserver gMouseHandler = nullptr;
 static MouseEventHandler gMouseMovedHandler = nullptr;
 static MouseEventHandler gMouseClickedHandler = nullptr;
@@ -64,7 +81,10 @@ static MouseEventHandler gMouseReleasedHandler = nullptr;
 static MouseEventHandler gMouseWheelHandler = nullptr;
 static MouseEventHandler gMouseDraggedHandler = nullptr;
 
+// Touch
 static WinMSGObserver gTouchHandler = nullptr;
+
+
 
 static int keyCode = 0;
 static int keyChar = 0;
@@ -274,7 +294,7 @@ WIN_EXPORT void draw();
 WIN_EXPORT void loop();
 WIN_EXPORT void setup();
 
-WIN_EXPORT LRESULT onPaint(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+WIN_EXPORT LRESULT onPaintHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // IO Event Handlers
 WIN_EXPORT LRESULT keyboardHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -294,61 +314,66 @@ WIN_EXPORT void mouseWheel(const MouseEvent &e);
 }
 #endif
 
-    // Setup the routines that will handle
-    // keyboard and mouse events
-    void setupEventHandlers()
-    {
-        // we're going to look within our own module
-        // to find handler functions
-        HMODULE hInst = GetModuleHandleA(NULL);
+// Setup the routines that will handle
+// keyboard and mouse events
+void setupHandlers()
+{
+    // we're going to look within our own module
+    // to find handler functions
+    HMODULE hInst = GetModuleHandleA(NULL);
 
-        // Start with our default handlers
-        gKeyboardHandler = HandleKeyboardEvent;
-        gMouseHandler = HandleMouseEvent;
-        gTouchHandler = HandleTouchEvent;
+    // Start with our default handlers
+    gKeyboardHandler = HandleKeyboardEvent;
+    gMouseHandler = HandleMouseEvent;
+    gTouchHandler = HandleTouchEvent;
 
+    // Get the general app routines
+    gSetupHandler = (VOIDROUTINE)GetProcAddress(hInst, "setup");
+    gPreSetupHandler = (VOIDROUTINE)GetProcAddress(hInst, "presetup");
+    gDrawHandler = (VOIDROUTINE)GetProcAddress(hInst, "draw");
+    gLoopHandler = (VOIDROUTINE)GetProcAddress(hInst, "loop");
 
-        // The user can specify their own handlers for io and
-        // painting
-        WinMSGObserver handler = (WinMSGObserver)GetProcAddress(hInst, "onPaint");
-        if (handler != nullptr) {
+    // The user can specify their own handlers for io and
+    // painting
+    WinMSGObserver handler = (WinMSGObserver)GetProcAddress(hInst, "onPaint");
+    if (handler != nullptr) {
             gPaintHandler = handler;
-        }
+    }
 
 
-        handler = (WinMSGObserver)GetProcAddress(hInst, "keyboardHandler");
-        if (handler != nullptr) {
+    handler = (WinMSGObserver)GetProcAddress(hInst, "keyboardHandler");
+    if (handler != nullptr) {
                     printf("key handler: %p\n", handler);
             gKeyboardHandler = handler;
-        }
-
-        handler = (WinMSGObserver)GetProcAddress(hInst, "mouseHandler");
-        if (handler != nullptr) {
-            gMouseHandler = handler;
-        }
-
-        handler = (WinMSGObserver)GetProcAddress(hInst, "touchHandler");
-        if (handler != nullptr) {
-            gTouchHandler = handler;
-        }
-
-        //printf("mouseHandler: %p\n", gMouseHandler);
-        // If the user implements various event handlers, they will 
-        // be called automatically
-        gMouseMovedHandler = (MouseEventHandler)GetProcAddress(hInst, "mouseMoved");
-        gMouseClickedHandler = (MouseEventHandler)GetProcAddress(hInst, "mouseClicked");
-        gMousePressedHandler = (MouseEventHandler)GetProcAddress(hInst, "mousePressed");
-        gMouseReleasedHandler = (MouseEventHandler)GetProcAddress(hInst, "mouseReleased");
-        gMouseWheelHandler = (MouseEventHandler)GetProcAddress(hInst, "mouseWheel");
-        gMouseDraggedHandler = (MouseEventHandler)GetProcAddress(hInst, "mouseDragged");
-
-        // Keyboard event handling
-        gKeyPressedHandler = (KeyEventHandler)GetProcAddress(hInst, "keyPressed");
-        gKeyReleasedHandler = (KeyEventHandler)GetProcAddress(hInst, "keyReleased");
-        gKeyTypedHandler = (KeyEventHandler)GetProcAddress(hInst, "keyTyped");
-
-        // Touch event handling
     }
+
+    handler = (WinMSGObserver)GetProcAddress(hInst, "mouseHandler");
+    if (handler != nullptr) {
+            gMouseHandler = handler;
+    }
+
+    handler = (WinMSGObserver)GetProcAddress(hInst, "touchHandler");
+    if (handler != nullptr) {
+            gTouchHandler = handler;
+    }
+
+    //printf("mouseHandler: %p\n", gMouseHandler);
+    // If the user implements various event handlers, they will 
+    // be called automatically
+    gMouseMovedHandler = (MouseEventHandler)GetProcAddress(hInst, "mouseMoved");
+    gMouseClickedHandler = (MouseEventHandler)GetProcAddress(hInst, "mouseClicked");
+    gMousePressedHandler = (MouseEventHandler)GetProcAddress(hInst, "mousePressed");
+    gMouseReleasedHandler = (MouseEventHandler)GetProcAddress(hInst, "mouseReleased");
+    gMouseWheelHandler = (MouseEventHandler)GetProcAddress(hInst, "mouseWheel");
+    gMouseDraggedHandler = (MouseEventHandler)GetProcAddress(hInst, "mouseDragged");
+
+    // Keyboard event handling
+    gKeyPressedHandler = (KeyEventHandler)GetProcAddress(hInst, "keyPressed");
+    gKeyReleasedHandler = (KeyEventHandler)GetProcAddress(hInst, "keyReleased");
+    gKeyTypedHandler = (KeyEventHandler)GetProcAddress(hInst, "keyTyped");
+
+    // Touch event handling
+}
 
 
 LRESULT MsgHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -360,23 +385,29 @@ LRESULT MsgHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 
     if (msg == WM_DESTROY) {
+        // By doing a PostQuitMessage(), a 
+        // WM_QUIT message will eventually find its way into the
+        // message queue.
         PostQuitMessage(0);
         return 0;
     } else if ((msg >= WM_MOUSEFIRST) && (msg <= WM_MOUSELAST)) {
+        // Handle all mouse messages
 		if (gMouseHandler != nullptr) {
 			return gMouseHandler(hWnd, msg, wParam, lParam);
 		}
     } else if ((msg >= WM_KEYFIRST) && (msg <= WM_KEYLAST)) {
+        // Handle all keyboard messages
         if (gKeyboardHandler != nullptr) {
             gKeyboardHandler(hWnd, msg, wParam, lParam);
         }
     } else if (msg == WM_TOUCH) {
+        // Handle touch specific messages
         if (gTouchHandler != nullptr) {
             gTouchHandler(hWnd, msg, wParam, lParam);
         }
             //res = TouchActivity(hwnd, msg, wparam, lparam)
     } else if (msg == WM_ERASEBKGND) {
-        printf("WM_ERASEBKGND\n");
+        //printf("WM_ERASEBKGND\n");
         HDC hdc = HDC(wParam); 
         if (gPaintHandler != nullptr) {
             gPaintHandler(hWnd, msg, wParam, lParam);
@@ -399,18 +430,38 @@ LRESULT MsgHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return res;
 }
 
+
+
+/*
+void forceDraw()
+{
+    // force the window to draw as soon as possible
+    printf("forceDraw\n");
+    InvalidateRect();
+}
+*/
+
 // A basic Windows event loop
 void run()
 {
     // Make sure we have all the event handlers connected
+    setupHandlers();
 
-    setupEventHandlers();
+    // Call a setup routine if the user specified one
+    if (gSetupHandler != nullptr) {
+        gSetupHandler();
+    }
+
     // Do a typical Windows message pump
     MSG msg;
     BOOL res;
 
     while (true) {
         //print("LOOP")
+        if (gLoopHandler != nullptr) {
+            gLoopHandler();
+        }
+
         // we use peekmessage, so we don't stall on a GetMessage
         //while (C.PeekMessageA(msg, nil, 0, 0, C.PM_REMOVE) ~= 0) do
         BOOL haveMessage = PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE) != 0;
@@ -427,3 +478,13 @@ void run()
 }
 
 
+
+
+// Easiest test case, just show a window
+// closing the window should terminate the app
+void main()
+{
+    Window w("Window Title", 640, 480, MsgHandler);
+    w.show();
+    run();
+}
