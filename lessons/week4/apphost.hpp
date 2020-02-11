@@ -89,6 +89,8 @@ static WinMSGObserver gTouchHandler = nullptr;
 static int keyCode = 0;
 static int keyChar = 0;
 
+static Window * gAppWindow = nullptr;
+
 LRESULT HandleKeyboardEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     LRESULT res = 0;
@@ -440,6 +442,16 @@ void forceDraw()
     InvalidateRect();
 }
 */
+
+/*
+    Routines the application can call
+*/
+void createCanvas(size_t width, size_t height)
+{
+    // The appWindow is already created, so we just
+    // need to resize it
+    gAppWindow->setClientSize(width, height);
+}
 
 // A basic Windows event loop
 void run()

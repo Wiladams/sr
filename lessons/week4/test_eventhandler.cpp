@@ -61,7 +61,7 @@ void keyTyped(const KeyEvent &e)
 // closing the window should terminate the app
 void main()
 {
-    Window w("Window Title", 640, 480);
+    Window w("Window Title", 640, 480, MsgHandler);
     w.show();
     run();
 }
