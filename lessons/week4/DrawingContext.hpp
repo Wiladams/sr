@@ -181,7 +181,7 @@ public:
     }
 
 
-    // drawPolyLine()
+    // drawPolyLine(int nPts, Point2D *pts)
     // drawCubicBezier()
 
 

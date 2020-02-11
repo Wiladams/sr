@@ -20,7 +20,6 @@ void main()
 
     dc.clear();
 
-    // default white fill color
     for (int i=0;i<200;i++) {
         PixRGBA pix;
         pix.r = MAPI(i, 0,200, 0,255);
@@ -47,5 +46,6 @@ void main()
         dc.setStroke(pix);
         dc.strokeLine(400+i,0,400+i,pb.getHeight()-1);
     }
+
     PBM::writePPMBinary("testgraygradient.ppm", pb);
 }

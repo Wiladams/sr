@@ -9,5 +9,5 @@ void main()
 {
     Window w("Window Title", 640, 480);
     w.show();
-    w.run();
+    run();
 }

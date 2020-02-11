@@ -16,6 +16,14 @@
 
 #include <stdint.h>
 
+// We need this export so when the user defines their functions
+// they will be listed as exports, and then at runtime we can 
+// load their pointers from the module
+#define WIN_EXPORT __declspec(dllexport)
+
+// Wrapping everything in this __cplusplus case is necessary because
+// various Windows APIs and structures are very C specific, so we don't
+// want the names to get C++ mangling
 #ifdef __cplusplus
 extern "C" {
 #endif

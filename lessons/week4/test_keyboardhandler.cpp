@@ -19,16 +19,17 @@ void keyReleased(const KeyEvent &e)
 }
 
 
+/*
 void keyTyped(const KeyEvent &e)
 {
     printf("KEYTYPED: %c\n", e.keyCode);
 }
-
+*/
 // Easiest test case, just show a window
 // closing the window should terminate the app
 void main()
 {
     Window w("Window Title", 640, 480);
     w.show();
-    w.run();
+    run();
 }
