@@ -16,7 +16,7 @@ typedef struct PixRGBA_t {
     union {
         uint32_t intValue;
         uint8_t data[4];
-        struct {uint8_t r, g, b, a;};
+        struct {uint8_t b, g, r, a;};
     };
 } PixRGBA;
 

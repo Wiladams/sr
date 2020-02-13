@@ -318,6 +318,15 @@ public:
 
 
     // strokeTriangle()
+    bool strokeTriangle(GRCOORD x1, GRCOORD y1, GRCOORD x2, GRCOORD y2, GRCOORD x3, GRCOORD y3)
+    {
+        strokeLine(x1, y1, x2, y2);
+        strokeLine(x2, y2, x3, y3);
+        strokeLine(x3, y3, x1, y1);
+
+        return true;
+    }
+
     bool strokeTriangle(const GRTriangle &geo)
     {
         strokeLine(geo.verts[0].x, geo.verts[0].y, geo.verts[1].x, geo.verts[1].y);
