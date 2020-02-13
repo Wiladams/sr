@@ -19,6 +19,6 @@ void draw()
 void setup()
 {
     printf("SETUP\n");
-    
     //createCanvas(640, 480);
+    gAppDC->setBackground(colors.cyan);
 }
