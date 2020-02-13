@@ -16,6 +16,7 @@ void main()
     PixelBufferRGBA32 ib(100, 100);
     DrawingContext ibdc(ib);
     ibdc.setBackground(colors.transparent);
+    //ibdc.setBackground(colors.black);
     ibdc.setFill(colors.green);
     ibdc.clear();
 

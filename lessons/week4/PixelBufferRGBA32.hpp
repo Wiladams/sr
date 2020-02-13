@@ -41,7 +41,7 @@ public:
     bool setPixel(GRCOORD x, GRCOORD y, const PixRGBA pix)
     {
         // BUGBUG - we should quick reject if alpha == 0
-        if (x>= getWidth() || y >= getHeight()) // || (pix.a == 0)) 
+        if (x>= getWidth() || y >= getHeight()  || (pix.a == 0)) 
         {
             return false;   // outside bounds, or invisible
         }
