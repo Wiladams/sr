@@ -43,6 +43,29 @@ public:
     // Set all pixels within the pixel buffer to the specified value
     virtual bool setAllPixels(const PixRGBA pix) = 0;
 
+    virtual bool blit(PixelBuffer &src, 
+        int srcX, int srcY, int srcWidth, int srcHeight, 
+        int destX, int destY, int destWidth, int destHeight)
+    {
+        //printf("srcWidth: %d\n", srcWidth);
+        //printf("srcHeight: %d\n", srcHeight);
+
+        for (int row=destY;row<(destY+destHeight-1);row++){
+            for (int col=destX; col<(destX+destWidth-1); col++)
+            {
+                int dx = MAPI(col, destX, destX+destWidth-1, srcX, srcX+srcWidth-1);
+                int dy = MAPI(row, destY, destY+destHeight-1, srcY, srcY+srcHeight-1);
+
+                PixRGBA pix = src.getPixel(dx,dy);
+                //printf("pixel: %d %d\n", dx, dy);
+
+                setPixel(col, row, pix);
+            }
+        }
+
+        return true;
+    }
+
     GRSIZE getWidth() const { return this->width;}
     GRSIZE getHeight() const { return this->height;}
 

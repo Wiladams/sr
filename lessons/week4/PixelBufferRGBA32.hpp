@@ -40,9 +40,10 @@ public:
     // Set the value of a single pixel
     bool setPixel(GRCOORD x, GRCOORD y, const PixRGBA pix)
     {
-        if (x>= getWidth() || y >= getHeight()) 
+        // BUGBUG - we should quick reject if alpha == 0
+        if (x>= getWidth() || y >= getHeight()) // || (pix.a == 0)) 
         {
-            return false;   // outside bounds
+            return false;   // outside bounds, or invisible
         }
         size_t offset = y * getWidth() + x;
         data[offset] = pix;

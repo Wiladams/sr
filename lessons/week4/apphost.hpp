@@ -286,6 +286,13 @@ LRESULT HandleTouchEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return res;
 }
 
+LRESULT HandlePaintEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT res = 0;
+    return res;
+}
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -450,7 +457,7 @@ void createCanvas(size_t width, size_t height)
 {
     // The appWindow is already created, so we just
     // need to resize it
-    gAppWindow->setClientSize(width, height);
+    //gAppWindow->setClientSize(width, height);
 }
 
 // A basic Windows event loop
@@ -496,7 +503,10 @@ void run()
 // closing the window should terminate the app
 void main()
 {
-    Window w("Window Title", 640, 480, MsgHandler);
-    w.show();
+    gAppWindow = new Window("Application Window", 640, 480, MsgHandler);
+    //Window w("Window Title", 640, 480, MsgHandler);
+    //w.show();
+    gAppWindow->show();
+
     run();
 }
