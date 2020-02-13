@@ -14,10 +14,10 @@ public:
 } p5colors;
 
 // Canvas management
-void createCanvas(size_t width, size_t height)
+void createCanvas(size_t awidth, size_t aheight)
 {
-    width = width;
-    height = height;
+    width = awidth;
+    height = aheight;
 }
 
 // Drawing attributes

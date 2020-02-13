@@ -10,14 +10,30 @@
 
 void draw()
 {
-    static posx = 0;
-    static posy = 0;
-    static rectSize = 200;
+    if ((width == 0) || (height == 0)) {
+        return ;
+    }
+
+    static int posx = 0;
+    static int posy = 0;
+    static int rectSize = 200;
+    static int xdir = 1;
+
+    posx = posx+3*xdir;
+    if (posx >= width-rectSize-3) {
+        posx = 0;
+    }
+    posy = posy +2;
+    if (posy >= height - rectSize-2) {
+        posy = 0;
+    }
+
+//printf("draw: %zd %zd %d %d\n", width, height, posx, posy);
 
     clear();
 
     fill(p5colors.yellow);
-    rectangle(320,240, rectSize,rectSize);
+    rectangle(posx,posy, rectSize,rectSize);
 }
 
 void setup()

@@ -418,6 +418,7 @@ static const int WM_SYSDEADCHAR                  = 0x0107;
 static const int WM_UNICHAR                      = 0x0109;
 static const int WM_KEYLAST                      = 0x0109;
 
+static const int WM_TIMER 			             = 0x0113;
 
 // Mouse Messages
 
@@ -708,6 +709,14 @@ BOOL UpdateLayeredWindow(HWND hWnd, HDC hdcDst, POINT* pptDst, SIZE* psize,
 
 DPI_AWARENESS_CONTEXT SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT dpiContext);
 UINT __stdcall GetDpiForSystem();
+
+typedef void (* TIMERPROC)(HWND Arg1,UINT Arg2,UINT_PTR Arg3,DWORD Arg4);
+UINT_PTR SetTimer(
+  HWND      hWnd,
+  UINT_PTR  nIDEvent,
+  UINT      uElapse,
+  TIMERPROC lpTimerFunc
+);
 
 // Touch Related founctions
 BOOL RegisterTouchWindow(HWND hwnd, ULONG ulFlags);
