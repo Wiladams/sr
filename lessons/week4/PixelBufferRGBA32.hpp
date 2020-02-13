@@ -107,6 +107,12 @@ public:
     // it also allows unrestricted access to the data itself
     // which breaks encapsulation.
     // PixRGBA * getData() const {return this->data;}
+    // BUT, very convenient, and the const helps somewhat
+    virtual const PixRGBA * getData() const
+    {
+        return data;
+    }
+
 
 private:
     // private default constructor, so this can not

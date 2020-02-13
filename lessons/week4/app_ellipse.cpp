@@ -8,19 +8,12 @@
 #include "apphost.hpp"
 
 
-void mouseClicked(const MouseEvent &e)
+void draw()
 {
-    PixelBufferRGBA32 fb(640, 480);
-    DrawingContext dc(fb);
-
-    dc.clear();
+    gAppDC->clear();
 
     // default white fill, black stroke
-    dc.drawEllipse(320,240, 200,200);
-
-    // Whenever the user clicks the mouse
-    // write the image out to a file
-    PBM::writePPMBinary("appellipse.ppm", fb);
+    gAppDC->drawEllipse(320,240, 200,200);
 }
 
 void setup()

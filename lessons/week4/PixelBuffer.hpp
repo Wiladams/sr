@@ -68,6 +68,7 @@ public:
 
     GRSIZE getWidth() const { return this->width;}
     GRSIZE getHeight() const { return this->height;}
+    virtual const PixRGBA * getData() const = 0;
 
 private:
     // private default constructor, so this can not

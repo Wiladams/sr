@@ -1,4 +1,6 @@
 #pragma once
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "gdi32.lib")
 
 /*
     This single file is meant to be enough win32 to put a window up on the screen

@@ -90,6 +90,10 @@ static int keyCode = 0;
 static int keyChar = 0;
 
 static Window * gAppWindow = nullptr;
+static PixelBuffer * gAppSurface = nullptr;
+static DrawingContext * gAppDC = nullptr;
+
+static BITMAPINFO gAppSurfaceInfo;
 
 LRESULT HandleKeyboardEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -286,9 +290,40 @@ LRESULT HandleTouchEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return res;
 }
 
-LRESULT HandlePaintEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT HandlePaintEvent(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     LRESULT res = 0;
+    PAINTSTRUCT ps;
+
+	HDC hdc = BeginPaint(hWnd, &ps);
+        
+/*
+int  StretchDIBits( HDC hdc,  int xDest,  int yDest,  int DestWidth,  int DestHeight,  
+    int xSrc,  int ySrc,  int SrcWidth,  int SrcHeight,
+    const void * lpBits,  const BITMAPINFO * lpbmi,  UINT iUsage,  DWORD rop);
+
+*/
+    int xDest = 0;
+    int yDest = 0;
+    int DestWidth = gAppSurface->getWidth();
+    int DestHeight = gAppSurface->getHeight();
+    int xSrc = 0;
+    int ySrc = 0;
+    int SrcWidth = gAppSurface->getWidth();
+    int SrcHeight = gAppSurface->getHeight();
+
+    int pResult = StretchDIBits(hdc,
+        xDest,yDest,
+        DestWidth,DestHeight,
+        xSrc,ySrc,
+        SrcWidth, SrcHeight,
+        gAppSurface->getData(),&gAppSurfaceInfo,
+        DIB_RGB_COLORS,
+        SRCCOPY);
+        
+	EndPaint(hWnd, &ps);
+
+
     return res;
 }
 
@@ -335,6 +370,7 @@ void setupHandlers()
     gKeyboardHandler = HandleKeyboardEvent;
     gMouseHandler = HandleMouseEvent;
     gTouchHandler = HandleTouchEvent;
+    gPaintHandler = HandlePaintEvent;
 
     // Get the general app routines
     gSetupHandler = (VOIDROUTINE)GetProcAddress(hInst, "setup");
@@ -441,14 +477,14 @@ LRESULT MsgHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 
 
-/*
+
 void forceDraw()
 {
     // force the window to draw as soon as possible
     printf("forceDraw\n");
-    InvalidateRect();
+    InvalidateRect(gAppWindow->getHandle(), NULL, 1);
 }
-*/
+
 
 /*
     Routines the application can call
@@ -493,19 +529,51 @@ void run()
             res = TranslateMessage(&msg);
             res = DispatchMessageA(&msg);
         }
+
+        // BUGBUG
+        // Drawing should really happen on a TIMER message
+        // not every time through the loop
+        if (gDrawHandler != nullptr) {
+            gDrawHandler();
+        }
     }
 }
 
 
 
+int GetAlignedByteCount(int width, int bitsperpixel, int alignment)
+{
+    int bytesperpixel = bitsperpixel / 8;
+
+    return (((width * bytesperpixel) + (alignment - 1)) & ~(alignment - 1));
+    //return band((width * bytesperpixel + (alignment - 1)), bnot(alignment - 1));
+}
 
 // Easiest test case, just show a window
 // closing the window should terminate the app
 void main()
 {
+    int width = 640;
+    int height = 480;
+
+    gAppSurface = new PixelBufferRGBA32(width,height);
+    
+    int alignment = 4;
+    int bitsPerPixel = 32;
+    int bytesPerRow = GetAlignedByteCount(width, bitsPerPixel, alignment);
+    gAppSurfaceInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    gAppSurfaceInfo.bmiHeader.biWidth = width;
+    gAppSurfaceInfo.bmiHeader.biHeight = height;	// top-down DIB Section
+    gAppSurfaceInfo.bmiHeader.biPlanes = 1;
+    gAppSurfaceInfo.bmiHeader.biBitCount = 32;
+    gAppSurfaceInfo.bmiHeader.biSizeImage = bytesPerRow * height;
+    gAppSurfaceInfo.bmiHeader.biClrImportant = 0;
+    gAppSurfaceInfo.bmiHeader.biClrUsed = 0;
+    gAppSurfaceInfo.bmiHeader.biCompression = BI_RGB;
+
+    gAppDC = new DrawingContext(*gAppSurface);
+
     gAppWindow = new Window("Application Window", 640, 480, MsgHandler);
-    //Window w("Window Title", 640, 480, MsgHandler);
-    //w.show();
     gAppWindow->show();
 
     run();

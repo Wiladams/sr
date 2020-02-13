@@ -17,23 +17,7 @@
 #include "w32.hpp"
 #include "PixelBufferRGBA32.hpp"
 
-/*
-int handlePaint()
 
-		hdc = BeginPaint(hWnd, &ps);
-        
-        int xDest = 0;
-        int yDest = 0;
-        int pResult = StretchDIBits(hdc,
-                xDest,yDest,
-                imgSize.w,imgSize.h,
-                0,0,
-                imgSize.w, imgSize.h,
-                surface.pixelData.data,surface.info,
-                DIB_RGB_COLORS,SRCCOPY)
-        
-		EndPaint(hWnd, &ps);
-*/
 
 class Window {
 public:
@@ -94,7 +78,8 @@ public:
     }
 
 
-
+    HWND getHandle() {return fHandle;}
+    
     // All the methods that are useful
     bool isValid() {return fHandle != NULL;}
 
