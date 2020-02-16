@@ -301,6 +301,21 @@ typedef struct tagWNDCLASSEXA {
         HICON       hIconSm;
 } WNDCLASSEXA, *PWNDCLASSEXA, *LPWNDCLASSEXA;
 
+typedef struct tagWINDOWINFO {
+  DWORD cbSize;
+  RECT  rcWindow;
+  RECT  rcClient;
+  DWORD dwStyle;
+  DWORD dwExStyle;
+  DWORD dwWindowStatus;
+  UINT  cxWindowBorders;
+  UINT  cyWindowBorders;
+  ATOM  atomWindowType;
+  WORD  wCreatorVersion;
+} WINDOWINFO, *PWINDOWINFO, *LPWINDOWINFO;
+
+
+// GDI Structures
 typedef struct tagPAINTSTRUCT {
     HDC         hdc;
     int        fErase;
@@ -686,6 +701,7 @@ int QueryPerformanceFrequency(int64_t * lpFrequency);
 DWORD __stdcall GetLastError(void);
 
 // Basic Window management
+BOOL AdjustWindowRect(LPRECT lpRect, DWORD  dwStyle, BOOL   bMenu);
 ATOM RegisterClassExA(const WNDCLASSEXA *);
 HWND CreateWindowExA(DWORD dwExStyle, const char * lpClassName, const char * lpWindowName, DWORD dwStyle,
      int X, int Y, int nWidth, int nHeight,
@@ -693,10 +709,12 @@ HWND CreateWindowExA(DWORD dwExStyle, const char * lpClassName, const char * lpW
 LRESULT DefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 BOOL DestroyWindow(HWND hWnd);
 BOOL GetClientRect(HWND   hWnd, LPRECT lpRect);
+BOOL GetWindowInfo(HWND hWnd, PWINDOWINFO pwi);
 BOOL GetWindowRect(HWND hWnd, LPRECT lpRect);
 UINT GetDpiForWindow(HWND hwnd);
 int GetSystemMetrics(int nIndex);
 BOOL InvalidateRect(HWND hWnd, const RECT *lpRect, BOOL bErase);
+HICON LoadIconA(HINSTANCE hInstance,LPCSTR    lpIconName);
 BOOL RedrawWindow(HWND hWnd, const RECT *lprcUpdate, HRGN hrgnUpdate, UINT flags);
 BOOL ScreenToClient(HWND hWnd, LPPOINT lpPoint);
 BOOL SetWindowPos(HWND hWnd, HWND hWndInsertAfter,int X,int Y,int cx,int cy, UINT uFlags);
@@ -716,6 +734,11 @@ UINT_PTR SetTimer(
   UINT_PTR  nIDEvent,
   UINT      uElapse,
   TIMERPROC lpTimerFunc
+);
+
+BOOL KillTimer(
+  HWND     hWnd,
+  UINT_PTR uIDEvent
 );
 
 // Touch Related founctions

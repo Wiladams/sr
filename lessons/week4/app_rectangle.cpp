@@ -7,7 +7,8 @@
 */
 #include "p5.hpp"
 
-
+// The draw function will be called based
+// on the framerate timer (default 30 frames per second)
 void draw()
 {
     if ((width == 0) || (height == 0)) {

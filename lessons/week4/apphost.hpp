@@ -85,13 +85,17 @@ static MouseEventHandler gMouseDraggedHandler = nullptr;
 static WinMSGObserver gTouchHandler = nullptr;
 
 
+static Window * gAppWindow = nullptr;
+static PixelBuffer * gAppSurface = nullptr;
+static DrawingContext * gAppDC = nullptr;
+static UINT_PTR gAppTimerID = 0;
+static bool gLooping = true;
+static size_t width = 0;
+static size_t height = 0;
 
 static int keyCode = 0;
 static int keyChar = 0;
 
-static Window * gAppWindow = nullptr;
-static PixelBuffer * gAppSurface = nullptr;
-static DrawingContext * gAppDC = nullptr;
 
 static BITMAPINFO gAppSurfaceInfo;
 
@@ -329,7 +333,7 @@ extern "C" {
 
 // These should be implemented by a module to be loaded
 WIN_EXPORT void draw();
-WIN_EXPORT void loop();
+WIN_EXPORT void onLoop();
 WIN_EXPORT void setup();
 
 WIN_EXPORT LRESULT onPaintHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -370,7 +374,7 @@ void setupHandlers()
     gSetupHandler = (VOIDROUTINE)GetProcAddress(hInst, "setup");
     gPreSetupHandler = (VOIDROUTINE)GetProcAddress(hInst, "presetup");
     gDrawHandler = (VOIDROUTINE)GetProcAddress(hInst, "draw");
-    gLoopHandler = (VOIDROUTINE)GetProcAddress(hInst, "loop");
+    gLoopHandler = (VOIDROUTINE)GetProcAddress(hInst, "onLoop");
 
     // The user can specify their own handlers for io and
     // painting
@@ -414,9 +418,9 @@ void setupHandlers()
     // Touch event handling
 
     // Timer
-    UINT_PTR nIDEvent = 0;
-    UINT uElapse = 1000 / 30;
-    SetTimer(gAppWindow->getHandle(), nIDEvent, uElapse, nullptr);
+    UINT_PTR nIDEvent = 5;
+    UINT uElapse = 1000 / 4;
+    gAppTimerID = SetTimer(gAppWindow->getHandle(), nIDEvent, uElapse, nullptr);
 }
 
 
@@ -485,9 +489,19 @@ LRESULT MsgHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return res;
 }
 
+// Controlling the runtime
+void loop() {gLooping = true;}
+void noLoop() {
+    // stop calling looping handler
+    // but still run event loop
+    gLooping = false;
 
+    // turn off timer
+    // so drawing is not called in event loop
+    BOOL bResult = KillTimer(gAppWindow->getHandle(), gAppTimerID);
 
-
+    //printf("noLoop: %d  %Id\n", bResult, gAppTimerID);
+}
 
 
 
@@ -509,8 +523,9 @@ void run()
     BOOL res;
 
     while (true) {
-        //print("LOOP")
-        if (gLoopHandler != nullptr) {
+        //printf("run(), looping: %d\n", gLooping);
+
+        if ((gLoopHandler != nullptr) && (gLooping)) {
             gLoopHandler();
         }
 
@@ -538,13 +553,17 @@ int GetAlignedByteCount(int width, int bitsperpixel, int alignment)
     return (((width * bytesperpixel) + (alignment - 1)) & ~(alignment - 1));
 }
 
-// Easiest test case, just show a window
-// closing the window should terminate the app
-void main()
+bool setCanvasSize(size_t aWidth, size_t aHeight)
 {
-    int width = 640;
-    int height = 480;
+    width = aWidth;
+    height = aHeight;
 
+    if (gAppSurface != nullptr) {
+        // Delete old one if it exists
+        delete gAppSurface;
+    }
+
+    // Create new drawing surface
     gAppSurface = new PixelBufferRGBA32(width,height);
     
     int alignment = 4;
@@ -560,10 +579,30 @@ void main()
     gAppSurfaceInfo.bmiHeader.biClrUsed = 0;
     gAppSurfaceInfo.bmiHeader.biCompression = BI_RGB;
 
+    // Delete old drawing context if it exists
+    if (gAppDC != nullptr) {
+        delete gAppDC;
+    }
+
+    // Create a new one
     gAppDC = new DrawingContext(*gAppSurface);
 
+    // resize the window itself
+    //if (gAppWindow != nullptr) {
+    //    gAppWindow->setCanvasSize(aWidth, aHeight);
+    //}
+
+    return true;
+}
+
+// Easiest test case, just show a window
+// closing the window should terminate the app
+void main()
+{
+    setCanvasSize(640, 480);
+
     gAppWindow = new Window("Application Window", 640, 480, MsgHandler);
-    gAppWindow->show();
+
 
     run();
 }

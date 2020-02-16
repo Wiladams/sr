@@ -234,7 +234,10 @@ public:
     /*
         Ellipse drawing
     */
-    void raster_rgba_ellipse(GRCOORD cx, GRCOORD cy, size_t xradius, size_t yradius, const PixRGBA color, EllipseHandler handler)
+   //The drive_ellipse() function takes care of calculating ellipse
+   // edge coordinates.  It then applies the handler function to each
+   // of the pairs to either draw edge strokes or fills
+    void drive_ellipse(GRCOORD cx, GRCOORD cy, size_t xradius, size_t yradius, const PixRGBA color, EllipseHandler handler)
     {
         int twoasquare = 2 * xradius*xradius;
         int twobsquare = 2 * yradius*yradius;
@@ -291,20 +294,24 @@ public:
     }
 
     // strokeEllipse()
+    // strokeEllipse with current stroke color
     bool strokeEllipse(GRCOORD cx, GRCOORD cy, size_t xradius, size_t yradius)
     {
-        raster_rgba_ellipse(cx, cy, xradius, yradius, strokePix, Plot4EllipsePoints);
+        drive_ellipse(cx, cy, xradius, yradius, strokePix, Plot4EllipsePoints);
         
         return true;
     }
 
     // fillEllipse()
+    // Fill ellipse with current fill color
     bool fillEllipse(GRCOORD cx, GRCOORD cy, size_t xradius, size_t yradius)
     {
-        raster_rgba_ellipse(cx, cy, xradius, yradius, fillPix, fill2EllipseLines);
+        drive_ellipse(cx, cy, xradius, yradius, fillPix, fill2EllipseLines);
         return false;
     }
     
+    // drawEllipse
+    // fill and stroke an elllipse
     bool drawEllipse(GRCOORD cx, GRCOORD cy, size_t xradius, size_t yradius)
     {
         fillEllipse(cx, cy, xradius, yradius);
@@ -313,11 +320,12 @@ public:
         return true;
     }
 
-    // drawEllipse()
+
 
 
 
     // strokeTriangle()
+    // Assumes coordinates are in top down order
     bool strokeTriangle(GRCOORD x1, GRCOORD y1, GRCOORD x2, GRCOORD y2, GRCOORD x3, GRCOORD y3)
     {
         strokeLine(x1, y1, x2, y2);

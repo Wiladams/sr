@@ -24,6 +24,7 @@ public:
     ATOM fwinclass;
     HWND fHandle;
     PixelBuffer * fBackground;
+    WINDOWINFO fInfo;
 
     /*
         Basic constructor for a window class
@@ -46,7 +47,7 @@ public:
         wcex.cbClsExtra     = 0;
         wcex.cbWndExtra     = 0;
         wcex.hInstance      = hInst;
-        wcex.hIcon          = NULL;		// LoadIcon(hInst, MAKEINTRESOURCE(IDI_APPLICATION));
+        wcex.hIcon          = NULL;     // LoadIcon(hInst, MAKEINTRESOURCE(IDI_APPLICATION));
         wcex.hCursor        = NULL;		// LoadCursor(NULL, IDC_ARROW);
         wcex.hbrBackground  = NULL;      // ffi.cast("HBRUSH", C.COLOR_WINDOW+1);;		-- (HBRUSH)(COLOR_WINDOW+1);
         wcex.lpszMenuName   = NULL;		// NULL;
@@ -83,6 +84,10 @@ public:
     // All the methods that are useful
     bool isValid() {return fHandle != NULL;}
 
+    bool getWindowInfo() {
+
+    }
+
     // Hide the window
     void hide()
     {
@@ -93,6 +98,29 @@ public:
     void show()
     {
         ShowWindow(fHandle, SW_SHOWNORMAL);
+    }
+
+
+    void setCanvasSize(size_t awidth, size_t aheight)
+    {
+        // Get current size of window
+        RECT wRect;
+        BOOL bResult = GetWindowRect(getHandle(), &wRect);
+
+        // Set the new size of the window based on the client area
+        RECT cRect = {0,0,(LONG)awidth,(LONG)aheight};
+        bResult = AdjustWindowRect(&cRect, WS_OVERLAPPEDWINDOW, 1);
+
+        //HWND hWndInsertAfter = (HWND)-1;
+        HWND hWndInsertAfter = NULL;
+        int X = wRect.left;
+        int Y = wRect.top;
+        int cx = cRect.right-cRect.left;
+        int cy = cRect.bottom-cRect.top;
+        UINT uFlags = 0;
+
+        bResult = SetWindowPos(getHandle(), hWndInsertAfter,X,Y,cx,cy, uFlags);
+
     }
 
     void setBackground(PixelBuffer *pb)

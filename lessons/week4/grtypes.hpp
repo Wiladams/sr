@@ -122,3 +122,10 @@ inline int MAPI(int x, int olow, int ohigh, int rlow, int rhigh)
     return (int)(rlow + (x-olow)*((float)rdiff/odiff));
 }
 
+inline float MAPF(float x, float olow, float ohigh, float rlow, float rhigh) 
+{
+    float odiff = ohigh-olow;
+    float rdiff = rhigh-rlow;
+
+    return (float)(rlow + (x-olow)*((float)rdiff/odiff));
+}
