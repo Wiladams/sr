@@ -1,12 +1,13 @@
 #pragma once
 
 #include "apphost.hpp"
+#include "pbm.hpp"
 
 void clear();
 
 // Specifying a color using a 32-bit integer
 // 0xAARRGGBB
-class colors {
+class p5colors {
 public:
     const PixRGBA transparent   = {0x00000000};
     const PixRGBA black         = {0xff000000};
