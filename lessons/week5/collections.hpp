@@ -50,8 +50,8 @@ struct List {
 
     void * popRight()
     {
-        ListNode * valueNode = farRight;
-        if (farRight == nullptr) {
+        struct ListNode * valueNode = farRight;
+        if (valueNode == nullptr) {
             return nullptr;
         }
 
@@ -59,6 +59,8 @@ struct List {
         if (valueNode->left != nullptr) {
             farRight = valueNode->left;
             farRight->right = nullptr;
+        } else {
+            farRight = nullptr;
         }
 
 
@@ -67,5 +69,85 @@ struct List {
         }
     
         return retValue;
+    }
+
+    void * popLeft()
+    {
+        struct ListNode * valueNode = farLeft;
+        if (valueNode == nullptr) {
+            return nullptr;
+        }
+
+        void * retValue = valueNode->value;
+        if (valueNode->right != nullptr) {
+            farLeft = valueNode->right;
+            farLeft->left = nullptr;
+        } else {
+            farLeft = nullptr;
+        }
+
+        if (farRight == valueNode) {
+            farRight = nullptr;
+        }
+
+        return retValue;
+    }
+};
+
+
+class ListIterator
+{
+protected:
+    List & fList;
+
+
+
+public:
+    ListIterator(List &aList) : fList(aList) {}
+
+    virtual void * next() = 0;
+};
+
+/*
+    A queue iterator starts on the far left and 
+    moves to the far right.
+*/
+class QueueIterator : public ListIterator
+{
+    struct ListNode *first;
+
+public:
+    QueueIterator(List &aList)
+        : ListIterator(aList)
+    {
+        first = aList.farLeft;
+    }
+
+    void * next()
+    {
+        if (first == nullptr) {
+            return nullptr;
+        }
+
+        void * nodeValue = first->value;
+        first = first->right;
+
+        return nodeValue; 
+    }
+};
+
+class Queue
+{
+private:
+    List fList;
+
+public:
+    bool enqueue(void *value) {fList.pushRight(value); return true;}
+    void * dequeue() {return fList.popLeft();}
+    int length() {return fList.length();}
+    
+    QueueIterator values() 
+    {
+        return QueueIterator(fList);
     }
 };
