@@ -83,7 +83,7 @@ static MouseEventHandler gMouseDraggedHandler = nullptr;
 // Touch
 static WinMSGObserver gTouchHandler = nullptr;
 
-
+static int gFPS = 15;   // Frames per second
 static Window * gAppWindow = nullptr;
 static PixelBuffer * gAppSurface = nullptr;
 static DrawingContext * gAppDC = nullptr;
@@ -158,8 +158,6 @@ LRESULT HandleMouseEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     //printf("mouseHandler: 0x%04x  %d %d\n", msg, mouseX, mouseY);
 
-    e.x = mouseX;
-    e.y = mouseY;
     e.control = (wParam & MK_CONTROL) != 0;
     e.shift = (wParam& MK_SHIFT) != 0;
     e.lbutton = (wParam & MK_LBUTTON) != 0;
@@ -355,6 +353,14 @@ WIN_EXPORT void mouseWheel(const MouseEvent &e);
 }
 #endif
 
+void setFrameRate(int newRate)
+{
+    UINT_PTR nIDEvent = 5;
+    BOOL bResult = KillTimer(gAppWindow->getHandle(), gAppTimerID);
+    UINT uElapse = 1000 / gFPS;
+    gAppTimerID = SetTimer(gAppWindow->getHandle(), nIDEvent, uElapse, nullptr);
+}
+
 // Setup the routines that will handle
 // keyboard and mouse events
 void setupHandlers()
@@ -418,8 +424,7 @@ void setupHandlers()
 
     // Timer
     UINT_PTR nIDEvent = 5;
-    UINT uElapse = 1000 / 4;
-    gAppTimerID = SetTimer(gAppWindow->getHandle(), nIDEvent, uElapse, nullptr);
+    setFrameRate(gFPS);
 }
 
 
@@ -598,9 +603,9 @@ bool setCanvasSize(size_t aWidth, size_t aHeight)
 // closing the window should terminate the app
 void main()
 {
-    setCanvasSize(640, 480);
+    setCanvasSize(320, 240);
 
-    gAppWindow = new Window("Application Window", 640, 480, MsgHandler);
+    gAppWindow = new Window("Application Window", width, height, MsgHandler);
 
     run();
 }

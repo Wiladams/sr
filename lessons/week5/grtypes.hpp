@@ -24,6 +24,7 @@ struct PixRGBA {
 
     // Easy constructor
     PixRGBA(uint32_t val) : intValue(val){}
+    PixRGBA(int r, int g, int b, int a):red(r), green(g), blue(b), alpha(a) {}
 } ;
 
 // Some well known types
