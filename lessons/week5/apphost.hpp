@@ -89,8 +89,7 @@ static PixelBuffer * gAppSurface = nullptr;
 static DrawingContext * gAppDC = nullptr;
 static UINT_PTR gAppTimerID = 0;
 static bool gLooping = true;
-static size_t width = 0;
-static size_t height = 0;
+
 
 static int keyCode = 0;
 static int keyChar = 0;
@@ -559,8 +558,6 @@ int GetAlignedByteCount(int width, int bitsperpixel, int alignment)
 
 bool setCanvasSize(size_t aWidth, size_t aHeight)
 {
-    width = aWidth;
-    height = aHeight;
 
     if (gAppSurface != nullptr) {
         // Delete old one if it exists
@@ -568,17 +565,17 @@ bool setCanvasSize(size_t aWidth, size_t aHeight)
     }
 
     // Create new drawing surface
-    gAppSurface = new PixelBufferRGBA32(width,height);
+    gAppSurface = new PixelBufferRGBA32(aWidth,aHeight);
     
     int alignment = 4;
     int bitsPerPixel = 32;
-    int bytesPerRow = GetAlignedByteCount(width, bitsPerPixel, alignment);
+    int bytesPerRow = GetAlignedByteCount(aWidth, bitsPerPixel, alignment);
     gAppSurfaceInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    gAppSurfaceInfo.bmiHeader.biWidth = width;
-    gAppSurfaceInfo.bmiHeader.biHeight = -height;	// top-down DIB Section
+    gAppSurfaceInfo.bmiHeader.biWidth = aWidth;
+    gAppSurfaceInfo.bmiHeader.biHeight = -aHeight;	// top-down DIB Section
     gAppSurfaceInfo.bmiHeader.biPlanes = 1;
     gAppSurfaceInfo.bmiHeader.biBitCount = 32;
-    gAppSurfaceInfo.bmiHeader.biSizeImage = bytesPerRow * height;
+    gAppSurfaceInfo.bmiHeader.biSizeImage = bytesPerRow * aHeight;
     gAppSurfaceInfo.bmiHeader.biClrImportant = 0;
     gAppSurfaceInfo.bmiHeader.biClrUsed = 0;
     gAppSurfaceInfo.bmiHeader.biCompression = BI_RGB;
@@ -605,7 +602,7 @@ void main()
 {
     setCanvasSize(320, 240);
 
-    gAppWindow = new Window("Application Window", width, height, MsgHandler);
+    gAppWindow = new Window("Application Window", 320, 240, MsgHandler);
 
     run();
 }

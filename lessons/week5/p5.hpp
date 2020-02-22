@@ -12,13 +12,18 @@
     and keyboard events.
 */
 
+#include <stdlib.h>
 #include "apphost.hpp"
 #include "pbm.hpp"
+
 
 void clear();
 
 bool gUseStroke = true;
 bool gUseFill = true;
+
+static size_t width = 0;
+static size_t height = 0;
 
 // Specifying a color using a 32-bit integer
 // 0xAARRGGBB
@@ -38,10 +43,14 @@ public:
 } p5colors;
 
 // Canvas management
-void createCanvas(size_t awidth, size_t aheight)
+void createCanvas(size_t aWidth, size_t aHeight)
 {
-    setCanvasSize(awidth, aheight);
-    gAppWindow->setCanvasSize(awidth, aheight);
+    width = aWidth;
+    height = aHeight;
+    
+    setCanvasSize(aWidth, aHeight);
+
+    gAppWindow->setCanvasSize(aWidth, aHeight);
     gAppWindow->show();
 
     // get current mouse position
@@ -50,9 +59,45 @@ void createCanvas(size_t awidth, size_t aheight)
 }
 
 // Drawing attributes
-void background(PixRGBA pix)
+// general color construction from components
+PixRGBA color(int a, int b, int c, int d)
 {
-    gAppDC->setBackground(pix);
+    PixRGBA pix;
+    pix.red = a;
+    pix.green = b;
+    pix.blue = c;
+    pix.alpha = d;
+
+    return pix;
+}
+
+PixRGBA color(int r, int g, int b)
+{
+    return color(r, g, b, 255);
+}
+
+PixRGBA color(int gray, int alpha)
+{
+    return color(gray, gray, gray, alpha);
+}
+
+PixRGBA color(int gray)
+{
+    return color(gray,gray,gray,255);
+}
+
+
+
+
+
+
+
+void fill(PixRGBA pix, int alpha)
+{
+    gUseFill = true;
+    PixRGBA c = pix;
+    c.alpha = alpha;
+    gAppDC->setFill(c);
 }
 
 void fill(PixRGBA pix)
@@ -64,24 +109,65 @@ void fill(PixRGBA pix)
 void noFill()
 {
     gUseFill = false;
-    gAppDC->setFill(0x00000000);
+    //gAppDC->setFill(0x00000000);
 }
 
+// Setting Stroke
 void stroke(PixRGBA pix)
 {
     gUseStroke = true;
     gAppDC->setStroke(pix);
 }
 
+// Change the alpha of an existing color
+void stroke(PixRGBA pix, int alpha)
+{
+    PixRGBA c = pix;
+    c.alpha = alpha;
+    stroke(c);
+}
+
+// create color with gray and alpha
+void stroke(uint8_t gray, uint8_t alpha=255)
+{
+    PixRGBA c;
+    c.red = gray;
+    c.green = gray;
+    c.blue = gray;
+    c.alpha = alpha;
+    stroke(c);
+}
+
 void noStroke()
 {
     gUseStroke = false;
-    gAppDC->setStroke(0x00000000);
+    //gAppDC->setStroke(0x00000000);
 }
 
+// Clearing the canvas
 void clear()
 {
     gAppDC->clear();
+}
+
+void background(PixRGBA pix)
+{
+    gAppDC->setBackground(pix);
+}
+
+void background(int a, int b, int c, int d)
+{
+    background(color(a, b, c, d));
+}
+
+void background(int gray, int alpha)
+{
+    background(color(gray, alpha));
+}
+
+void background(int gray)
+{
+    background(color(gray));
 }
 
 // Drawing Primitives
@@ -117,6 +203,10 @@ void triangle(int x1, int y1, int x2, int y2, int x3, int y3)
 
 void ellipse(int cx, int cy, int xRadius, int yRadius)
 {
+    if ((cx < 0) || (cy < 0)) {
+        return ;
+    }
+
     if (gUseFill) {
         gAppDC->fillEllipse(cx, cy, xRadius, yRadius);
     }
@@ -127,4 +217,14 @@ void ellipse(int cx, int cy, int xRadius, int yRadius)
 }
 
 
+// Math functions
+double random(double low, double high)
+{
+    double value = (double)rand()/(double)RAND_MAX;
+    return MAP(value, 0,1, low,high);
+}
 
+double random(double high)
+{
+    return random(0, high);
+}

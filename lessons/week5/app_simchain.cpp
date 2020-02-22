@@ -3,20 +3,10 @@
 
 float gRadius = 20;
 float s1, s2;
-float gravity = 4.0;    // 9.0
-float mass = 1.75;       // 2.0
-
-PixRGBA  randomColor()
-{
-    int r = random(30,255);
-    int g = random(30,255);
-    int b = random(30,255);
-    
-    return PixRGBA(r,g,b,126);
-}
-
-
-
+float gravity = 7.0;    // 9.0
+float mass = 1.80;       // 2.0
+float gDamping = 0.7;   // 0.7
+float gStiffness = 0.3; // 0.2
 
 
 struct Spring2D {
@@ -31,7 +21,7 @@ struct Spring2D {
     float damping;
     PixRGBA color;
 
-    Spring2D(int xpos, int ypos, float m, float g, PixRGBA c = randomColor())
+    Spring2D(int xpos, int ypos, float m, float g, PixRGBA c)
     {
         x = xpos;   // The x- and y-coordinates
         y = ypos;
@@ -39,9 +29,9 @@ struct Spring2D {
         vy = 0;
         mass = m;
         gravity = g;
-        radius = radius;
-        stiffness = 0.2;
-        damping = 0.7;
+        radius = gRadius;
+        stiffness = gStiffness;
+        damping = gDamping;
         color = c;
     }
 
@@ -63,7 +53,7 @@ struct Spring2D {
     {
         noStroke();
         fill(color, 126);
-        ellipse(x, y, radius * 2, radius * 2);
+        ellipse(x, y, radius, radius);
         stroke(255);
         line(x, y, nx, ny);
     }
@@ -71,42 +61,58 @@ struct Spring2D {
 };
 
 
-
-
-
-
-
-
-
 Stack springs;
 Spring2D * headSpring = nullptr;
 
+PixRGBA  randomColor()
+{
+    int r = random(30,255);
+    int g = random(30,255);
+    int b = random(30,255);
+    
+    return PixRGBA(r,g,b,126);
+}
+
 void addSpring()
 {
-    Spring2D * aspring = new Spring2D(0.0, width / 2, mass, gravity);
+    Spring2D * aspring = new Spring2D(width/2, height / 2, mass, gravity, randomColor());
     
     if (headSpring == nullptr) {
         headSpring = aspring;
     } else {
-        springs.enqueue(aspring);
+        springs.push(aspring);
     }
 }
 
+// Remove a single spring
 void removeSpring()
 {
-    if #springs > 1 then
-        springs[#springs] = nil;
-    end
+    if (springs.length() > 1) {
+        Spring2D *aspring = (Spring2D *)springs.pop();
+        //delete aspring;
+    }
+}
+
+void clearSprings()
+{
+    Spring2D * spring = (Spring2D *)springs.pop();
+    while (spring != nullptr) {
+        delete spring;
+        spring = (Spring2D *)springs.pop();
+    }
 }
 
 void reset()
 {
-  // Inputs: x, y, mass, gravity
-  springs = {}
-  headSpring = nil;
+    // Inputs: x, y, mass, gravity
+    clearSprings();
+    if (headSpring != nullptr) {
+        delete headSpring;
+        headSpring = nullptr;
+    }
 
-  addSpring();
-  addSpring();
+    addSpring();
+    addSpring();
 }
 
 int T_SP = ' ';
@@ -115,6 +121,8 @@ int VK_DOWN = 40;
 
 void keyReleased(const KeyEvent &event)
 {
+    // Up arrow, add more
+    // Down arrow, remove one
     //print("keyReleased: ", event, keyCode)
     if (keyCode == VK_UP) {
         addSpring();
@@ -123,9 +131,11 @@ void keyReleased(const KeyEvent &event)
     }
 }
 
+
 void keyTyped(const KeyEvent &event)
 {
-    //print("keyTyped: ", event, keyCode)
+    // If the user types a '<sp>' reset
+    // the chain to 1 node
     if (keyCode == T_SP) {
         reset();
     }
@@ -133,36 +143,38 @@ void keyTyped(const KeyEvent &event)
 
 void draw()
 {
-  background(0);
+    background(127);
+    clear();
+
+
+    if (headSpring == nullptr) {
+        return;
+    }
+
+    //printf("Mouse: %d %d\n", mouseX, mouseY);
+
+    headSpring->update(mouseX, mouseY);
+    headSpring->display(mouseX, mouseY);
   
-  if not mouseX then return end
+  
+    // iterate through rest of springs
+    Spring2D * currentSpring = headSpring;
+    StackIterator i = springs.values();
+    Spring2D * spring;
+    while (i.next((void **)&spring)) {
+        spring->update(currentSpring->x, currentSpring->y);
+        spring->display(currentSpring->x, currentSpring->y);
+        currentSpring = spring;
+    }
 
 
-    headSpring:update(mouseX, mouseY);
-    headSpring:display(mouseX, mouseY);
-    
-    -- iterate through rest of springs
-    local currentSpring = headSpring
-    for _, spring in ipairs(springs) do
-        spring:update(currentSpring.x, currentSpring.y);
-        spring:display(currentSpring.x, currentSpring.y);
-        currentSpring = spring
-    end
-
-    stats:draw()
 }
 
 void setup()
 {
     createCanvas(1280, 1024);
     setFrameRate(30);
-    setFill(0x7fffffff);
+    //fill(PixRGBA(0x7fffffff));
 
-  reset();
+    reset();
 }
-
-
-
-
-
-go {width = 1280, height=1024, frameRate=30}
