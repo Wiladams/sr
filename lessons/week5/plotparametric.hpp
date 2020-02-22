@@ -1,6 +1,7 @@
 #pragma once
 
 #include "grtypes.hpp"
+#include "p5.hpp"
 
 // signature for a parametric function
 // A parametric function is one that takes as input a
@@ -15,16 +16,16 @@ typedef float (*PARAMFUNC)(float u);
 // Draw a parametric curve
 void plotparametric(PARAMFUNC func, double xlow, double xhigh, double ylow, double yhigh)
 {
-    float lastx = MAPF(0, 0,1, xlow, xhigh);
-    float lasty = MAPF(func(0), 0,1, ylow, yhigh);
+    float lastx = MAP(0, 0,1, xlow, xhigh);
+    float lasty = MAP(func(0), 0,1, ylow, yhigh);
 
 //printf("lastxy: %f %f\n", lastx, lasty);
 
     REAL u = 0.01;
     while (u <= 1.0) {
         float val = func(u);
-        float x = MAPF(u, 0,1, xlow, xhigh);
-        float y = MAPF(val, 0,1, ylow,yhigh);
+        float x = MAP(u, 0,1, xlow, xhigh);
+        float y = MAP(val, 0,1, ylow,yhigh);
 
         //printf("u,val: %f %f  x,y: %f %f\n", u, val, x, y);
         //printf("pixel: %d %d\n", x, y);
