@@ -100,12 +100,10 @@ class ListIterator
 protected:
     List & fList;
 
-
-
 public:
     ListIterator(List &aList) : fList(aList) {}
 
-    virtual void * next() = 0;
+    virtual bool next(void **value) = 0;
 };
 
 /*
@@ -123,16 +121,15 @@ public:
         first = aList.farLeft;
     }
 
-    void * next()
+    bool next(void **value)
     {
         if (first == nullptr) {
-            return nullptr;
+            return false;
         }
 
-        void * nodeValue = first->value;
+        *value = first->value;
         first = first->right;
-
-        return nodeValue; 
+        return true;
     }
 };
 
@@ -149,5 +146,46 @@ public:
     QueueIterator values() 
     {
         return QueueIterator(fList);
+    }
+};
+
+
+class StackIterator : public ListIterator
+{
+    struct ListNode *first;
+
+public:
+    StackIterator(List &aList)
+        : ListIterator(aList)
+    {
+        first = aList.farRight;
+    }
+
+    bool next(void **value)
+    {
+        if (first == nullptr) {
+            return false;
+        }
+
+        *value = first->value;
+        first = first->left;
+
+        return true;
+    }
+};
+
+class Stack
+{
+private:
+    List fList;
+
+public:
+    bool push(void *value) {fList.pushRight(value); return true;}
+    void * pop() {return fList.popRight();}
+    int length() {return fList.length();}
+    
+    StackIterator values() 
+    {
+        return StackIterator(fList);
     }
 };

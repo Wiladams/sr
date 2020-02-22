@@ -3,7 +3,7 @@
 
 void testQueue()
 {
-        printf("==== testQueue ====\n");
+    printf("==== testQueue ====\n");
 
     Queue q;
     
@@ -37,12 +37,10 @@ void testIterator()
     
     QueueIterator i = q.values();
 
-    void * val = i.next();
-    while (val != nullptr) {
+    void * val = nullptr;
+    while (i.next(&val)) {
         printf("val: %s\n", (char *)val);
-        val = i.next();
     }
-
 }
 
 void main()

@@ -1,4 +1,5 @@
 #include "p5.hpp"
+#include "collections.hpp"
 
 float gRadius = 20;
 float s1, s2;
@@ -61,7 +62,7 @@ struct Spring2D {
     void display(int nx, int ny)
     {
         noStroke();
-        fill(color, 126)
+        fill(color, 126);
         ellipse(x, y, radius * 2, radius * 2);
         stroke(255);
         line(x, y, nx, ny);
@@ -77,22 +78,22 @@ struct Spring2D {
 
 
 
-Sprint2D springs = {};
-Sprint2D * headSpring = nullptr;
+Stack springs;
+Spring2D * headSpring = nullptr;
 
 void addSpring()
 {
-    local aspring = Spring2D(0.0, width / 2, mass, gravity);
+    Spring2D * aspring = new Spring2D(0.0, width / 2, mass, gravity);
     
-    if not headSpring then
-        headSpring = aspring
-    else
-        table.insert(springs, aspring)
-    end
+    if (headSpring == nullptr) {
+        headSpring = aspring;
+    } else {
+        springs.enqueue(aspring);
+    }
 }
 
 void removeSpring()
-{}
+{
     if #springs > 1 then
         springs[#springs] = nil;
     end
