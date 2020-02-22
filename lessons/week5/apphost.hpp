@@ -507,9 +507,6 @@ void noLoop() {
 }
 
 
-
-
-
 // A basic Windows event loop
 void run()
 {
@@ -547,8 +544,6 @@ void run()
     }
 }
 
-
-
 int GetAlignedByteCount(int width, int bitsperpixel, int alignment)
 {
     int bytesperpixel = bitsperpixel / 8;
@@ -558,7 +553,6 @@ int GetAlignedByteCount(int width, int bitsperpixel, int alignment)
 
 bool setCanvasSize(size_t aWidth, size_t aHeight)
 {
-
     if (gAppSurface != nullptr) {
         // Delete old one if it exists
         delete gAppSurface;
@@ -587,11 +581,6 @@ bool setCanvasSize(size_t aWidth, size_t aHeight)
 
     // Create a new one
     gAppDC = new DrawingContext(*gAppSurface);
-
-    // resize the window itself
-    //if (gAppWindow != nullptr) {
-    //    gAppWindow->setCanvasSize(aWidth, aHeight);
-    //}
 
     return true;
 }

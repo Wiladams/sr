@@ -2,13 +2,20 @@
 #include "collections.hpp"
 
 float gRadius = 20;
-float s1, s2;
 float gravity = 7.0;    // 9.0
 float mass = 1.80;       // 2.0
 float gDamping = 0.7;   // 0.7
 float gStiffness = 0.3; // 0.2
 
+/*
+    A Spring2D is the essential data structure
+    that represents the bahavior of a spring.  It is
+    modeled as a single point with a radius,
+    mass, gravity, stiffness, and damping.
 
+    A force is applied to the spring, and its parameters
+    will determine how much it will move in which direction.
+*/
 struct Spring2D {
     int x;
     int y;
