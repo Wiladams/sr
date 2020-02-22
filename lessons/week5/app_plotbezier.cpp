@@ -58,7 +58,7 @@ void draw()
 
     // Draw outline
     stroke(p5colors.black);
-    rectangle(5,5,cwidth, cheight);
+    rect(5,5,cwidth, cheight);
 
     // plot each component of bezier curve
     // there are 4 curves

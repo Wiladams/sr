@@ -89,7 +89,7 @@ static PixelBuffer * gAppSurface = nullptr;
 static DrawingContext * gAppDC = nullptr;
 static UINT_PTR gAppTimerID = 0;
 static bool gLooping = true;
-
+static bool gRunning = true;
 
 static int keyCode = 0;
 static int keyChar = 0;
@@ -493,6 +493,10 @@ LRESULT MsgHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 // Controlling the runtime
+void halt() {
+    PostQuitMessage(0);
+}
+
 void loop() {gLooping = true;}
 void noLoop() {
     // stop calling looping handler

@@ -16,14 +16,19 @@
 #include "apphost.hpp"
 #include "pbm.hpp"
 
-
-void clear();
-
+/*
+Global State
+*/
 bool gUseStroke = true;
 bool gUseFill = true;
 
 static size_t width = 0;
 static size_t height = 0;
+
+
+void clear();
+
+
 
 // Specifying a color using a 32-bit integer
 // 0xAARRGGBB
@@ -183,7 +188,7 @@ void line(int x1, int y1, int x2, int y2)
     gAppDC->strokeLine(x1, y1, x2, y2);
 }
 
-void rectangle(int x, int y, int width, int height)
+void rect(int x, int y, int width, int height)
 {
     if (gUseFill) {
         gAppDC->fillRectangle(x, y, width, height);
@@ -218,13 +223,43 @@ void ellipse(int cx, int cy, int xRadius, int yRadius)
 
 
 // Math functions
+static const double QUARTER_PI = 0.7853982;
+static const double HALF_PI = 1.57079632679489661923;
+static const double PI = 3.14159265358979323846;
+static const double TWO_PI = 6.28318530717958647693;
+static const double TAU = 6.28318530717958647693;
+
+// are angles specified in degrees
+// or in radians
+enum {
+    DEGREES,
+    RADIANS
+};
+
+static int gAngleMode = DEGREES;
+void angleMode(int newMode)
+{
+    gAngleMode = newMode;
+}
+
+double degrees(double x) { return x * 57.29577951308232; }
+double radians(double x) { return x * 0.017453292519943295; }
+
+double random()
+{
+    return (double)rand()/(double)RAND_MAX;
+}
+
 double random(double low, double high)
 {
-    double value = (double)rand()/(double)RAND_MAX;
-    return MAP(value, 0,1, low,high);
+    return MAP(random(), 0,1, low,high);
 }
 
 double random(double high)
 {
     return random(0, high);
 }
+
+
+
+

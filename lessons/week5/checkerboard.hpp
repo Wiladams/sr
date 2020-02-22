@@ -51,10 +51,10 @@ struct Checkerboard
                 // alternate colors per column
                 if (c % 2 == 0) {
 		            fill(c1);
-                    rectangle(c*tileWidth, r*tileHeight, tileWidth, tileHeight);
+                    rect(c*tileWidth, r*tileHeight, tileWidth, tileHeight);
                 } else {
                     fill(c2);
-                    rectangle(c*tileWidth, r*tileHeight, tileWidth, tileHeight);
+                    rect(c*tileWidth, r*tileHeight, tileWidth, tileHeight);
                 }
             }
         }
