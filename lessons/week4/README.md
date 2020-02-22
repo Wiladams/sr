@@ -6,5 +6,5 @@ this will require the usage of at least the user32 library
 To compile
 ----------
 
-cl test_w32.cpp user32.lib
+cl app_ellipse.cpp
 
