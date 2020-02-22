@@ -151,8 +151,6 @@ void keyTyped(const KeyEvent &event)
 void draw()
 {
     background(127);
-    clear();
-
 
     if (headSpring == nullptr) {
         return;

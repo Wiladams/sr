@@ -354,10 +354,25 @@ WIN_EXPORT void mouseWheel(const MouseEvent &e);
 
 void setFrameRate(int newRate)
 {
+    gFPS = newRate;
+    //printf("setFrameRate: %d\n", newRate);
     UINT_PTR nIDEvent = 5;
     BOOL bResult = KillTimer(gAppWindow->getHandle(), gAppTimerID);
+    //printf("KillTimer: %d %lld\n", bResult, gAppTimerID);
     UINT uElapse = 1000 / gFPS;
     gAppTimerID = SetTimer(gAppWindow->getHandle(), nIDEvent, uElapse, nullptr);
+    //printf("SetTimer: %lld\n", gAppTimerID);
+
+}
+
+// Controlling drawing
+void forceRedraw()
+{
+    if (gDrawHandler != nullptr) {
+        gDrawHandler();
+    }
+
+    InvalidateRect(gAppWindow->getHandle(), NULL, 1);
 }
 
 // Setup the routines that will handle
@@ -467,16 +482,7 @@ LRESULT MsgHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         // return non-zero indicating we erase the background
         res = 1;
     } else if (msg == WM_TIMER) {
-        // BUGBUG
-        // Drawing should really happen on a TIMER message
-        // not every time through the loop
-        if (gDrawHandler != nullptr) {
-            gDrawHandler();
-
-            // force the window to draw as soon as possible
-            //printf("forceDraw\n");
-            InvalidateRect(gAppWindow->getHandle(), NULL, 1);
-        }
+        forceRedraw();
     } else if (msg == WM_PAINT) {
         if (gPaintHandler != nullptr) {
             gPaintHandler(hWnd, msg, wParam, lParam);
@@ -491,6 +497,8 @@ LRESULT MsgHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     return res;
 }
+
+
 
 // Controlling the runtime
 void halt() {

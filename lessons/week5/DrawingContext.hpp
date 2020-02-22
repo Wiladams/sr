@@ -84,8 +84,16 @@ public:
         return true;
     }
 
-    // clear the canvas to the background color
+    // Clear the canvas to transparent
     bool clear()
+    {
+        PixRGBA pix = {0x00000000};
+        pb.setAllPixels(pix);
+        return true;
+    }
+
+    // clear the canvas to the background color
+    bool clearToBackground()
     {
         pb.setAllPixels(bgPix);
         return true;

@@ -11,7 +11,7 @@ void mouseMoved(const MouseEvent &e)
 
 void draw()
 {
-    clear();
+    background(127);
 
     ellipse(mouseX, mouseY, radius, radius);
 }

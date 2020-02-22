@@ -28,7 +28,13 @@ static size_t height = 0;
 
 void clear();
 
-
+// RectMode, EllipseMode
+enum {
+    CORNER,
+    CORNERS,
+    CENTER,
+    RADIUS
+};
 
 // Specifying a color using a 32-bit integer
 // 0xAARRGGBB
@@ -61,6 +67,18 @@ void createCanvas(size_t aWidth, size_t aHeight)
     // get current mouse position
     
     clear();
+}
+
+void redraw(int nTimes=1)
+{
+    for (int i=1;i<=nTimes;i++) {
+        forceRedraw();
+    }
+}
+
+void frameRate(int newRate)
+{
+    setFrameRate(newRate);
 }
 
 // Drawing attributes
@@ -158,6 +176,7 @@ void clear()
 void background(PixRGBA pix)
 {
     gAppDC->setBackground(pix);
+    gAppDC->clearToBackground();
 }
 
 void background(int a, int b, int c, int d)
@@ -221,6 +240,10 @@ void ellipse(int cx, int cy, int xRadius, int yRadius)
     }
 }
 
+void circle(int cx, int cy, int diameter)
+{
+    ellipse(cx, cy, diameter/2, diameter/2);
+}
 
 // Math functions
 static const double QUARTER_PI = 0.7853982;

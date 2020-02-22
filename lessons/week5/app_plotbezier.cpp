@@ -50,7 +50,7 @@ void draw()
 {
     //printf("DRAW\n");
 
-    clear();
+    background(p5colors.white);
 
     int cwidth = width-10;
     int cheight = height-20;
