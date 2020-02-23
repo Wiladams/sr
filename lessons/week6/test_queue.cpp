@@ -35,13 +35,12 @@ void testIterator()
     q.enqueue("it");
 
     
-    QueueIterator * qi = new QueueIterator(q);
+    QueueIterator qi(q);
     void * val = nullptr;
 
-    while (qi->next(&val)) {
+    while (qi.next(&val)) {
         printf("val: %s\n", (char *)val);
     }
-    delete qi;
 }
 
 void main()

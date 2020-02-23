@@ -26,21 +26,21 @@ void testIterator()
 {
     printf("==== test Stack Iterator ====\n");
 
-    Stack q;
+    Stack s;
     
-    q.push("this");
-    q.push("is");
-    q.push("how");
-    q.push("we");
-    q.push("do");
-    q.push("it");
+    s.push("this");
+    s.push("is");
+    s.push("how");
+    s.push("we");
+    s.push("do");
+    s.push("it");
 
     
-    StackIterator *i = new StackIterator(q);
+    StackIterator si(s);
 
 
     void * val = nullptr;
-    while (i->next(&val)) {
+    while (si.next(&val)) {
         printf("stack val: %s\n", (char *)val);
     }
 }
