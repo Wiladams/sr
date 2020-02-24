@@ -1,5 +1,6 @@
 #include "p5.hpp"
 #include "collections.hpp"
+#include "checkerboard.hpp"
 
 static const int edgeMargin = 10;
 static const int toolWidth = 64;
@@ -19,12 +20,25 @@ PixRGBA  randomColor()
 
 
 class ToolSelector {
+    int originX;
+    int originY;
+
 public:
+    ToolSelector(int x, int y)
+        :originX(x), originY(y)
+    {
+
+    }
+
     void draw()
     {
         stroke(colors.black);
         fill(colors.white);
-        rect(edgeMargin, edgeMargin, toolWidth,toolHeight*6);
+        rect(originX, originY, toolWidth,toolHeight*6);
+
+        for (int i=1; i<6; i++){
+            line(originX, originY+i*toolHeight, originX+toolWidth, originY+i*toolHeight);
+        }
     }    
 };
 
@@ -32,10 +46,12 @@ class ColorSelector {
     int originX;
     int originY;
     Queue colorQ;
+    Checkerboard cb;
 
 public:
     ColorSelector(int x, int y)
-        :originX(x), originY(y)
+        :originX(x), originY(y),
+        cb(x, y, 320, 64, 8*10, 16)
     {
         // setup selection of colors
         // twenty colors including transparent
@@ -54,29 +70,34 @@ public:
     
     void draw()
     {
+
+
+        cb.draw();
+        
         stroke(colors.black);
-        fill(colors.white);
+        noFill();
         rect(originX, originY, 320, 64);
 
         // draw color rectangles
+        stroke(colors.black);
         int row = 0;
-        int column = 0;
+        int column = 1;
         QueueIterator qi(colorQ);
         PixRGBA * aColor;
         while (qi.next((void **)&aColor))
         {
-            if (column % 11 == 0)
-            {
-                column = 0;
-                row = row + 1;
-            }
-            printf("pos: %d %d\n", row, column);
+            //printf("pos: %d %d\n", row, column);
         
             fill(*aColor);
-            rect(originX + (column)*32,originY+(row*32),
+            rect(originX + (column-1)*32,originY+(row*32),
                 32,32); 
 
-            column = column+1;  
+            column = column+1;
+            if (column % 11 == 0)
+            {
+                column = 1;
+                row = row + 1;
+            }
         }
     }
 
@@ -89,7 +110,7 @@ public:
 
 
 
-ToolSelector ts;
+ToolSelector ts(edgeMargin, edgeMargin);
 ColorSelector cs(edgeMargin + toolWidth + interMargin, canvasHeight-64-10);
 
 void draw()

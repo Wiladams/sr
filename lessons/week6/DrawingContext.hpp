@@ -252,6 +252,11 @@ public:
 
     bool fillRectangle(GRCOORD x, GRCOORD y, GRSIZE width, GRSIZE height)
     {
+        // If no alpha, then don't fill in
+        if (fillPix.alpha == 0){
+            return true;
+        }
+
         // Fill up a single row of pixels
         for (GRSIZE idx=0;idx < width;idx++)
         {
