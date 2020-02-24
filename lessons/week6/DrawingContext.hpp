@@ -214,7 +214,7 @@ public:
     {
         // draw the lines
         for (int i=1; i<nPts; i++) {
-            line(pts[i-1].x, pts[i-1].y, pts[i].x, pts[i].y);
+            strokeLine(pts[i-1].x, pts[i-1].y, pts[i].x, pts[i].y);
         }
 
         return true;
@@ -418,7 +418,7 @@ public:
         if (nPts >= 3) {
             // We have enough points to close the 
             // polygon, so draw from last point to first point
-            line(pts[nPts-1].x, pts[nPts-1].y, pts[0].x, pts[0].y);
+            strokeLine(pts[nPts-1].x, pts[nPts-1].y, pts[0].x, pts[0].y);
         }
 
         return true;
