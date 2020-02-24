@@ -18,6 +18,9 @@ inline double MAP(double x, double olow, double ohigh, double rlow, double rhigh
 // this will only work in cases where 0 represents false
 // and 1 represents true
 inline int sgn(double val) { return ((0 < val) - (val < 0)); }
+
+inline double sq(double x) {return x*x;}
+
 #define swap16(a, b) { int16_t t = a; a = b; b = t; }
 
 // Math functions
@@ -33,6 +36,11 @@ double radians(double x) { return x * 0.017453292519943295; }
 double constrain(double x, double low, double high)
 {
     return MIN(MAX(x, low), high);
+}
+
+double dist(double x1, double y1, double x2, double y2)
+{
+    return sqrt(sq(x2-x1) + sq(y2-y1));
 }
 
 double lerp(double low, double high, double x)
@@ -59,3 +67,5 @@ double random(double high)
 {
     return random(0, high);
 }
+
+

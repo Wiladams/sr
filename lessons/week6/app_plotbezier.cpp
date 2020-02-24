@@ -32,16 +32,16 @@ void draw()
     // plot each component of bezier curve
     // there are 4 curves
     stroke(colors.blue);
-    plotcurve(BEZ03, cmargin, cwidth, cheight, cmargin);
+    plotcurve(BEZ03, 100, cmargin, cwidth, cheight, cmargin);
 
     stroke(colors.green);
-    plotcurve(BEZ13, cmargin, cwidth, cheight, cmargin);
+    plotcurve(BEZ13, 100, cmargin, cwidth, cheight, cmargin);
 
     stroke(colors.red);
-    plotcurve(BEZ23, cmargin, cwidth, cheight, cmargin);
+    plotcurve(BEZ23, 100, cmargin, cwidth, cheight, cmargin);
 
     stroke(colors.cyan);
-    plotcurve(BEZ33, cmargin, cwidth, cheight, cmargin);
+    plotcurve(BEZ33, 100, cmargin, cwidth, cheight, cmargin);
 
     noLoop();
 }

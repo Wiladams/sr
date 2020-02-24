@@ -112,6 +112,8 @@ public:
 
     bool strokeHorizontalLine(GRCOORD x, GRCOORD y, GRSIZE width)
     {
+        // BUGBUG - should sanity check line fits
+        // within bounds
         GRCOORD idx = x;
         while (idx < x+width)
         {
@@ -124,6 +126,8 @@ public:
 
     bool strokeVerticalLine(GRCOORD x, GRCOORD y, GRSIZE length)
     {
+        // BUGBUG - should sanity check line fits
+        // within bounds
         GRCOORD idx = y;
         while (idx < y+length) {
             this->pb.setPixel(x, idx, this->strokePix);
@@ -141,9 +145,22 @@ public:
 
     Note: an easy optimization would be to use the specialized
     horizontal and vertical line drawing routines when necessary
+
+    BUGBUG - should sanity check line fits
+    within bounds
     */
     bool strokeLine(GRCOORD x1, GRCOORD y1, GRCOORD x2, GRCOORD y2)
     {
+        /*
+        // BUGBUG
+        // Specialize for vertical and horizontal lines
+        if (x1 == x2) {
+            // need to figure out the proper ordering
+            // of y2 and y1
+            strokeVerticalLine(x1, y1, y2-y1);
+        }
+        */
+
 	    int sdx, sdy, dxabs, dyabs;
 	    unsigned int x, y, px, py;
 
@@ -193,8 +210,31 @@ public:
 
 
     // drawPolyLine(int nPts, Point2D *pts)
-    // drawCubicBezier()
+    bool strokePolyLine(int nPts, Point2D *pts)
+    {
+        // draw the lines
+        for (int i=1; i<nPts; i++) {
+            line(pts[i-1].x, pts[i-1].y, pts[i].x, pts[i].y);
+        }
 
+        return true;
+    }
+
+    // Cubic bezier basis functions
+    // the 'u' value ranges from 0.0 to 1.0
+    double BEZ03(double u) {return powf(1-u, 3); }            // (1-u)^3
+    double BEZ13(double u) {return 3 * u*((1-u) * (1-u));}    // 3u(1-u)^2
+    double BEZ23(double u) {return 3 * u*u * (1-u);}          // 3u^2(1-u)
+    double BEZ33(double u) {return u * u*u;}                  // u^3
+
+    bool strokeCubicBezier(
+        GRCOORD x1, GRCOORD y1, 
+        GRCOORD x2, GRCOORD y2, 
+        GRCOORD x3, GRCOORD y3, 
+        GRCOORD x4, GRCOORD y4)
+    {
+
+    }
 
 
     bool strokeRectangle(GRCOORD x, GRCOORD y, GRSIZE width, GRSIZE height)
@@ -370,10 +410,30 @@ public:
         return true;
     }
     
-    // drawPolygon()
+
     // strokePolygon()
+    bool strokePolygon(int nPts, Point2D *pts)
+    {
+        strokePolyLine(nPts, pts);
+        if (nPts >= 3) {
+            // We have enough points to close the 
+            // polygon, so draw from last point to first point
+            line(pts[nPts-1].x, pts[nPts-1].y, pts[0].x, pts[0].y);
+        }
+
+        return true;
+    }
     // fillPolygon()
+    bool fillPolygon(int nPts, Point2D *pts)
+    {
+        return false;
+    }
 
-
+    // drawPolygon()
+    bool drawPolygon(int nPts, Point2D *pts)
+    {
+        fillPolygon(nPts, pts);
+        strokePolygon(nPts, pts);
+    }
 
 };
