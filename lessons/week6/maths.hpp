@@ -1,9 +1,17 @@
 #pragma once
 
+/*
+    References
+    https://github.com/HandmadeMath/Handmade-Math/blob/master/HandmadeMath.h
+*/
+
 #include <math.h>
 
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
+
+// doesn't deal with -0 vs +0
+#define ABS(a) ((a) > 0 ? (a) : -(a))
 
 inline double MAP(double x, double olow, double ohigh, double rlow, double rhigh) 
 {
@@ -23,13 +31,16 @@ inline double sq(double x) {return x*x;}
 
 #define swap16(a, b) { int16_t t = a; a = b; b = t; }
 
-// Math functions
+// Math constants
+static const float  PI32 = 3.14159265359f;
+
 static const double QUARTER_PI = 0.7853982;
 static const double HALF_PI = 1.57079632679489661923;
 static const double PI = 3.14159265358979323846;
 static const double TWO_PI = 6.28318530717958647693;
 static const double TAU = 6.28318530717958647693;
 
+// Math functions
 double degrees(double x) { return x * 57.29577951308232; }
 double radians(double x) { return x * 0.017453292519943295; }
 
@@ -68,4 +79,32 @@ double random(double high)
     return random(0, high);
 }
 
+/*
+    Some linear algebra stuff
+*/
+// A 2D vector type to be used to store stuff
+// and do transformations
+typedef union vec2 {
+    struct { double x, y;};
+    struct { double width, height;};
+    struct { double u, v;};
 
+    double Elements[2];
+
+    vec2(double a, double b) :x(a),y(b){}
+
+    // convenient operator overloading
+    // using indexing
+    inline double &operator[](const int &idx) { return Elements[idx];}
+
+    // Arithmetic Altering self
+    vec2 operator+(const vec2 &b) const {return vec2(x+b.x,y+b.y);}
+    vec2 operator+(double num) const {return vec2(x+num, y+num);}
+    vec2 operator-(const vec2 &b) const {return vec2(x-b.x,y-b.y);}
+    vec2 operator-(double num) const {return vec2(x-num, y-num);}
+
+    // Aritmetic Assignment operators
+    vec2& operator += (const vec2 &b) { x = x + b.x; y=y+b.y; return *this;}
+    vec2& operator -= (const vec2 &b) { x = x - b.x; y=y-b.y; return *this;}
+
+} vec2;

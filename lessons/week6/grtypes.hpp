@@ -1,21 +1,10 @@
 #pragma once
 
-#include <stdint.h>
-
-#if BUILD_AS_DLL
-  #define GPROC_API		__declspec(dllexport)
-#else
-//  #define GPROC_API		__declspec(dllimport)
-  #define GPROC_API
-#endif
-
-//#define GPROC_EXPORT		__declspec(dllexport)
-#define GPROC_EXPORT
-
+#include "appconfig.hpp"
 #include "maths.hpp"
 
 
-
+/*
 struct PixRGBA {
     union {
         uint32_t intValue;
@@ -30,6 +19,25 @@ struct PixRGBA {
     PixRGBA(uint32_t val) : intValue(val){}
     PixRGBA(int r, int g, int b, int a):red(r), green(g), blue(b), alpha(a) {}
 } ;
+*/
+
+typedef union PixRGBA {
+
+    uint32_t intValue;
+    uint8_t data[4];
+    struct {
+        uint8_t blue, green, red, alpha;
+    };
+
+
+    // default constructor, transparent
+    PixRGBA():intValue(0){}
+
+    // Easy constructor
+    PixRGBA(uint32_t val) : intValue(val){}
+    PixRGBA(int r, int g, int b, int a):red(r), green(g), blue(b), alpha(a) {}
+} PixRGBA;
+
 
 // Some well known types
 typedef float	float32;
