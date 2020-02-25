@@ -1,10 +1,10 @@
 #include "p5.hpp"
 #include "collections.hpp"
 #include "checkerboard.hpp"
+#include "ToolSelector.hpp"
 
 static const int edgeMargin = 10;
-static const int toolWidth = 64;
-static const int toolHeight = 64;
+
 static const int interMargin = 4;
 static const int canvasWidth = 1024;
 static const int canvasHeight =768;
@@ -19,28 +19,7 @@ PixRGBA  randomColor()
 }
 
 
-class ToolSelector {
-    int originX;
-    int originY;
 
-public:
-    ToolSelector(int x, int y)
-        :originX(x), originY(y)
-    {
-
-    }
-
-    void draw()
-    {
-        stroke(colors.black);
-        fill(colors.white);
-        rect(originX, originY, toolWidth,toolHeight*6);
-
-        for (int i=1; i<6; i++){
-            line(originX, originY+i*toolHeight, originX+toolWidth, originY+i*toolHeight);
-        }
-    }    
-};
 
 class ColorSelector {
     int originX;
@@ -59,7 +38,7 @@ public:
         colorQ.enqueue(new PixRGBA(0xff000000));
         colorQ.enqueue(new PixRGBA(0xffffffff));
 
-        for (int i=1; i<18;i++) {
+        for (int i=1; i<26;i++) {
             int r = random(30,255);
             int g = random(30,255);
             int b = random(30,255);
@@ -93,7 +72,7 @@ public:
                 32,32); 
 
             column = column+1;
-            if (column % 11 == 0)
+            if (column % 15 == 0)
             {
                 column = 1;
                 row = row + 1;
@@ -123,5 +102,5 @@ void draw()
 
 void setup()
 {
-    createCanvas(1024, 768);
+    createCanvas(canvasWidth, canvasHeight);
 }

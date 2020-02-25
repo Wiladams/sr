@@ -43,7 +43,7 @@ public:
     // Set all pixels within the pixel buffer to the specified value
     virtual bool setAllPixels(const PixRGBA pix) = 0;
 
-    virtual bool blit(PixelBuffer &src, 
+    virtual bool blit(const PixelBuffer &src, 
         int srcX, int srcY, int srcWidth, int srcHeight, 
         int destX, int destY, int destWidth, int destHeight)
     {

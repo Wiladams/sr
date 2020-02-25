@@ -87,7 +87,7 @@ public:
         return true;
     }
 
-    // Clear the canvas to transparent
+    // Clear the canvas to all transparent pixels
     bool clear()
     {
         PixRGBA pix = {0x00000000};
@@ -95,7 +95,7 @@ public:
         return true;
     }
 
-    // clear the canvas to the background color
+    // clear the canvas to the background pixel
     bool clearToBackground()
     {
         pb.setAllPixels(bgPix);
@@ -104,6 +104,12 @@ public:
 
     // Uses fill color
     // Should be able to apply a drawing operator
+    bool setPixel(GRCOORD x, GRCOORD y, PixRGBA c)
+    {
+        pb.setPixel(x, y, c);
+        return true;
+    }
+
     bool fillPixel(GRCOORD x, GRCOORD y)
     {
         pb.setPixel(x, y, fillPix);
@@ -441,4 +447,14 @@ public:
         strokePolygon(nPts, pts);
     }
 
+    bool copyImage(int x, int y, const PixelBuffer &img)
+    {
+        int destX = x;
+        int destY = y;
+        int destWidth = img.getWidth();
+        int destHeight = img.getHeight();
+        pb.blit(img, 0, 0, img.getHeight(),img.getWidth(), destX, destY, destWidth, destHeight);
+
+        return false;
+    }
 };

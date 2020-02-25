@@ -17,7 +17,7 @@
 #include "apphost.hpp"
 #include "grtypes.hpp"
 #include "maths.hpp"
-
+#include "Image.hpp"
 
 // RectMode, EllipseMode
 enum {
@@ -98,22 +98,20 @@ PixRGBA color(int gray)
 
 
 
-
-
-
-
-void fill(PixRGBA pix, int alpha)
-{
-    gUseFill = true;
-    PixRGBA c = pix;
-    c.alpha = alpha;
-    gAppDC->setFill(c);
-}
-
 void fill(PixRGBA pix)
 {
     gUseFill = true;
     gAppDC->setFill(pix);
+}
+
+void fill(uint8_t gray)
+{
+    PixRGBA c;
+    c.red = gray;
+    c.green = gray;
+    c.blue = gray;
+    c.alpha = 255;
+    fill(c);
 }
 
 void noFill()
@@ -181,9 +179,9 @@ void background(int gray)
 }
 
 // Drawing Primitives
-void pixel(int x1, int y1)
+void set(int x1, int y1, PixRGBA c)
 {
-    gAppDC->fillPixel(x1, y1);
+    gAppDC->setPixel(x1, y1, c);
 }
 
 void line(int x1, int y1, int x2, int y2)
@@ -231,6 +229,10 @@ void circle(int cx, int cy, int diameter)
     ellipse(cx, cy, diameter/2, diameter/2);
 }
 
+void image(const Image &img, int x, int y)
+{
+    gAppDC->copyImage(x, y, img);
+}
 
 
 
@@ -246,6 +248,12 @@ void angleMode(int newMode)
 }
 
 
+// Image management
+Image * createImage(size_t width, size_t height)
+{
+    Image *img = new Image(width, height);
+    return img;
+}
 
 // Canvas management
 void createCanvas(size_t aWidth, size_t aHeight)
