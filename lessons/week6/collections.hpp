@@ -1,6 +1,8 @@
-#include <stdio.h>
+#pragma once
 
-typedef struct ListNode ListNode;
+//#include <stdio.h>
+
+//typedef struct ListNode ListNode;
 
 struct ListNode {
     void * value;
@@ -10,8 +12,8 @@ struct ListNode {
 } ;
 
 struct List {
-    struct ListNode * farLeft;
-    struct ListNode * farRight;
+    ListNode * farLeft;
+    ListNode * farRight;
 
     List() : farLeft(nullptr), farRight(nullptr){}
 

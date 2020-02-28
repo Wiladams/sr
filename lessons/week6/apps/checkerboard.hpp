@@ -1,3 +1,5 @@
+#pragma once
+
 /*
     Draw a checkerboard pattern, assuming the p5 environment
 */

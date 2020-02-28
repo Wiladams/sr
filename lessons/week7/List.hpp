@@ -14,24 +14,19 @@ struct ListNode {
 
 template <typename T>
 struct List {
+    size_t count;
     ListNode<T> * farLeft;
     ListNode<T> * farRight;
 
-    List() : farLeft(nullptr), farRight(nullptr){}
+    List() 
+        : count(0), farLeft(nullptr), farRight(nullptr){}
 
     int length() {
-        if (farLeft == nullptr) {
-            return 0;
-        }
+        return count;
+    }
 
-        int counter = 1;
-        struct ListNode<T> *cursor = farLeft;
-        while (cursor->right != nullptr) {
-            counter = counter + 1;
-            cursor = cursor->right;
-        }
-
-        return counter;
+    bool isEmpty() {
+        return count <= 0;
     }
 
     void pushRight(T value) {
@@ -47,6 +42,7 @@ struct List {
             farLeft = newNode;
         }
 
+        count = count + 1;
     }
 
     T popRight()
@@ -68,16 +64,17 @@ struct List {
         if (farLeft == valueNode) {
             farLeft = nullptr;
         }
-        
+        count = count - 1;
+
         // Make sure we don't have a memory leak
         delete valueNode;
 
         return retValue;
     }
 
-    T peekRight() {
+    T peekRight() const {
         if (farRight == nullptr) {
-            return T();
+            return T(NULL);
         }
 
         return farRight.value;
@@ -102,13 +99,15 @@ struct List {
             farRight = nullptr;
         }
         
+        count = count - 1;
+
         // Make sure we don't have a memory leak
         delete valueNode;
 
         return retValue;
     }
 
-    T peekLeft()
+    T peekLeft const()
     {
         if (farLeft == nullptr) {
             return T();
