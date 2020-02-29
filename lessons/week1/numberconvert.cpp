@@ -34,6 +34,7 @@ void ConvertToBase( const unsigned long decimal,
   {
     std::cout << symbols[remainder[place - index]];
   }
+  std::cout << '\n';
 }
 
 void main()
