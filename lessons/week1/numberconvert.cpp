@@ -1,6 +1,7 @@
 // Reference
 // http://codeofthedamned.com/index.php/number-base-conversion
-
+// Compile: cl /EHsc numberconvert.cpp
+//
 
 #include <iostream>
 
