@@ -26,9 +26,10 @@ struct AFunction
     }
 };
 
-void each(AFunction aFunc, IIterable &aIterator)
+
+void each(AFunction aFunc, struct IIterable &aIterator)
 {
-    while (!aIterator.empty())
+    while (!aIterator.isEmpty())
         {
             // perform aFunc on each item from iterator
         }
