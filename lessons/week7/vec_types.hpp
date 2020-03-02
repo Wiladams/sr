@@ -45,8 +45,8 @@ typedef union vec2 {
 
 /*
     With vec3, we have a data structure, similar to what we 
-    have for vec2, but instead of having the operators inline with 
-    the structure, we have them as external functions.
+    have for vec2, but instead of implementing them as structure
+    methods, we implement them as external functions.
 
     This will make it such that the compiler does not need to 
     maintain a 'this' pointer with each data structure.
@@ -75,8 +75,9 @@ typedef union vec3_t {
 
 // Arithmetic Altering self
 vec3 operator+(const vec3 &v, const vec3 &b) {return {v.x+b.x, v.y+b.y, v.z+b.z};}
-vec3 operator+(const vec3 &v, double num) {return {v.x+num, v.y+num, v.z+num};}
 vec3 operator-(const vec3 &v, const vec3 &b) {return {v.x-b.x,v.y-b.y, v.z-b.z};}
+
+vec3 operator+(const vec3 &v, double num) {return {v.x+num, v.y+num, v.z+num};}
 vec3 operator-(const vec3 &v, double num) {return {v.x-num, v.y-num, v.z-num};}
 vec3 operator*(const vec3 &v, double num) {return {v.x*num, v.y*num, v.z*num};}
 vec3 operator/(const vec3 &v, double num) {return {v.x/num, v.y/num, v.z/num};}
