@@ -9,13 +9,11 @@
 template <typename T>
 class Queue
 {
-public:
     List<T> fList;
 
+public:
     bool enqueue(T value) {fList.pushRight(value); return true;}
     T dequeue() {return fList.popLeft();}
     T peek() {return fList.peekLeft();}
     int length() {return fList.length();}
-
-    
 };

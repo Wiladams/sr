@@ -21,11 +21,11 @@ struct List {
     List() 
         : count(0), farLeft(nullptr), farRight(nullptr){}
 
-    int length() {
+    int length() const {
         return count;
     }
 
-    bool isEmpty() {
+    bool isEmpty() const {
         return count <= 0;
     }
 
@@ -72,13 +72,7 @@ struct List {
         return retValue;
     }
 
-    T peekRight() const {
-        if (farRight == nullptr) {
-            return T(NULL);
-        }
 
-        return farRight.value;
-    }
 
     T popLeft()
     {
@@ -107,12 +101,63 @@ struct List {
         return retValue;
     }
 
-    T peekLeft const()
+    T peekRight() const {
+        if (farRight == nullptr) {
+            // BUGBUG - maybe throw exception
+            return T(NULL);
+        }
+
+        return farRight->value;
+    }
+
+    T peekLeft() const
     {
         if (farLeft == nullptr) {
+            // BUGBUG - maybe throw exception
             return T();
         }
 
-        return farLeft.value;
+        return farLeft->value;
+    }
+
+    T nthFromLeft(const int n) const
+    {
+        int count = 0;
+        ListNode<T> sentinel = farLeft;
+        if (sentinel == nullptr) {
+            return T();
+        }
+
+        while (count < n) {
+            sentinel = sentinel->right;
+            if (sentinel == nullptr) {
+                return T();
+            }
+            count = count + 1;
+        }
+        return sentinel->value;
+    }
+
+    T nthFromRight(const int n) const
+    {
+        int count = n;
+        ListNode<T> * sentinel = farRight;
+        // If the list is empty
+        // return nothing
+        // BUGBUG - should throw (index out of range) exception
+        if (sentinel == nullptr) {
+            return T();
+        }
+
+        while (count > 0) {
+            sentinel = sentinel->left;
+            // BUGBUG - should throw out of range exception
+            if (sentinel == nullptr) {
+                return T();
+            }
+            count = count - 1;
+        }
+
+        return sentinel->value;
     }
 };
