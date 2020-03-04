@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdio.h>
 
 #include "PixelBuffer.hpp"
 
@@ -38,7 +39,7 @@ public:
     }
 
     // Set the value of a single pixel
-    bool setPixel(GRCOORD x, GRCOORD y, const PixRGBA pix)
+    bool setPixel(GRCOORD x, GRCOORD y, const PixRGBA &pix)
     {
         // BUGBUG - we should quick reject if alpha == 0
         if (x>= getWidth() || y >= getHeight()  || (pix.alpha == 0)) 
@@ -56,6 +57,8 @@ public:
     // of the FrameBuffer
     PixRGBA getPixel(GRCOORD x, GRCOORD y) const
     {
+        //printf("getPixel: %d %d, width: %d height: %d\n", x, y, getWidth(), getHeight());
+
         size_t offset = y * getWidth() + x;
         return this->data[offset];
     }

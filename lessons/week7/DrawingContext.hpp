@@ -2,6 +2,7 @@
 
 #include "grtypes.hpp"
 #include "PixelBuffer.hpp"
+#include "PixelOps.hpp"
 
 #include <math.h>
 
@@ -9,17 +10,17 @@
 /*
     These sit here so they are not class members
 */
-typedef void(* EllipseHandler)(PixelBuffer &pb, GRCOORD cx, GRCOORD cy, GRCOORD x, GRCOORD y, const PixRGBA color);
+typedef void(* EllipseHandler)(PixelBuffer &pb, GRCOORD cx, GRCOORD cy, GRCOORD x, GRCOORD y, const PixRGBA color, const PixelTransferOp &tOp);
 
-void Plot4EllipsePoints(PixelBuffer &pb, GRCOORD cx, GRCOORD cy, GRCOORD x, GRCOORD y, const PixRGBA color)
+void Plot4EllipsePoints(PixelBuffer &pb, GRCOORD cx, GRCOORD cy, GRCOORD x, GRCOORD y, const PixRGBA color, const PixelTransferOp &tOp)
 {
-    pb.setPixel(cx + x, cy + y, color);
-    pb.setPixel(cx - x, cy + y, color);
-    pb.setPixel(cx - x, cy - y, color);
-    pb.setPixel(cx + x, cy - y, color);
+    pb.transferPixel(cx + x, cy + y, color, tOp);
+    pb.transferPixel(cx - x, cy + y, color, tOp);
+    pb.transferPixel(cx - x, cy - y, color, tOp);
+    pb.transferPixel(cx + x, cy - y, color, tOp);
 }
 
-void fill2EllipseLines(PixelBuffer &pb, GRCOORD cx, GRCOORD cy, GRCOORD x, GRCOORD y, const PixRGBA color)
+void fill2EllipseLines(PixelBuffer &pb, GRCOORD cx, GRCOORD cy, GRCOORD x, GRCOORD y, const PixRGBA color, const PixelTransferOp &tOp)
 {
 	int x1 = cx - x;
 	int y1 = cy+y;
@@ -37,27 +38,13 @@ void fill2EllipseLines(PixelBuffer &pb, GRCOORD cx, GRCOORD cy, GRCOORD x, GRCOO
 	//}
 }
 
-class PixelTransferOp
-{
-public:
-    virtual PixRGBA operator()(GRCOORD x, GRCOORD y, const PixRGBA &src, const PixRGBA &dst) const = 0;
-};
 
-class PixelSRCCOPY : public PixelTransferOp
-{
-public:
-    virtual PixRGBA operator()(GRCOORD x, GRCOORD y, const PixRGBA &src, const PixRGBA &dst) const
-    {
-        return src;
-    }
-
-};
 
 class DrawingContext {
 
 private:
     PixelBuffer &pb;        // The pixel buffer we will be drawing into
-    PixelTransferOp &tOp;
+    PixelTransferOp *tOp;
 
     PixRGBA strokePix;      // pixel color for stroking
     PixRGBA fillPix;        // pixel color for filling
@@ -75,8 +62,10 @@ public:
     strokePix(0xff000000), 
     fillPix(0xffffffff),
     bgPix(0xff707070),
-    tOp(PixelSRCCOPY())
+    tOp(nullptr)
     {
+        tOp = new PixelSRCOVER();
+
         // create a scratch row for better optimization
         // of copy operators
         scratch = {new PixRGBA[pb.getWidth()]{}};
@@ -87,8 +76,12 @@ public:
         delete [] scratch;
     }
 
-    void setTransferOp(PixelTransferOp &newOp)
+    void setTransferOp(PixelTransferOp *newOp)
     {
+        if (tOp != nullptr) {
+            delete tOp;
+        }
+
         this->tOp = newOp;
     }
 
@@ -134,20 +127,15 @@ public:
 
     // Uses fill color
     // Should be able to apply a drawing operator
-    bool transferPixel(GRCOORD x, GRCOORD y, PixRGBA c)
+    bool setPixel(GRCOORD x, GRCOORD y, PixRGBA c)
     {
-        setPixel(x, y, tOp(x, y, c, pb.getPixel(x, y)));
-    }
-
-    bool setPixel(GRCOORD x, GRCOORD y, const PixRGBA &c)
-    {
-        pb.setPixel(x, y, c);
+        pb.transferPixel(x, y,c, *tOp);
         return true;
     }
 
     bool fillPixel(GRCOORD x, GRCOORD y)
     {
-        pb.setPixel(x, y, fillPix);
+        pb.transferPixel(x, y, fillPix, *tOp);
         return true;
     }
 
@@ -158,7 +146,7 @@ public:
         GRCOORD idx = x;
         while (idx < x+width)
         {
-            pb.setPixel(idx, y, strokePix);
+            pb.transferPixel(idx, y, strokePix, *tOp);
             idx = idx + 1;
         }
 
@@ -171,7 +159,7 @@ public:
         // within bounds
         GRCOORD idx = y;
         while (idx < y+length) {
-            this->pb.setPixel(x, idx, this->strokePix);
+            this->pb.transferPixel(x, idx, this->strokePix, *tOp);
             idx = idx + 1;
         }
         return true;
@@ -216,7 +204,7 @@ public:
         px = x1;
         py = y1;
 
-        this->pb.setPixel(x1, y1, this->strokePix);
+        this->pb.transferPixel(x1, y1, this->strokePix, *tOp);
 
         if (dxabs >= dyabs) // the line is more horizontal than vertical
         {
@@ -229,7 +217,7 @@ public:
                     py = py + sdy;
                 }
                 px = px + sdx;
-                this->pb.setPixel(px, py, this->strokePix);
+                this->pb.transferPixel(px, py, this->strokePix, *tOp);
             }
         } else // the line is more vertical than horizontal
         {
@@ -242,7 +230,7 @@ public:
                     px += sdx;
                 }
                 py += sdy;
-                this->pb.setPixel(px, py, this->strokePix);
+                this->pb.transferPixel(px, py, this->strokePix, *tOp);
             }
         }
 
@@ -307,7 +295,8 @@ public:
         // use that scratch line to fill all lines of the rectangle
         for (GRSIZE idx = 0; idx<height; idx++)
         {
-            this->pb.setSpan(x, y+idx, width, this->scratch);
+            strokeHorizontalLine(x, y+idx, width);
+            //this->pb.setSpan(x, y+idx, width, this->scratch);
         }
 
         return true;
@@ -352,7 +341,7 @@ public:
         // first set of points, sides
         while (stoppingx >= stoppingy)
         {
-            handler(pb, cx, cy, x, y, color);
+            handler(pb, cx, cy, x, y, color, *tOp);
             y = y + 1;
             stoppingy = stoppingy + twoasquare;
             ellipseerror += ychange;
@@ -376,7 +365,7 @@ public:
         stoppingy = twoasquare*yradius;
 
         while (stoppingx <= stoppingy) {
-            handler(pb, cx, cy, x, y, color);
+            handler(pb, cx, cy, x, y, color, *tOp);
             x = x + 1;
             stoppingx = stoppingx + twobsquare;
             ellipseerror = ellipseerror + xchange;

@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "grtypes.hpp"
+#include "PixelOps.hpp"
 
 /*
     This base class essentially defines an interface
@@ -13,6 +14,10 @@
     ensure you can not create an instance of one of these,
     but you can use it as a parameter in function calls.
 */
+void pColor(const PixRGBA c)
+{
+    printf("rgba: %d %d %d %d\n", c.red, c.green, c.blue, c.alpha);
+}
 
 class PixelBuffer
 {
@@ -25,8 +30,23 @@ public:
 
     // Sub-classes MUST implement the following
     // Set a single pixel value at the specified location
-    virtual bool setPixel(GRCOORD x, GRCOORD y, const PixRGBA pix) = 0;
+    virtual bool setPixel(GRCOORD x, GRCOORD y, const PixRGBA &pix) = 0;
     
+    // Transfer a pixel using an operation
+    virtual bool transferPixel(GRCOORD x, GRCOORD y, const PixRGBA &src, const PixelTransferOp &tOp)
+    {
+
+        PixRGBA dst = getPixel(x, y);
+        PixRGBA pix = tOp(x, y, src, dst);
+        //printf("transferPixel\n");
+        //pColor(src);
+        //pColor(dst);
+        //pColor(pix);
+
+        return setPixel(x, y, pix);
+        //return setPixel(x, y, src);
+    }
+
     // Retrieve a single pixel value from the specified location 
     virtual PixRGBA getPixel(GRCOORD x, GRCOORD y) const = 0;
     

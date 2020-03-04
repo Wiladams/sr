@@ -15,7 +15,7 @@ DPROC_API float bezier_cubic_second_derivative(const float u, const float p0, co
 
 void bez3_cubic(const Pt3 *controls, const int m, Pt3 * curve);
 */
-typedef float REAL;
+
 
 
 
