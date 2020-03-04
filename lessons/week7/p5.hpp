@@ -117,7 +117,6 @@ void fill(uint8_t gray)
 void noFill()
 {
     gUseFill = false;
-    //gAppDC->setFill(0x00000000);
 }
 
 // Setting Stroke
@@ -268,7 +267,8 @@ void createCanvas(size_t aWidth, size_t aHeight)
 
     // get current mouse position
     
-    clear();
+    //clear();
+    gAppDC->clearToBackground();
 }
 
 void redraw(int nTimes=1)

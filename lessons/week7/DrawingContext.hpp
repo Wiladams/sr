@@ -6,6 +6,9 @@
 #include <math.h>
 
 
+/*
+    These sit here so they are not class members
+*/
 typedef void(* EllipseHandler)(PixelBuffer &pb, GRCOORD cx, GRCOORD cy, GRCOORD x, GRCOORD y, const PixRGBA color);
 
 void Plot4EllipsePoints(PixelBuffer &pb, GRCOORD cx, GRCOORD cy, GRCOORD x, GRCOORD y, const PixRGBA color)
@@ -34,32 +37,59 @@ void fill2EllipseLines(PixelBuffer &pb, GRCOORD cx, GRCOORD cy, GRCOORD x, GRCOO
 	//}
 }
 
+class PixelTransferOp
+{
+public:
+    virtual PixRGBA operator()(GRCOORD x, GRCOORD y, const PixRGBA &src, const PixRGBA &dst) const = 0;
+};
+
+class PixelSRCCOPY : public PixelTransferOp
+{
+public:
+    virtual PixRGBA operator()(GRCOORD x, GRCOORD y, const PixRGBA &src, const PixRGBA &dst) const
+    {
+        return src;
+    }
+
+};
 
 class DrawingContext {
 
 private:
     PixelBuffer &pb;        // The pixel buffer we will be drawing into
+    PixelTransferOp &tOp;
+
     PixRGBA strokePix;      // pixel color for stroking
     PixRGBA fillPix;        // pixel color for filling
     PixRGBA bgPix;          // pixel color for background
 
-    PixRGBA *scratch;
+    PixRGBA *scratch;       // A single row of pixels for various speedups
+
+    // We don't want these to be constructed using
+    // a default constructor, so make it private
+    DrawingContext();
 
 public:
     DrawingContext(PixelBuffer &pb)
     :pb(pb), 
     strokePix(0xff000000), 
     fillPix(0xffffffff),
-    bgPix(0xff707070)
+    bgPix(0xff707070),
+    tOp(PixelSRCCOPY())
     {
         // create a scratch row for better optimization
         // of copy operators
-        this->scratch = {new PixRGBA[pb.getWidth()]{}};
+        scratch = {new PixRGBA[pb.getWidth()]{}};
     }
 
     virtual ~DrawingContext()
     {
         delete [] scratch;
+    }
+
+    void setTransferOp(PixelTransferOp &newOp)
+    {
+        this->tOp = newOp;
     }
 
     bool setBackground(const PixRGBA pix)
@@ -104,7 +134,12 @@ public:
 
     // Uses fill color
     // Should be able to apply a drawing operator
-    bool setPixel(GRCOORD x, GRCOORD y, PixRGBA c)
+    bool transferPixel(GRCOORD x, GRCOORD y, PixRGBA c)
+    {
+        setPixel(x, y, tOp(x, y, c, pb.getPixel(x, y)));
+    }
+
+    bool setPixel(GRCOORD x, GRCOORD y, const PixRGBA &c)
     {
         pb.setPixel(x, y, c);
         return true;
@@ -293,9 +328,10 @@ public:
     // strokeRoundedRectangle()
     // fillRoundedRectangle()
 
-    /*
+/*
         Ellipse drawing
-    */
+*/
+
    //The drive_ellipse() function takes care of calculating ellipse
    // edge coordinates.  It then applies the handler function to each
    // of the pairs to either draw edge strokes or fills
