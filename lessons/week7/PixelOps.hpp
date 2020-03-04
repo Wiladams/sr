@@ -3,6 +3,12 @@
 #include "grtypes.hpp"
 #include "PixelBuffer.hpp"
 
+/*
+    Pixel transfer is the way in which a source pixel (src)
+    is combined with a destination pixel (dst).  The simplest
+    operation is SRCCOPY, where the source pixel simply replaces
+    the destination pixel.
+*/
 class PixelTransferOp
 {
 public:
