@@ -153,6 +153,20 @@ public:
         return true;
     }
 
+    bool fillHorizontalLine(GRCOORD x, GRCOORD y, GRSIZE width)
+    {
+        // BUGBUG - should sanity check line fits
+        // within bounds
+        GRCOORD idx = x;
+        while (idx < x+width)
+        {
+            pb.transferPixel(idx, y, fillPix, *tOp);
+            idx = idx + 1;
+        }
+
+        return true;
+    }
+
     bool strokeVerticalLine(GRCOORD x, GRCOORD y, GRSIZE length)
     {
         // BUGBUG - should sanity check line fits
@@ -286,17 +300,9 @@ public:
             return true;
         }
 
-        // Fill up a single row of pixels
-        for (GRSIZE idx=0;idx < width;idx++)
+        for (GRSIZE row = 0; row<height; row++)
         {
-            this->scratch[idx] = this->fillPix;
-        }
-
-        // use that scratch line to fill all lines of the rectangle
-        for (GRSIZE idx = 0; idx<height; idx++)
-        {
-            strokeHorizontalLine(x, y+idx, width);
-            //this->pb.setSpan(x, y+idx, width, this->scratch);
+            fillHorizontalLine(x, y+row, width);
         }
 
         return true;

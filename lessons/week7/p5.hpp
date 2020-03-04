@@ -18,6 +18,7 @@
 #include "grtypes.hpp"
 #include "maths.hpp"
 #include "Image.hpp"
+#include "PixelOps.hpp"
 
 // RectMode, EllipseMode
 enum {
@@ -67,6 +68,10 @@ bool gUseFill = true;
 static size_t width = 0;
 static size_t height = 0;
 
+void pixelOp(PixelTransferOp *tOp)
+{
+    gAppDC->setTransferOp(tOp);
+}
 
 // Drawing attributes
 // general color construction from components

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "grtypes.hpp"
-#include <stdio.h>
+#include "PixelBuffer.hpp"
 
 class PixelTransferOp
 {
