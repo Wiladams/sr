@@ -1,5 +1,22 @@
 #include "p5.hpp"
 
+/*
+    In this application, there are two things of interest.
+    The first is that color bars are created and move 
+    around the screen tracking the mouse.
+
+    A red background is drawn
+    Then a horizontal green bar follows the mouse up and
+    down the screen.
+
+    A blue vertical bar moves from left to right with the 
+    mouseX location.
+
+    Since the default pixel transfer operation is SRCOVER
+    the color's alpha value is changed based on the position
+    of the mouse, vertically or horizontally.
+*/
+
 int barSize = 80;
 
 void draw()
@@ -9,6 +26,10 @@ void draw()
 
 
     // horizontal green bar
+    // set the alpha of the color based on the vertical
+    // position of the mouseY value.  It will be 20 when
+    // the mouse is at the top of the window, and it will
+    // be 255 when the mouse is at the bottom of the window
     PixRGBA c2 = color(0,255,0,MAP(mouseY, 0,height-1, 20,255));
     fill(c2);
     noStroke();

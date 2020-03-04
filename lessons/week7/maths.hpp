@@ -22,9 +22,19 @@
 // doesn't deal with -0 vs +0
 #define ABS(a) ((a) > 0 ? (a) : -(a))
 
-inline double MAP(double x, double olow, double ohigh, double rlow, double rhigh) 
+double constrain(double x, double low, double high)
 {
-    return (double)(rlow + (x-olow)*((double)(rhigh-rlow)/(ohigh-olow)));
+    return MIN(MAX(x, low), high);
+}
+
+inline double MAP(double x, double olow, double ohigh, double rlow, double rhigh, bool tight= false)
+{
+    if (!tight) {
+        return rlow + (x-olow)*((double)(rhigh-rlow)/(ohigh-olow));
+    }
+
+    double cx = constrain(x, olow, ohigh);
+    return rlow + (cx-olow)*((rhigh-rlow)/(ohigh-olow));
 }
 
 // Some useful routines
@@ -64,10 +74,7 @@ static const double TAU = 6.28318530717958647693;
 double degrees(double x) { return x * 57.29577951308232; }
 double radians(double x) { return x * 0.017453292519943295; }
 
-double constrain(double x, double low, double high)
-{
-    return MIN(MAX(x, low), high);
-}
+
 
 double dist(double x1, double y1, double x2, double y2)
 {
