@@ -17,7 +17,13 @@
 #include <stdint.h>
 
 //local min = math.min
-
+void memcopy(uint8_t *dst, size_t n, const uint8_t *src)
+{
+    for (int i=0;i<n;i++)
+    {
+        dst[i] = src[i];
+    }
+}
 /*
     Standard 'object' construct.
     __call is implemented so we get a 'constructor'
@@ -328,57 +334,68 @@ end
 /*
     Writing to a binary stream
 */
-/*
-bool writeOctet(octet)
-    if (self.cursor >= self.size) then
-        return false, "EOF";
-    end
 
-    self.data[self.cursor] = octet;
-    self.cursor = self.cursor + 1;
+    bool writeOctet(uint8_t octet)
+    {
+        if (fcursor >= fsize) {
+            return false;
+        }
 
-    return true;
-end
+        fdata[fcursor] = octet;
+        fcursor = fcursor + 1;
 
-function writeInt(self, value, n)
+        return true;
+    }
 
+size_t writeInt(uint64_t value, size_t n)
+{
+    if (remaining() < n) {
+        // BUGBUG - throw exception
+    }
 
-    if self:remaining() < n then
-        return false, "NOT ENOUGH DATA AVAILABLE"
-    end
+    int i = n-1;
+    if (fbigend) {
 
-    if self.bigend then
-        local i = n-1;
-        while  (i >= 0) do
-            self:writeOctet(band(rshift(value,i*8), 0xff))
+        while  (i >= 0) {
+            writeOctet(((value >> i*8) & 0xff));
             i = i - 1;
-        end 
-    else
-        local i = 0;
-        while  (i < n) do
-            self:writeOctet(band(rshift(value,i*8), 0xff))
+        }
+    } else {
+        size_t i = 0;
+        while  (i < n) {
+            writeOctet((value >> i*8) & 0xff);
             i = i + 1;
-        end 
-    end
+        }
+    }
 
-    return v;
-end
+    return i+1;
+}
 
-function writeBytes(self,  n, bytes)
-    n = n or #bytes
-    if n > self:remaining() then 
-        return false, "Not enough space"
-    end
 
-    ffi.copy(self.data+self.cursor, ffi.cast("const char *", bytes, n))
-    self:skip(n)
+bool writeBytes(size_t n, const uint8_t *bytes)
+{
+    if (bytes == nullptr) {
+        return false;
+    }
+
+    if (n > remaining()) {
+        // BUGBUG - throw exception
+        return false;   //, "Not enough space"
+    }
+
+    memcopy(fdata+fcursor, n, bytes);
+    skip(n);
 
     return true;
-end
+}
 
-function writeString(self, str)
-    return self:writeBytes(str)
-end
+/*
+bool writeString(size_t n, char * str)
+{
+
+    return writeBytes(str)
+}
+*/
 
 function writeInt8(self, n)
     return self:writeInt(n, 1);
