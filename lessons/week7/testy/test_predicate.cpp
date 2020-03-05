@@ -87,9 +87,11 @@ void main()
     for (int i=1; i<=nTemps; i++)
         tempsQ.enqueue(temps[i-1]);
 
-    QueueIterator<cityTemp> tempsqi(tempsQ);
-    //PredicateFilter nf(namePredicate(name), tempsqi);
-    PredicateFilter ff(highTempPredicate(50), PredicateFilter(namePredicate(name), tempsqi));
+
+    PredicateFilter ff(highTempPredicate(50), 
+        PredicateFilter(namePredicate(name), 
+        QueueIterator<cityTemp>(tempsQ)));
+        
     printTemp pt;
 
     while (ff.moveNext()) {
