@@ -398,23 +398,33 @@ public:
         return writeInt(n, 8);
     }
 
+
+    // various useful fixed formats
+    // fixed 2_14 numbers
+    // 16-bit
+    float readF2Dot14()
+    {
+        return (float)readUInt16() / 0x4000;
+    }
+
+    // fixed 16_16 numbers
+    // 32-bit
+    float readFixed()
+    {
+        uint16_t decimal = readInt16();
+        uint16_t fraction = readUInt16();
+
+        return decimal + (fraction / 0xffff);
+    }
+
+    // fixed 2_30 numbers
+    // 32-bit
+    float readF2Dot30()
+    {
+        return (float)readUInt32() / 0x4000000;
+    }
+
 /*
-// Some various fixed formats
-function readFixed(self)
-    local decimal = readInt16();
-    local fraction = readUInt16();
-
-    return decimal + fraction / 65535;
-end
-
-function readF2Dot14(self)
-    return readUInt16() / 16384;
-end
-
-function readF2Dot30(self)
-    return self:readUInt32() / 0x4000000;
-end
-
 -- Convenient types named in the documentation
 readFWord = readInt16;
 readUFWord = readUInt16;

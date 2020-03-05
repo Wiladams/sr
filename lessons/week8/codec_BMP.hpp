@@ -1,46 +1,43 @@
+#pragma once
+
+#include <stdint.h>
+
 #include "PixelBuffer.hpp"
+#include "binstream.hpp"
+#include "w32_types.hpp"
 
--- References
--- http://entropymine.com/jason/bmpsuite/bmpsuite/
+// References
+// http://entropymine.com/jason/bmpsuite/bmpsuite/
+// Specifications
+// many former implementations
+//
 
-local ffi = require("ffi")
-local bit = require("bit")
+CIEXYZ read_CIEXYZ(BinStream &bs)
+{
+    CIEXYZ res;
 
-local compressionMethod = {
-    [0]  = "BI_RGB",
-    [1]  = "BI_RLE8",
-    [2]  = "BI_RLE4",
-    [3]  = "BI_BITFIELDS",
-    [4]  = "BI_JPEG",
-    [5]  = "BI_PNG",
-    [6]  = "BI_ALPHABITFIELDS",
-    [11] = "BI_CMYK",
-    [12] = "BI_CMYKRLE8",
-    [13] = "BI_CMYKRLE4"
+    res.ciexyzX = bs.readF2Dot30();
+    res.ciexyzY = bs.readF2Dot30();
+    res.ciexyzZ = bs.readF2Dot30();
+
+    return res;
 }
 
-local function read_CIEXYZ(bs, res)
-    res = res or {}
-    res.ciexyzX = bs:readF2Dot30();
-    res.ciexyzY = bs:readF2Dot30();
-    res.ciexyzZ = bs:readF2Dot30();
-
-    return res
-end
-
-local function read_CIEXYZTRIPLE(bs, res)
-    res = res or {}
+CIEXYZTRIPLE read_CIEXYZTRIPLE(BinStream &bs)
+{
+    CIEXYZTRIPLE res;
 
     res.ciexyzRed = read_CIEXYZ(bs);
     res.ciexyzGreen = read_CIEXYZ(bs);
     res.ciexyzBlue = read_CIEXYZ(bs);
 
-    return res
-end
+    return res;
+}
 
+/*
 local headerFuncs = {
-    -- BITMAPCOREHEADER, 
-    -- OS21XBITMAPHEADER
+    // BITMAPCOREHEADER, 
+    // OS21XBITMAPHEADER
     [12] = function(bs, res)
         res.Width = bs:readWORD();
         res.Height = bs:readWORD();
@@ -48,7 +45,7 @@ local headerFuncs = {
         res.BitsPerPixel = bs:readWORD();
     end;
 
-    -- BITMAPCOREHEADER2
+    // BITMAPCOREHEADER2
     [64] = function(bs, res)
         -- OS22XBITMAPHEADER
     end;
@@ -59,7 +56,7 @@ local headerFuncs = {
         -- 16 bytes valid
     end;
 
-    --BITMAPINFOHEADER 
+    //BITMAPINFOHEADER 
     [40] = function(bs, res)
         res.Width = bs:readLONG();
         res.Height = bs:readIntLONG();
@@ -73,15 +70,15 @@ local headerFuncs = {
         res.ImportantColors = bs:readDWORD();
     end;
 
-    -- BITMAPV2INFOHEADER 
+    // BITMAPV2INFOHEADER 
     [52] = function(bs, res)
     end;
 
-    -- BITMAPV3INFOHEADER 
+    // BITMAPV3INFOHEADER 
     [56] = function(bs, res)
     end;
 
-    -- BITMAPV4HEADER 
+    // BITMAPV4HEADER 
     [108] = function (bs, res)
         -- BITMAPINFOHEADER
         res.Width = bs:readIntLONG();
@@ -108,7 +105,7 @@ local headerFuncs = {
         
     end;
 
-    -- BITMAPV5HEADER 
+    // BITMAPV5HEADER 
     [124] = function(bs, res)
         -- BITMAPINFOHEADER
         res.Width = bs:readIntLONG();
@@ -140,6 +137,7 @@ local headerFuncs = {
         res.Reserved = bs:readDWORD();
     end;
 }
+*/
 
 local validSignatures = {
     "BM",
@@ -148,18 +146,19 @@ local validSignatures = {
     "CP",
     "IC",
     "PT"
-}
+};
 
-local function readFileHeader(bs, res)
+void readFileHeader(bs, res)
+{
     res = res or {}
-    -- Windows Signatur 'BM', 
-    -- for OS/2 BA, CI, CP, IC, PT
-    -- assuming it is in fact a file header
+    // Windows Signatur 'BM', 
+    // for OS/2 BA, CI, CP, IC, PT
+    // assuming it is in fact a file header
     res.Signature = bs:readString(2);
 
-    if not validSignatures[res.Signature] then
+    if not validSignatures[res.Signature] {
         return false;
-    end
+    }
 
     res.FileSize = bs:readDWORD();
     res.Reserved1 = bs:readBytes(2);
@@ -167,7 +166,7 @@ local function readFileHeader(bs, res)
     res.DataOffset = bs:readDWORD();
 
     return res;
-end
+}
 
 local function readImageHeader(bs, res)
     res = res or {}

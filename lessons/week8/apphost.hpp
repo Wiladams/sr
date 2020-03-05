@@ -2,10 +2,15 @@
 
 #include <stdio.h>
 
-#include "NativeWindow.hpp"
 #include "w32.hpp"
+#include "NativeWindow.hpp"
 #include "PixelBufferRGBA32.hpp"
 #include "DrawingContext.hpp"
+
+// We need this export so when the user defines their functions
+// they will be listed as exports, and then at runtime we can 
+// load their pointers from the module
+#define EXPORT __declspec(dllexport)
 
 
 // Basic type to encapsulate a mouse event
@@ -328,25 +333,25 @@ extern "C" {
 
 
 // These should be implemented by a module to be loaded
-WIN_EXPORT void draw();
-WIN_EXPORT void onLoop();
-WIN_EXPORT void setup();
+EXPORT void draw();
+EXPORT void onLoop();
+EXPORT void setup();
 
-WIN_EXPORT LRESULT onPaintHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+EXPORT LRESULT onPaintHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // IO Event Handlers
-WIN_EXPORT LRESULT keyboardHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-WIN_EXPORT void keyPressed(const KeyEvent &e);
-WIN_EXPORT void keyReleased(const KeyEvent &e);
-WIN_EXPORT void keyTyped(const KeyEvent &e);
+EXPORT LRESULT keyboardHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+EXPORT void keyPressed(const KeyEvent &e);
+EXPORT void keyReleased(const KeyEvent &e);
+EXPORT void keyTyped(const KeyEvent &e);
 
-WIN_EXPORT LRESULT mouseHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-WIN_EXPORT void mouseClicked(const MouseEvent &e);
-WIN_EXPORT void mouseDragged(const MouseEvent &e);
-WIN_EXPORT void mouseMoved(const MouseEvent &e);
-WIN_EXPORT void mousePressed(const MouseEvent &e);
-WIN_EXPORT void mouseReleased(const MouseEvent &e);
-WIN_EXPORT void mouseWheel(const MouseEvent &e);
+EXPORT LRESULT mouseHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+EXPORT void mouseClicked(const MouseEvent &e);
+EXPORT void mouseDragged(const MouseEvent &e);
+EXPORT void mouseMoved(const MouseEvent &e);
+EXPORT void mousePressed(const MouseEvent &e);
+EXPORT void mouseReleased(const MouseEvent &e);
+EXPORT void mouseWheel(const MouseEvent &e);
 
 #ifdef __cplusplus
 }
