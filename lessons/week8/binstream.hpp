@@ -15,9 +15,14 @@
 */
 
 #include <stdint.h>
+#include <string.h>
+
+#ifndef MIN
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#endif
 
 //local min = math.min
-void memcopy(uint8_t *dst, size_t n, const uint8_t *src)
+void memcopy(uint8_t *dst, const size_t n, const uint8_t *src)
 {
     for (int i=0;i<n;i++)
     {
@@ -39,7 +44,7 @@ class BinStream
     size_t fsize;
 
 public:
-    BinStream(uint8_t *data, size_t size, size_t position, bool littleendian = true)
+    BinStream(uint8_t *data, size_t size, size_t position=0, bool littleendian = true)
         : fbigend(!littleendian),
         fposition(0),
         fdata(data),
@@ -48,9 +53,6 @@ public:
         fcursor = fposition;
     }
  
-
-
-
 
     // get a subrange of the memory stream
     // returning a new memory stream
@@ -86,7 +88,7 @@ public:
         return fsize - fcursor;
     }
 
-    bool EOF()
+    bool isEOF()
     {
         return (remaining() < 1);
     }
@@ -166,98 +168,53 @@ public:
         return fdata[fcursor-1];
     }
 
+    size_t readBytes(const size_t n, uint8_t * buff)
+    {
+        if (n < 1) { 
+            // throw exception
+            return 0;
+        }
+
+        // see how many bytes are remaining to be read
+        size_t nActual = MIN(n, remaining());
+    
+        // read the minimum between remaining and 'n'
+        uint8_t * ptr = fdata+fcursor;
+        memcopy(buff, nActual, ptr);
+        skip(nActual);
+
+        // return the number of bytes actually read
+        return nActual;
+    }
+
+    // read in a null terminated string
+    // n - tells us the size of the buffer
+    size_t readStringZ(const size_t n, char *buff)
+    {
+        // determine maximum number of bytes we can read
+        // we leave one space for the null terminator
+        size_t nActual = MIN(n-1, remaining());
+        size_t idx = 0;
+        while (idx < nActual) {
+            buff[idx] = readOctet();
+            if (buff[idx] == 0) {
+                break;
+            }
+
+            idx = idx + 1;
+        }
+
+        // ensure null termination
+        buff[idx] = 0;
+
+        return idx;
+    }
 
     // Read an integer value
     // The parameter 'n' determines how many bytes to read.
     // 'n' can be up to 8 
     // The routine will deal with big or little endian
-
-
-
-
-
-/*
--- BUGBUG, do error checking against end of stream
-function readBytes(self, n, bytes)
-{
-    if n < 1 then 
-        return false, "must specify more then 0 bytes" 
-    end
-
-    -- see how many bytes are remaining to be read
-    local nActual = min(n, self:remaining())
-    -- read the minimum between remaining and 'n'
-    bytes = bytes or ffi.new("uint8_t[?]", nActual)
-    local ptr = self.data+self.cursor
-    ffi.copy(bytes, ptr, nActual)
-    self:skip(nActual)
-
-    -- if minimum is less than n, return false, and the number
-    -- actually read
-    if nActual < n then
-        return false, nActual;
-    end
-
-    return bytes, nActual;
-}
-
-function readByteBuffer(self, n, buff)
-    --print("readByteBuffer, BEGIN: ", n, buff)
-    if not buff or n < 1 then 
-        return false, "must specify more then 0 bytes" 
-    end
-    --print("readByteBuffer, 1.0: ")
-
-    -- see how many bytes are remaining to be read
-    local nActual = min(n, self:remaining())
-    --print("readByteBuffer, 2.0: ")
-    -- read the minimum between remaining and 'n'
-    local ptr = self.data+self.cursor
-    --print("readByteBuffer, 3.0: ", ptr, nActual)
-    ffi.copy(buff, ptr, nActual)
-    --print("readByteBuffer, 4.0: ")
-    self:skip(nActual)
-    --print("readByteBuffer, 4.0: ")
-
-    -- if nActual is less than n, return nActual
-    if nActual < 1 then
-        return false, "EOF"
-    end
-
-    --print("readByteBuffer, END")
-
-    return nActual
-end
-
-
--- Read bytes and turn into a Lua string
--- Read up to 'n' bytes, or up to a '\0' if
--- 'n' is not specified.
-function readString(self, n)
-    local str = nil;
-
-    --print("BS: ", self:remaining())
-    if self:EOF() then
-        return false, "EOF"
-    end
-
-    if not n then
-        -- read to null terminator
-
-        str = ffi.string(self.data+self.cursor)
-        --print("binstream, STR: ", str)
-        self.cursor = self.cursor + #str + 1;
-    else
-        -- read a specific number of bytes, turn into Lua string
-        str = ffi.string(self.data+self.cursor, n)
-        self.cursor = self.cursor + n;
-    end
-
-    return str;
-end
-*/
-
-    uint64_t readNumber(int n)
+    uint64_t readInt(int n)
     {
         uint64_t v = 0;
         int i = 0;
@@ -285,57 +242,56 @@ end
     // Read 8-bit signed integer
     int8_t readInt8()
     {
-        return (int8_t)readNumber(1);
+        return (int8_t)readInt(1);
     }
 
     // Read 8-bit unsigned integer
     uint8_t readUInt8()
     {
-        return (uint8_t)readNumber(1);
+        return (uint8_t)readInt(1);
     }
 
     // Read 16-bit signed integer
     int16_t readInt16()
     {
-        return (int16_t)readNumber(2);
+        return (int16_t)readInt(2);
     }
 
     // Read 16-bit unsigned integer
     uint16_t readUInt16()
     {
-        return (uint16_t)readNumber(2);
+        return (uint16_t)readInt(2);
     }
 
     // Read Signed 32-bit integer
     int32_t readInt32()
     {
-        return (int32_t)readNumber(4);
+        return (int32_t)readInt(4);
     }
 
     // Read unsigned 32-bit integer
     uint32_t readUInt32()
     {
-        return (uint32_t)readNumber(4);
+        return (uint32_t)readInt(4);
     }
 
     // Read signed 64-bit integer
     int64_t readInt64()
     {
-        return (int64_t)readNumber(8);
+        return (int64_t)readInt(8);
     }
 
     uint64_t readUInt64()
     {
-        return (uint64_t)readNumber(8);
+        return (uint64_t)readInt(8);
     }
 
 
 
-/*
-    Writing to a binary stream
-*/
-
-    bool writeOctet(uint8_t octet)
+    /*
+        Writing to a binary stream
+    */
+    bool writeOctet(const uint8_t octet)
     {
         if (fcursor >= fsize) {
             return false;
@@ -347,99 +303,112 @@ end
         return true;
     }
 
-size_t writeInt(uint64_t value, size_t n)
-{
-    if (remaining() < n) {
-        // BUGBUG - throw exception
-    }
-
-    int i = n-1;
-    if (fbigend) {
-
-        while  (i >= 0) {
-            writeOctet(((value >> i*8) & 0xff));
-            i = i - 1;
+    bool writeBytes(const size_t n, const uint8_t *bytes)
+    {
+        if (bytes == nullptr) {
+            return false;
         }
-    } else {
-        size_t i = 0;
-        while  (i < n) {
-            writeOctet((value >> i*8) & 0xff);
-            i = i + 1;
+
+        if (n > remaining()) {
+            // BUGBUG - throw exception
+            return false;   //, "Not enough space"
         }
+
+        memcopy(fdata+fcursor, n, bytes);
+        skip(n);
+
+        return true;
     }
 
-    return i+1;
-}
+    bool writeStringZ(const char * str)
+    {
+        if (str == nullptr) {
+            return 0;
+        }
 
+        size_t n = strlen(str);
+        bool success = writeBytes(n, (const uint8_t *)str);
+        
+        // write a null terminating byte
+        writeOctet(0);
 
-bool writeBytes(size_t n, const uint8_t *bytes)
-{
-    if (bytes == nullptr) {
-        return false;
+        return success;
     }
 
-    if (n > remaining()) {
-        // BUGBUG - throw exception
-        return false;   //, "Not enough space"
+    size_t writeInt(const uint64_t value, size_t n)
+    {
+        if (remaining() < n) {
+            // BUGBUG - throw exception
+        }
+
+        int i = n-1;
+        if (fbigend) {
+            while  (i >= 0) {
+                writeOctet(((value >> i*8) & 0xff));
+                i = i - 1;
+            }
+        } else {
+            size_t i = 0;
+            while  (i < n) {
+                writeOctet((value >> i*8) & 0xff);
+                i = i + 1;
+            }
+        }
+
+        return i+1;
     }
 
-    memcopy(fdata+fcursor, n, bytes);
-    skip(n);
+    size_t writeInt8(const int8_t n)
+    {
+        return writeInt(n, 1);
+    }
 
-    return true;
-}
+    size_t writeUInt8(const uint8_t n)
+    {
+        return writeInt(n, 1);
+    }
 
-/*
-bool writeString(size_t n, char * str)
-{
+    size_t writeInt16(int16_t n)
+    {
+        return writeInt(n, 2);
+    }
 
-    return writeBytes(str)
-}
-*/
+    size_t writeUint16(uint16_t n)
+    {
+        return writeInt(n, 2);
+    }
 
-function writeInt8(self, n)
-    return self:writeInt(n, 1);
-end
+    size_t writeInt32(int32_t n)
+    {
+        return writeInt(n, 4);
+    }
 
-function writeUInt8(self, n)
-    return self:writeInt(ffi.cast("uint8_t",n), 1)
-end
+    size_t writeUInt32(uint32_t n)
+    {
+        return writeInt(n, 4);
+    }
 
-function writeInt16(self, n)
-    return self:writeInt(ffi.cast("int16_t",n), 2);
-end
+    size_t writeInt64(int64_t n)
+    {
+        return writeInt(n, 8);
+    }
 
-function writeUint16(self, n)
-    return self:writeInt(ffi.cast("uint16_t",n), 2);
-end
+    size_t writeUInt64(uint64_t n)
+    {
+        return writeInt(n, 8);
+    }
 
-function writeInt32(self, n)
-    return self:writeInt(ffi.cast("int32_t",n), 4);
-end
-
-function writeUInt32(self, n)
-    return self:writeInt(ffi.cast("uint32_t",n), 4);
-end
-
-function writeInt64(self, n)
-    return self:writeInt(ffi.cast("int64_t",n), 8);
-end
-
-function writeUInt64(self, n)
-    return self:writeInt(ffi.cast("uint64_t",n), 8);
-end
-*/
 /*
 // Some various fixed formats
 function readFixed(self)
-    local decimal = self:readInt16();
-    local fraction = self:readUInt16();
+    local decimal = readInt16();
+    local fraction = readUInt16();
 
     return decimal + fraction / 65535;
 end
 
 function readF2Dot14(self)
-    return self:readUInt16() / 16384;
+    return readUInt16() / 16384;
 end
 
 function readF2Dot30(self)

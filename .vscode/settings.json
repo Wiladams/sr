@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "initializer_list": "cpp",
+        "xiosbase": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp"
+    }
+}
