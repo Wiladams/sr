@@ -2,7 +2,12 @@
 #include "Queue.hpp"
 
 // A simple functor to print an integer value
-struct intPrint {void operator()(const int value) { printf("%d\n", value);}};
+struct intPrint {
+    void operator()(const int value) 
+    { 
+        printf("%d\n", value);
+    }
+};
 
 
 void test_iterator()
@@ -29,23 +34,24 @@ void test_iterator()
 
 }
 
+
 void test_simple()
 {
-        Queue<int> aList;
+    Queue<int> aQ;
 
-    aList.enqueue(1);
-    aList.enqueue(2);
-    aList.enqueue(3);
+    aQ.enqueue(1);
+    aQ.enqueue(2);
+    aQ.enqueue(3);
 
     // print out values
-    while (aList.length() > 0) {
-        printf("%d\n", aList.dequeue());
+    while (aQ.length() > 0) {
+        printf("%d\n", aQ.dequeue());
     }
 }
 
 void main()
 {
-    test_simple();
+    //test_simple();
     test_iterator();
 
 }

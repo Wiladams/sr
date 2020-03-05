@@ -1,4 +1,4 @@
-#include "p5.hpp"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -8,13 +8,17 @@
 Queue<cityTemp> tempsQ;
 char * name = "RENTON MUNICIPAL AIRPORT, WA US";
 
-struct predicate {
+
+class Predicate 
+{
+public:
     virtual bool operator()(const cityTemp &tmp)=0;
 };
 
 // Simple example of a filter based on generic predicates
-struct namePredicate : public predicate {
+class namePredicate : public Predicate {
     const char *fName;    
+public:
     namePredicate(const char * name)
     :fName(name)
     {}
@@ -28,68 +32,55 @@ struct namePredicate : public predicate {
     }
 };
 
-// This iterator is essentially a filter/predicate
-class PredicateFilter {
-    QueueIterator<cityTemp> &fSource;
-    predicate &fPredicate;
+class highTempPredicate : public Predicate {
+    int target;
 
 public:
-    PredicateFilter(predicate &pred, QueueIterator<cityTemp> &source)
-        :fPredicate(pred),
-        fSource(source)
-    {
-        
-    }
+    highTempPredicate(int value)
+        : target(value)
+    {}
 
-    bool moveNext(){
-        while (fSource.moveNext()) {
-            if (fPredicate(fSource.getCurrent()) {
-                return true;
-            }
+    bool operator()(const cityTemp &tmp) {
+        if (tmp.high <= target) {
+            return true;
         }
         return false;
     }
-
-    cityTemp getCurrent() {return fSource.getCurrent();}
-    void reset() {fSource.reset();}
 };
 
-
-
-
 // This iterator is essentially a filter/predicate
-class nameFilter {
-    QueueIterator<cityTemp> &fSource;
-    const char *fName;
+class PredicateFilter : public IEnumerator<cityTemp> {
+    IEnumerator<cityTemp> &fSource;
+    Predicate &fPredicate;
 
 public:
-    nameFilter(const char * locName, QueueIterator<cityTemp> &source)
-        :fName(locName),
+    PredicateFilter(Predicate &pred, IEnumerator<cityTemp> &source)
+        :fPredicate(pred),
         fSource(source)
     {}
 
     bool moveNext(){
         while (fSource.moveNext()) {
-            if (!strcmp(fSource.getCurrent().name, fName)) {
+            bool isTrue = fPredicate(fSource.getCurrent());
+            if (isTrue)
                 return true;
-            }
         }
         return false;
     }
 
-    cityTemp getCurrent() {return fSource.getCurrent();}
+    cityTemp getCurrent() const {return fSource.getCurrent();}
     void reset() {fSource.reset();}
 };
 
+
 struct printTemp {
     void operator()(const cityTemp &tmp) {
-        printf("Low: %d  High: %d\n", tmp.low, tmp.high);
+        printf("Name: %s Low: %d  High: %d\n", tmp.name, tmp.low, tmp.high);
     }
 };
 
-void setup()
+void main()
 {
-    createCanvas(400, 400);
 
     int nTemps = sizeof(temps)/sizeof(temps[0]);
     // Fill the queue with temperature data
@@ -97,11 +88,12 @@ void setup()
         tempsQ.enqueue(temps[i-1]);
 
     QueueIterator<cityTemp> tempsqi(tempsQ);
-    nameFilter nf(name, tempsqi);
+    //PredicateFilter nf(namePredicate(name), tempsqi);
+    PredicateFilter ff(highTempPredicate(50), PredicateFilter(namePredicate(name), tempsqi));
     printTemp pt;
 
-    while (nf.moveNext()) {
-        pt(nf.getCurrent());
+    while (ff.moveNext()) {
+        pt(ff.getCurrent());
     }
     
 }

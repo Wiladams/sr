@@ -7,7 +7,7 @@ struct IEnumerator {
     virtual bool moveNext() = 0;
     virtual void reset() = 0;
     
-    virtual T getCurrent() =0;
+    virtual T getCurrent() const =0;
 };
 
 template <typename T>

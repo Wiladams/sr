@@ -1,7 +1,9 @@
 #pragma once
 
-#include "List.hpp"
 #include <stdio.h>
+
+#include "List.hpp"
+#include "iterator.hpp"
 
 // Implementation of a Queue
 // fist in first out
@@ -24,7 +26,7 @@ public:
     moves to the far right.
 */
 template <typename T>
-class QueueIterator
+class QueueIterator : public IEnumerator<T>
 {
     struct List<T> &fList;
     struct ListNode<T> *cursor;
