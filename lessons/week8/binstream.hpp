@@ -143,14 +143,13 @@ public:
     }
 
     // get 8 bits, and don't advance the cursor
-    uint8_t peekOctet()
+    int peekOctet(int offset=0)
     {
-        if (fcursor >= fsize) {
-            // throw EOF exception
-            return false;
+        if (fcursor+offset >= fsize) {
+            return -1;
         }
 
-        return fdata[fcursor];
+        return fdata[fcursor+offset];
     }
 
 
@@ -209,6 +208,51 @@ public:
 
         return idx;
     }
+
+static const int CR = '\r';
+static const int LF = '\n';
+
+
+size_t readLine(const size_t bufflen, char * buff)
+{
+    if (isEOF()) {
+        return 0;
+    }
+
+    int64_t starting = tell();
+    int64_t ending = starting;
+    uint8_t *startPtr = getPositionPointer();
+
+    while (!isEOF()) {
+        uint8_t c = peekOctet();
+        if (c < 0) {
+            break;
+        }
+
+        if (c == CR) {
+            c = peekOctet(1);
+            if (c == LF) {
+                ending = tell();
+                skip(2);
+                break;
+            }
+        } else if (c == LF) {
+            src:skip(1);
+            break;
+        }
+
+        skip(1);
+        ending = tell();
+    }
+
+    int64_t len = ending - starting;
+    len = MIN(len, bufflen-1);
+
+    memcopy((uint8_t *)buff, len, startPtr);
+    buff[len] = 0;
+
+    return len;
+}
 
     // Read an integer value
     // The parameter 'n' determines how many bytes to read.
@@ -424,15 +468,16 @@ public:
         return (float)readUInt32() / 0x4000000;
     }
 
+    // Convenient names used in various documentation
+    uint8_t readBYTE() {return readOctet();}
+    uint16_t readWORD() {return readUInt16();}
+    uint32_t readDWORD() {return  readUInt32();}
+    int32_t readLONG() {return readInt32();}
+
 /*
--- Convenient types named in the documentation
 readFWord = readInt16;
 readUFWord = readUInt16;
 readOffset16 = readUInt16;
 readOffset32 = readUInt32;
-readWORD = readUInt16;
-readDWORD = readUInt32;
-readLONG = readInt32;
-readBYTE = readOctet;
 */
 };

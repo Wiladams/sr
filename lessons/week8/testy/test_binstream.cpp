@@ -37,8 +37,24 @@ void testStringZ()
     printf("String: %d %s\n",len, str);
 }
 
+void testReadline()
+{
+    printf("==== testReadLine ====\n");
+    char * str = "the\r\nquick brown\r\nfox jumped\nover the\nlazy\ndog";
+    int size = strlen(str);
+
+    BinStream s((uint8_t *)str, size);
+
+    char buff[256];
+    while (!s.isEOF()) {
+        size_t len = s.readLine(256, buff);
+        printf("%s\n", buff);
+    }
+}
+
 void main()
 {
-    testStringZ();
+    //testStringZ();
     //testInt();
+    testReadline();
 }

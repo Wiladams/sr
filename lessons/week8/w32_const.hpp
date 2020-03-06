@@ -3,6 +3,30 @@
 /*
     Windows has thousands of me
 */
+static const int ERROR_ACCESS_DENIED = 5;
+static const int ERROR_ALREADY_EXISTS = 183;
+static const int ERROR_INVALID_HANDLE = 6;
+static const int ERROR_INVALID_PARAMETER = 87;
+
+static const int GENERIC_READ  = 0x80000000;
+static const int GENERIC_WRITE = 0x40000000;
+
+static const int OPEN_EXISTING = 3;
+static const int OPEN_ALWAYS   = 4;
+
+static const int FILE_ATTRIBUTE_ARCHIVE = 0x20;
+static const int FILE_FLAG_RANDOM_ACCESS = 0x10000000;
+static const int FILE_BEGIN            = 0;
+
+//local FILE_MAP_EXECUTE	= 0;
+static const int FILE_MAP_READ		= 0x04;
+static const int FILE_MAP_WRITE	= 0x02;
+//local FILE_MAP_TARGETS_INVALID = 0
+static const int FILE_MAP_ALL_ACCESS = 0xf001f;
+
+static const int PAGE_READONLY         = 0x02; 
+static const int PAGE_READWRITE        = 0x4;
+
 // winuser
 
 // Class styles

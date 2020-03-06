@@ -172,27 +172,25 @@ CloseGestureInfoHandle(
 
 
 // Basic file handling
-    HANDLE CreateFileA(
+HANDLE CreateFileA(
         LPCSTR lpFileName,
         DWORD dwDesiredAccess,
         DWORD dwShareMode,
         void * lpSecurityAttributes,
         DWORD dwCreationDisposition,
         DWORD dwFlagsAndAttributes,
-        HANDLE hTemplateFile
-    );
+        HANDLE hTemplateFile);
 
-    BOOL DeleteFileA(LPCSTR lpFileName);
+BOOL DeleteFileA(LPCSTR lpFileName);
 
-	DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh);
-	
-	BOOL WriteFile(
+DWORD GetFileSize(HANDLE hFile, LPDWORD lpFileSizeHigh);
+
+BOOL WriteFile(
 		HANDLE       hFile,
 		LPCVOID      lpBuffer,
 		DWORD        nNumberOfBytesToWrite,
 		LPDWORD      lpNumberOfBytesWritten,
-		void * lpOverlapped
-	);
+		void * lpOverlapped);
 
 
 // File mapping
@@ -202,22 +200,19 @@ HANDLE CreateFileMappingA(
 		DWORD flProtect,
 		DWORD dwMaximumSizeHigh,
 		DWORD dwMaximumSizeLow,
-		LPCSTR lpName
-    );
+		LPCSTR lpName);
 
 LPVOID MapViewOfFile(
     	HANDLE hFileMappingObject,
     	DWORD dwDesiredAccess,
     	DWORD dwFileOffsetHigh,
     	DWORD dwFileOffsetLow,
-    	SIZE_T dwNumberOfBytesToMap
-    );
+    	SIZE_T dwNumberOfBytesToMap);
 
 BOOL UnmapViewOfFile(LPCVOID lpBaseAddress);
 
 BOOL CloseHandle(HANDLE hObject);
 
-DWORD GetLastError(void);
 
 #ifdef __cplusplus
 }
