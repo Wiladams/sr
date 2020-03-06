@@ -81,8 +81,9 @@ typedef int ( __stdcall *NEARPROC)();
 typedef int ( __stdcall *PROC)();
 #endif
 
-typedef void * LPVOID;
-
+typedef void *          LPVOID;
+typedef const void *    LPCVOID;
+typedef DWORD *         LPDWORD;
 
 
 /* Types use for passing & returning polymorphic values */
@@ -116,6 +117,23 @@ static const int MAXBYTE    = 0xff;
 static const int MAXWORD    = 0xffff;      
 static const int MAXDWORD   = 0xffffffff;  
 
+
+// Handle Types
+typedef HANDLE HDC;
+typedef HANDLE HGDIOBJ;
+typedef HANDLE HWND;
+typedef HANDLE HICON;
+typedef HANDLE HCURSOR;
+typedef HANDLE HBRUSH;
+typedef HANDLE HINSTANCE;
+typedef HANDLE HMENU;
+typedef HANDLE HBITMAP;
+typedef HANDLE HRGN;
+typedef HANDLE HTOUCHINPUT;
+
+typedef HANDLE HMODULE;
+
+typedef HANDLE DPI_AWARENESS_CONTEXT;
 
 
 // windef
@@ -168,22 +186,7 @@ typedef struct tagICEXYZTRIPLE {
 } CIEXYZTRIPLE;
 
 
-// Types
-typedef HANDLE HDC;
-typedef HANDLE HGDIOBJ;
-typedef HANDLE HWND;
-typedef HANDLE HICON;
-typedef HANDLE HCURSOR;
-typedef HANDLE HBRUSH;
-typedef HANDLE HINSTANCE;
-typedef HANDLE HMENU;
-typedef HANDLE HBITMAP;
-typedef HANDLE HRGN;
-typedef HANDLE HTOUCHINPUT;
 
-typedef HANDLE HMODULE;
-
-typedef HANDLE DPI_AWARENESS_CONTEXT;
 
 typedef WORD                ATOM; 
 
@@ -245,6 +248,15 @@ typedef struct tagRGBQUAD {
     BYTE    rgbRed;
     BYTE    rgbReserved;
 } RGBQUAD;
+
+typedef struct tagBITMAPFILEHEADER {
+        WORD    bfType;
+        DWORD   bfSize;
+        WORD    bfReserved1;
+        WORD    bfReserved2;
+        DWORD   bfOffBits;
+} BITMAPFILEHEADER, *LPBITMAPFILEHEADER, *PBITMAPFILEHEADER;
+
 
 typedef struct tagBITMAPINFOHEADER{
     DWORD      biSize;

@@ -1,0 +1,9 @@
+#include <stdio.h>
+#include "mmap.hpp"
+
+void main()
+{
+    mmap m1 = mmap("testfile.txt");
+
+    printf("isValid: %d\n", m1.isValid());
+}

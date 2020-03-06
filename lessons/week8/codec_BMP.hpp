@@ -11,7 +11,7 @@
 // Specifications
 // many former implementations
 //
-
+/*
 CIEXYZ read_CIEXYZ(BinStream &bs)
 {
     CIEXYZ res;
@@ -137,7 +137,7 @@ local headerFuncs = {
         res.Reserved = bs:readDWORD();
     end;
 }
-*/
+
 
 local validSignatures = {
     "BM",
@@ -147,27 +147,29 @@ local validSignatures = {
     "IC",
     "PT"
 };
+*/
 
-void readFileHeader(bs, res)
+bool readFileHeader(BinStream &bs, BITMAPFILEHEADER &res)
 {
-    res = res or {}
     // Windows Signatur 'BM', 
     // for OS/2 BA, CI, CP, IC, PT
     // assuming it is in fact a file header
-    res.Signature = bs:readString(2);
+    res.bfType = bs.readUInt16();
+    // typical value is 0x4D42
 
-    if not validSignatures[res.Signature] {
+    if (res.bfType != 'MB') {
         return false;
     }
 
-    res.FileSize = bs:readDWORD();
-    res.Reserved1 = bs:readBytes(2);
-    res.Reserved2 = bs:readBytes(2);
-    res.DataOffset = bs:readDWORD();
+    res.bfSize = bs.readUInt32();
+    res.bfReserved1 = bs.readUInt16();
+    res.bfReserved2 = bs.readUInt16();
+    res.bfOffBits = bs.readUInt32();
 
-    return res;
+    return true;
 }
 
+/*
 local function readImageHeader(bs, res)
     res = res or {}
 
@@ -176,3 +178,4 @@ local function readImageHeader(bs, res)
 
     return res;
 end
+*/
