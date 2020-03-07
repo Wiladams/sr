@@ -13,6 +13,7 @@
 */
 
 #include "w32.hpp"
+#include <stdio.h>
 
 class mmap
 {
@@ -22,6 +23,12 @@ class mmap
 public:
     size_t size;
     uint8_t * data;
+
+    // factory method
+    static mmap create(const char *filename)
+    {
+        return mmap(filename);
+    }
 
     mmap(const char * filename)
         : size(0),
@@ -53,7 +60,7 @@ public:
         bool exists = filehandle != INVALID_HANDLE_VALUE;
         if (exists) {
 		    size_t fsize = GetFileSize(filehandle, nullptr);
-            //printf("    Size: ", fsize)
+
 		    if (fsize == 0) {
 			    // Windows will error if mapping a 0-length file, fake a new one
 			    exists = false;
@@ -69,8 +76,12 @@ public:
         maphandle = CreateFileMappingA(filehandle, nullptr, PAGE_READONLY, 0, size, nullptr);
         //printf("CREATE File Mapping: ", maphandle)
 	    
-        if (maphandle == nullptr) {
+        if (maphandle == INVALID_HANDLE_VALUE) {
 		    //error("Could not create file map: "..tostring(ffi.C.GetLastError()))
+            // close file handle and set it to invalid
+            CloseHandle(filehandle);
+            filehandle = INVALID_HANDLE_VALUE;
+
             return ;
         }
 	
@@ -78,8 +89,11 @@ public:
 	    data = (uint8_t *)MapViewOfFile(maphandle, FILE_MAP_READ, 0, 0, 0);
 	    //print("MAP VIEW: ", m.map)
 	    if (data == nullptr) {
-            // throw exception
-		    //error("Could not map: "..tostring(ffi.C.GetLastError()))
+            CloseHandle(maphandle);
+            CloseHandle(filehandle);
+            maphandle = INVALID_HANDLE_VALUE;
+            filehandle = INVALID_HANDLE_VALUE;
+
             return ;
         }
     }
@@ -114,6 +128,8 @@ public:
     }
 
     virtual ~mmap() {
+        printf("mmap - DESTRUCTOR\n");
+
         close();
     }
 

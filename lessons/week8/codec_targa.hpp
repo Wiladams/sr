@@ -22,14 +22,14 @@
 
 
 #include "binstream.hpp"
-
-local mmap = require("mmap")
+#include "mmap.hpp"
 #include "PixelBufferRGBA32.hpp"
-local bitbang = require("bitbang")
 
+/*
+local bitbang = require("bitbang")
 local BITSVALUE = bitbang.BITSVALUE
 local isset = bitbang.isset
-
+*/
 
 
 //    Convenience structures
@@ -57,7 +57,7 @@ enum class VerticalOrientation : int {
 //             11 = reserved.         
 */
 
-enum class Interleave : int {
+enum Interleave : int {
     non_interleaved = 0,
     two_way = 1,
     four_way = 2,
@@ -65,7 +65,7 @@ enum class Interleave : int {
 };
 
 
-enum class ImageType : int {
+enum ImageKind : int {
     NoImageData = 0,
     ColorMapped = 1,
     TrueColor = 2,
@@ -79,11 +79,36 @@ enum class ImageType : int {
 static const int footerSize = 26;
 const char * targaXFileID = "TRUEVISION-XFILE";
 
-struct ColorMapEntry {
-    uint32_t b,g,r,a;
+struct tgaFooter {
+    uint32_t    ExtAreaOffset;
+    uint32_t    DevDirOffset;
+    char        Signature[18];
 };
 
-bool readColorMap(bs, header)
+// This is NOT suitable for direct memory
+// reading.
+struct tgaHeader {
+    uint8_t     IDLength;
+    uint8_t     ColorMapType;
+    uint8_t     ImageType;
+    uint16_t    CMapStart;
+    uint16_t    CMapLength;
+    uint8_t     CMapDepth;
+    bool        Compressed;         // calculated
+
+    // Image information
+    uint16_t    XOffset;
+    uint16_t    YOffset;
+    uint16_t    Width;
+    uint16_t    Height;
+    uint8_t     PixelDepth;         // bits per pixel
+    uint8_t     BytesPerPixel;      // calculated
+    uint8_t     ImageDescriptor;
+};
+
+/*
+bool readColorMap(BinStream &bs, tgaHeader &header)
+{
     int bytespe = header.CMapDepth / 8;
     local pixtype = ffi.typeof("uint8_t[$]", bytespe)
     local databuff = pixtype()
@@ -91,7 +116,7 @@ bool readColorMap(bs, header)
     local cMap = ffi.new("struct Pixel32[?]", header.CMapLength)
 
     for (int i= header.CMapStart; i<header.CMapLength) {
-        local nRead = bs:readByteBuffer(bytespe, databuff)
+        local nRead = bs.readByteBuffer(bytespe, databuff)
         
         if (bytespe == 2) {
             uint16_t src16 = (uint16_t)((databuff[1]<<8) | databuff[0])
@@ -119,33 +144,33 @@ bool readColorMap(bs, header)
 
     return cMap
 }
+*/
 
-bool isCompressed(header)
+bool isCompressed(tgaHeader &header)
 {
-    return header.ImageType == ImageType.ColorMappedCompressed or
-        header.ImageType == ImageType.TrueColorCompressed or
-        header.ImageType == ImageType.MonochromeCompressed
+    return header.ImageType == ColorMappedCompressed ||
+        header.ImageType == TrueColorCompressed ||
+        header.ImageType == MonochromeCompressed;
 }
 
-TargaHeader readHeader(bs, res)
+bool readHeader(BinStream &bs, tgaHeader &res)
+{
+    res.IDLength = bs.readOctet();           // 00h  Size of Image ID field
+    res.ColorMapType = bs.readOctet();       // 01h  Color map type 
+    res.ImageType = bs.readOctet();          // 02h  Image type code
+    res.CMapStart = bs.readUInt16();         // 03h  Color map origin
+    res.CMapLength = bs.readUInt16();        // 05h  Color map length
+    res.CMapDepth = bs.readOctet();          // 07h  Depth of color map entries
+    res.Compressed = isCompressed(res);
 
-
-    res.IDLength = bs:readOctet()           -- 00h  Size of Image ID field
-    res.ColorMapType = bs:readOctet()       -- 01h  Color map type 
-    res.ImageType = bs:readOctet()          -- 02h  Image type code
-    res.CMapStart = bs:readUInt16()         -- 03h  Color map origin
-    res.CMapLength = bs:readUInt16()        -- 05h  Color map length
-    res.CMapDepth = bs:readOctet()          -- 07h  Depth of color map entries
-    res.Compressed = isCompressed(res)
-
-    -- Image Description
-    res.XOffset = bs:readUInt16()           -- 08h  X origin of image
-    res.YOffset = bs:readUInt16()           -- 0Ah  Y origin of image
-    res.Width = bs:readUInt16()             -- 0Ch  Width of image - Maximum 512
-    res.Height = bs:readUInt16()            -- 0Eh  Height of image - Maximum 482
-    res.PixelDepth = bs:readOctet()         -- 10h  Number of bits per pixel
-    res.BytesPerPixel = res.PixelDepth / 8
-    res.ImageDescriptor = bs:readOctet()    -- 11h  Image descriptor byte
+    // Image Description
+    res.XOffset = bs.readUInt16();           // 08h  X origin of image
+    res.YOffset = bs.readUInt16();           // 0Ah  Y origin of image
+    res.Width = bs.readUInt16();             // 0Ch  Width of image - Maximum 512
+    res.Height = bs.readUInt16();            // 0Eh  Height of image - Maximum 482
+    res.PixelDepth = bs.readOctet();         // 10h  Number of bits per pixel
+    res.BytesPerPixel = res.PixelDepth / 8;
+    res.ImageDescriptor = bs.readOctet();    // 11h  Image descriptor byte
 
 
 /*
@@ -175,25 +200,27 @@ TargaHeader readHeader(bs, res)
                  10 = four way interleaving.                    |
                  11 = reserved.         
 */
-    res.AttrBits = band(res.ImageDescriptor , 0x0F);
-    res.HorizontalOrientation = rshift(band(res.ImageDescriptor, 0x10),4)
-    res.VerticalOrientation = rshift(band(res.ImageDescriptor, 0x20), 5)
-    res.Interleave = rshift(band(res.ImageDescriptor, 0xC0), 6)
+    //res.AttrBits = (res.ImageDescriptor & 0x0F);
+    //res.HorizontalOrientation = ((res.ImageDescriptor & 0x10) >> 4)
+    //res.VerticalOrientation = ((res.ImageDescriptor & 0x20) >> 5)
+    //res.Interleave = ((res.ImageDescriptor & 0xC0) >> 6)
 
 
 // If there's an identification section, read that next
-//print("ImageIdentification: ", res.IDLength, string.format("0x%x",bs:tell()))
-    if res.IDLength > 0 then
-        res.ImageIdentification = bs:readBytes(res.IDLength)
-    end
+//print("ImageIdentification: ", res.IDLength, string.format("0x%x",bs.tell()))
+/*
+    if (res.IDLength > 0) {
+        res.ImageIdentification = bs.readBytes(res.IDLength);
+    }
 
 
     // If there's a color map, read that next
     if (res.ColorMapType == ColorMapType.Palette) {
-        res.ColorMap = readColorMap(bs, res)
+        res.ColorMap = readColorMap(bs, res);
     }
+*/
 
-    return res
+    return true;
 }
 
 
@@ -211,32 +238,35 @@ Return a PixelBuffer if we can read the file successfully
 */
 
 
-bool readFooter(bs, rs)
-    rs = rs or {}
-    --print("targa.readFooter, BEGIN")
-    rs.ExtensionAreaOffset = bs:readUInt32()
-    rs.DeveloperDirectoryOffset = bs:readUInt32()
-    rs.Signature = bs:readBytes(16)
-    rs.Signature = ffi.string(rs.Signature, 16)
-    rs.Period = string.char(bs:readOctet())
-    rs.Zero = bs:readOctet()
+bool readFooter(BinStream &bs, tgaFooter)
+{
+    //print("targa.readFooter, BEGIN")
+
+    rs.ExtensionAreaOffset = bs.readUInt32();
+    rs.DeveloperDirectoryOffset = bs.readUInt32();
+    rs.Signature = bs.readBytes(16);
+    rs.Signature = ffi.string(rs.Signature, 16);
+    rs.Period = string.char(bs.readOctet());
+    rs.Zero = bs.readOctet();
 
     rs.isExtended = rs.Signature == targaXFileID
 
-    if not rs.isExtended then
+    if (!rs.isExtended) {
         return false;
-    end
-    --print("targa.readFooter, END")
+    }
+    //print("targa.readFooter, END")
     
     return rs
 }
 
+/*
 local TrueColor = ImageType.TrueColor
 local Monochrome = ImageType.Monochrome
 local ColorMapped = ImageType.ColorMapped
 local TrueColorCompressed = ImageType.TrueColorCompressed
 local ColorMappedCompressed = ImageType.ColorMappedCompressed
 local MonochromeCompressed = ImageType.MonochromeCompressed
+*/
 
 local function decodeSinglePixel(pix, databuff, pixelDepth, imtype, colorMap)
     --print(pix, databuff, bpp, imtype)
@@ -335,7 +365,7 @@ local function uncompressedPixels(bs, header)
         local databuff = pixtype()
 
         for x,y in locations(header) do
-            local nRead = bs:readByteBuffer(bytesPerPixel, databuff)
+            local nRead = bs.readByteBuffer(bytesPerPixel, databuff)
             decodeSinglePixel(pix, databuff, header.PixelDepth, header.ImageType, header.ColorMap)
             coroutine.yield(x,y,pix)
         end
@@ -358,11 +388,11 @@ local function compressedPixels(bs, header)
             if pixelCount == 0 then
                 -- read repeatCount byte to see if it's RLE or RAW
                 -- and the number of repetitions                
-                repCount = bs:readOctet()
+                repCount = bs.readOctet()
                 local isRLE = isset(repCount, 7)
                 --print("RLE: ", isRLE)
                 pixelCount = BITSVALUE(repCount,0,6) + 1
-                local nRead = bs:readByteBuffer(bytesPerPixel, databuff)
+                local nRead = bs.readByteBuffer(bytesPerPixel, databuff)
                 decodeSinglePixel(pix, databuff, header.PixelDepth, header.ImageType, header.ColorMap)
                 --print("pixelCount: ", pixelCount, pix)
             end
@@ -401,14 +431,14 @@ local function readFromStream(bs, res)
 
     -- position 26 bytes from the end and try 
     -- to read the footer
-    bs:seek(bs.size-footerSize)
+    bs.seek(bs.size-footerSize)
     local footer, err = readFooter(bs)
     res.Footer = footer
 
     -- if footer == false, then it's not an extended
     -- format file.  Otherwise, the footer is returned
     -- In either case, time to read the header
-    bs:seek(0)
+    bs.seek(0)
     local header, err = readHeader(bs)
     res.Header = header
 

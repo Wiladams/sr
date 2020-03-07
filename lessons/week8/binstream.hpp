@@ -22,13 +22,14 @@
 #endif
 
 //local min = math.min
-void memcopy(uint8_t *dst, const size_t n, const uint8_t *src)
+void memcopy(void *dst, const size_t n, const void *src)
 {
     for (int i=0;i<n;i++)
     {
-        dst[i] = src[i];
+        ((uint8_t *)dst)[i] = ((uint8_t *)src)[i];
     }
 }
+
 /*
     Standard 'object' construct.
     __call is implemented so we get a 'constructor'
@@ -39,63 +40,56 @@ class BinStream
 {
     bool fbigend;
     uint8_t *fdata;
-    size_t fposition;
     size_t fcursor;
     size_t fsize;
 
+    BinStream() : fdata(nullptr){}
+
 public:
-    BinStream(uint8_t *data, size_t size, size_t position=0, bool littleendian = true)
+
+    BinStream(void *data, const size_t size, size_t position=0, bool littleendian = true)
         : fbigend(!littleendian),
-        fposition(0),
-        fdata(data),
+        fcursor(position),
+        fdata((uint8_t *)data),
         fsize(size)
-    {
-        fcursor = fposition;
-    }
+    {}
  
+    bool isValid() {return fdata != nullptr;}
 
     // get a subrange of the memory stream
     // returning a new memory stream
-    BinStream *range(int64_t size, int64_t pos)
+    BinStream range(int64_t size, int64_t pos)
     {
         if (pos < 0 || (fsize < 0)) {
             // BUGBUG - throw exception
-            return nullptr;
+            return BinStream();
         }
 
         if (pos > fsize) {
             // BUGBUG - throw exception
-            return nullptr;
+            return BinStream();
         }
 
         if ((size > (fsize - pos))) { 
             // BUGBUG - throw exception
-            return nullptr;
+            return BinStream();
         }
 
-        return new BinStream(fdata+pos, size, 0 , !fbigend);
+        return BinStream(fdata+pos, size, 0 , !fbigend);
     }
 
-    BinStream * range(size_t size)
-    {
-        return range(size, fcursor);
-    }
+    BinStream range(size_t size) {return range(size, fcursor); }
 
     // report how many bytes remain to be read
     // from stream
-    int64_t remaining()
-    {
-        return fsize - fcursor;
-    }
+    int64_t remaining() {return fsize - fcursor;}
 
-    bool isEOF()
-    {
-        return (remaining() < 1);
-    }
+    // report whether we've reached the end of the stream yet
+    bool isEOF() {return (remaining() < 1);}
 
 
- // move to a particular position, in bytes
-    bool seek(int64_t pos)
+    // move to an absolute position
+    bool seek(const int64_t pos)
     {
         // if position specified outside of range
         // just set it past end of stream
@@ -111,36 +105,20 @@ public:
 
 
     // Report the current cursor position.
-    int64_t tell()
-    {
-        return fcursor;
-    }
+    int64_t tell() {return fcursor;}
 
     // move the cursor ahead by the amount
     // specified in the offset
     // seek, relative to current position
-    bool skip(int64_t offset)
-    {
-        //print("SKIP: ", offset)
-        return seek(fcursor + offset);
-    }
+    bool skip(int64_t offset) {return seek(fcursor + offset);}
 
     // Seek forwad to a boundary of the specified
     // number of bytes.
-    bool alignTo(size_t num)
-    {
-        return skip(fcursor % num);
-    }
+    bool alignTo(size_t num) {return skip(fcursor % num);}
     
-    bool skipToEven()
-    {
-        return alignTo(2);
-    }
+    bool skipToEven() {return alignTo(2);}
 
-    uint8_t * getPositionPointer()
-    {
-        return fdata + fcursor;
-    }
+    void * getPositionPointer() {return fdata + fcursor;}
 
     // get 8 bits, and don't advance the cursor
     int peekOctet(int offset=0)
@@ -221,7 +199,7 @@ size_t readLine(const size_t bufflen, char * buff)
 
     int64_t starting = tell();
     int64_t ending = starting;
-    uint8_t *startPtr = getPositionPointer();
+    void *startPtr = getPositionPointer();
 
     while (!isEOF()) {
         uint8_t c = peekOctet();

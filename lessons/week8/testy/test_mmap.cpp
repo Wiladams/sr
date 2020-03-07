@@ -5,7 +5,7 @@
 
 void main()
 {
-    mmap m1 = mmap("testfile.txt");
+    mmap m1 = mmap::create("testfile.txt");
 
     printf("isValid: %d size: %zd\n", m1.isValid(), m1.length());
     printf("=================================\n");
