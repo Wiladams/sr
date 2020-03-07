@@ -17,9 +17,10 @@
 #include <stdint.h>
 #include <string.h>
 
-#ifndef MIN
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#endif
+// Define this here instead of using MIN to
+// reduce dependencies
+#define BINMIN(a,b) (((a)<(b))?(a):(b))
+
 
 //local min = math.min
 void memcopy(void *dst, const size_t n, const void *src)
@@ -56,6 +57,20 @@ public:
  
     bool isValid() {return fdata != nullptr;}
 
+    // report whether we've reached the end of the stream yet
+    bool isEOF() {return (remaining() < 1);}
+
+    size_t length() {return fsize;}
+    
+    // report how many bytes remain to be read
+    // from stream
+    int64_t remaining() {return fsize - fcursor;}
+
+    // Report the current cursor position.
+    int64_t tell() {return fcursor;}
+
+
+
     // get a subrange of the memory stream
     // returning a new memory stream
     BinStream range(int64_t size, int64_t pos)
@@ -80,13 +95,6 @@ public:
 
     BinStream range(size_t size) {return range(size, fcursor); }
 
-    // report how many bytes remain to be read
-    // from stream
-    int64_t remaining() {return fsize - fcursor;}
-
-    // report whether we've reached the end of the stream yet
-    bool isEOF() {return (remaining() < 1);}
-
 
     // move to an absolute position
     bool seek(const int64_t pos)
@@ -104,9 +112,10 @@ public:
     }
 
 
-    // Report the current cursor position.
-    int64_t tell() {return fcursor;}
 
+    /*
+        Moving the cursor around
+    */
     // move the cursor ahead by the amount
     // specified in the offset
     // seek, relative to current position
@@ -119,6 +128,7 @@ public:
     bool skipToEven() {return alignTo(2);}
 
     void * getPositionPointer() {return fdata + fcursor;}
+
 
     // get 8 bits, and don't advance the cursor
     int peekOctet(int offset=0)
@@ -153,7 +163,7 @@ public:
         }
 
         // see how many bytes are remaining to be read
-        size_t nActual = MIN(n, remaining());
+        size_t nActual = BINMIN(n, remaining());
     
         // read the minimum between remaining and 'n'
         uint8_t * ptr = fdata+fcursor;
@@ -170,7 +180,7 @@ public:
     {
         // determine maximum number of bytes we can read
         // we leave one space for the null terminator
-        size_t nActual = MIN(n-1, remaining());
+        size_t nActual = BINMIN(n-1, remaining());
         size_t idx = 0;
         while (idx < nActual) {
             buff[idx] = readOctet();
@@ -224,7 +234,7 @@ size_t readLine(const size_t bufflen, char * buff)
     }
 
     int64_t len = ending - starting;
-    len = MIN(len, bufflen-1);
+    len = BINMIN(len, bufflen-1);
 
     memcopy((uint8_t *)buff, len, startPtr);
     buff[len] = 0;

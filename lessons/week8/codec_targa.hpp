@@ -24,6 +24,7 @@
 #include "binstream.hpp"
 #include "mmap.hpp"
 #include "PixelBufferRGBA32.hpp"
+#include "enumerable.hpp"
 
 /*
 local bitbang = require("bitbang")
@@ -33,17 +34,17 @@ local isset = bitbang.isset
 
 
 //    Convenience structures
-enum class PaletteType : int {
+enum PaletteType : int {
     none   = 0,
     palette     = 1
 };
 
-enum class HorizontalOrientation : int {
+enum HorizontalOrientation : int {
     LeftToRight = 0,
     RightToLeft = 1
 };
 
-enum class VerticalOrientation : int {
+enum VerticalOrientation : int {
     BottomToTop = 0,
     TopToBottom = 1,
 };
@@ -80,9 +81,12 @@ static const int footerSize = 26;
 const char * targaXFileID = "TRUEVISION-XFILE";
 
 struct tgaFooter {
-    uint32_t    ExtAreaOffset;
-    uint32_t    DevDirOffset;
+    uint32_t    ExtensionAreaOffset;
+    uint32_t    DeveloperDirectoryOffset;
     char        Signature[18];
+
+    // calculated
+    bool isExtended;
 };
 
 // This is NOT suitable for direct memory
@@ -104,6 +108,16 @@ struct tgaHeader {
     uint8_t     PixelDepth;         // bits per pixel
     uint8_t     BytesPerPixel;      // calculated
     uint8_t     ImageDescriptor;
+
+    // Calculated
+    int HorizontalOrientation;
+    int VerticalOrientation;
+    int Interleave;
+};
+
+struct TargaMeta {
+    tgaHeader header;
+    tgaFooter footer;
 };
 
 /*
@@ -201,9 +215,9 @@ bool readHeader(BinStream &bs, tgaHeader &res)
                  11 = reserved.         
 */
     //res.AttrBits = (res.ImageDescriptor & 0x0F);
-    //res.HorizontalOrientation = ((res.ImageDescriptor & 0x10) >> 4)
-    //res.VerticalOrientation = ((res.ImageDescriptor & 0x20) >> 5)
-    //res.Interleave = ((res.ImageDescriptor & 0xC0) >> 6)
+    res.HorizontalOrientation = ((res.ImageDescriptor & 0x10) >> 4);
+    res.VerticalOrientation = ((res.ImageDescriptor & 0x20) >> 5);
+    res.Interleave = ((res.ImageDescriptor & 0xC0) >> 6);
 
 
 // If there's an identification section, read that next
@@ -238,25 +252,27 @@ Return a PixelBuffer if we can read the file successfully
 */
 
 
-bool readFooter(BinStream &bs, tgaFooter)
+bool readFooter(BinStream &bs, tgaFooter &rs)
 {
     //print("targa.readFooter, BEGIN")
 
     rs.ExtensionAreaOffset = bs.readUInt32();
     rs.DeveloperDirectoryOffset = bs.readUInt32();
-    rs.Signature = bs.readBytes(16);
-    rs.Signature = ffi.string(rs.Signature, 16);
-    rs.Period = string.char(bs.readOctet());
-    rs.Zero = bs.readOctet();
+    bs.readBytes(18, (uint8_t *)rs.Signature);
 
-    rs.isExtended = rs.Signature == targaXFileID
+    rs.isExtended = !strcmp(rs.Signature, targaXFileID);
+
+    //printf("readFooter(), signature: %s\n", rs.Signature);
+    //printf("isExtended: %d\n", rs.isExtended);
 
     if (!rs.isExtended) {
         return false;
     }
+
+
     //print("targa.readFooter, END")
     
-    return rs
+    return true;
 }
 
 /*
@@ -267,10 +283,10 @@ local TrueColorCompressed = ImageType.TrueColorCompressed
 local ColorMappedCompressed = ImageType.ColorMappedCompressed
 local MonochromeCompressed = ImageType.MonochromeCompressed
 */
-
-local function decodeSinglePixel(pix, databuff, pixelDepth, imtype, colorMap)
-    --print(pix, databuff, bpp, imtype)
-    if imtype == TrueColor or imtype == TrueColorCompressed then
+/*
+bool decodeSinglePixel(PixRGBA &pix, databuff, pixelDepth, int imtype, colorMap)
+    //print(pix, databuff, bpp, imtype)
+    if (imtype == TrueColor) || (imtype == TrueColorCompressed) then
         if pixelDepth == 24 then
             pix.Red = databuff[0]
             pix.Green = databuff[1]
@@ -293,25 +309,28 @@ local function decodeSinglePixel(pix, databuff, pixelDepth, imtype, colorMap)
                 pix.Alpha = 0;  -- 255
             end 
         end
-        return true;
-    elseif imtype == Monochrome or imtype == MonochromeCompressed then
-        pix.Red = databuff[0]
-        pix.Green = databuff[0]
-        pix.Blue = databuff[0]
-        pix.Alpha = 0
-        return true
-    elseif imtype == ColorMapped or imtype == ColorMappedCompressed then
-        -- lookup the color using databuff[0] as index
-        local cpix = colorMap[databuff[0]]
-        pix.Red = cpix.Red;
-        pix.Green = cpix.Green;
-        pix.Blue = cpix.Blue;
-        return true;
-    end
 
-    return false
-end
+        return true;
+    } else if (imtype == Monochrome) || (imtype == MonochromeCompressed) {
+        pix.red = databuff[0];
+        pix.green = databuff[0];
+        pix.blue = databuff[0];
+        pix.alpha = 0;
 
+        return true;
+    } else if (imtype == ColorMapped) || (imtype == ColorMappedCompressed) {
+        // lookup the color using databuff[0] as index
+        PixRGBA cpix = colorMap[databuff[0]];
+        pix.red = cpix.red;
+        pix.green = cpix.green;
+        pix.blue = cpix.blue;
+
+        return true;
+    }
+
+    return false;
+}
+*/
 /*
 -- We want to figure out the mapping between positions as we
 -- read them and their locations in our pixel buffer in one place
@@ -320,41 +339,85 @@ end
 -- would do interleaving as well, but we don't have an image to test
 -- with
 */
-local function locations(header)
-    local function iterator()
-        --  Start with left to right orientation
-        local dx = 1;
-        local xStart = 0
-        local xEnd = header.Width-1
-        
-        -- switch to right to left of horizontal orientation indicates
-        if header.HorizontalOrientation == HorizontalOrientation.RightToLeft then
-            dx = -1
-            xStart = header.Width-1
-            xEnd = 0
-        end
-    
-        -- start top to bottom vertical orientation
-        local dy = 1
-        local yStart = 0
-        local yEnd = header.Height-1
-        if header.VerticalOrientation == VerticalOrientation.BottomToTop then
-            dy = -1
-            yStart = header.Height-1
-            yEnd = 0
-        end
-    
-        -- Now do the actual iteration job
-        for y = yStart, yEnd, dy do 
-            for x=xStart,xEnd, dx do
-                coroutine.yield(x,y,pix)
-            end
-        end
-    end
 
-    return coroutine.wrap(iterator)
-end
+struct Location
+{
+    int x, y;
+};
 
+// An iterator over locations
+class LocIterator : IEnumerator<Location>
+{
+    int xSign, xStart, xEnd, xincr;
+    int ySign, yStart, yEnd, yincr;
+
+    tgaHeader fHeader;
+
+public:
+    LocIterator(tgaHeader &header)
+        :fHeader(header)
+    {
+        // Start with left to right orientation
+        xSign = 1;
+        xStart = 0;
+        xEnd = header.Width-1;
+        xincr = -1;
+
+        // switch to right to left of horizontal orientation indicates
+        if (header.HorizontalOrientation == RightToLeft) {
+            xSign = -1;
+            xStart = header.Width-1;;
+            xEnd = 0;
+        }
+
+        // start top to bottom vertical orientation
+        ySign = 1;
+        yStart = 0;
+        yEnd = header.Height-1;
+        yincr = 0;
+
+        // Switch to bottom to top if necessary
+        if (header.VerticalOrientation == BottomToTop) {
+            ySign = -1;
+            yStart = header.Height-1;
+            yEnd = 0;
+        }
+
+        reset();
+    }
+
+    virtual bool moveNext()
+    {
+        xincr = xincr + 1;
+        if (xincr == fHeader.Width)
+        {
+            xincr = 0;
+            yincr = yincr + 1;
+            if (yincr == fHeader.Height) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    virtual void reset() 
+    { 
+        xincr = -1;
+        yincr = 0;
+    }
+    
+    virtual Location getCurrent() const
+    {
+        return {xStart + (xSign*xincr), yStart + (ySign*yincr)};
+    }
+
+    // getCurrent()
+    Location operator *() {return getCurrent();}
+};
+
+
+/*
 // An iterator which will return the uncompressed
 // pixels in row order
 local function uncompressedPixels(bs, header)
@@ -373,7 +436,8 @@ local function uncompressedPixels(bs, header)
 
     return coroutine.wrap(iterator)
 end
-
+*/
+/*
 local function compressedPixels(bs, header)
     local function iterator()
         local bytesPerPixel = header.BytesPerPixel
@@ -404,73 +468,69 @@ local function compressedPixels(bs, header)
 
     return coroutine.wrap(iterator)
 end
+*/
 
-bool readBody(bs, header)
-    --print("targa.readBody, BEGIN")
-
-    local pb = PixelBuffer(header.Width, header.Height)
- 
-    if not header.Compressed then
-        for x,y,pixel in uncompressedPixels(bs, header) do
-            pb:set(x,y,pixel)
-        end
-    else
-        for x,y,pixel in compressedPixels(bs, header) do
-            pb:set(x,y,pixel)
-        end
-    end
-
-    return pb
-end
-
--- read a targa image from a stream
--- This assumes other forms, like reading from a fill
--- will create a stream to read from
-local function readFromStream(bs, res)
-    res = res or {}
-
-    -- position 26 bytes from the end and try 
-    -- to read the footer
-    bs.seek(bs.size-footerSize)
-    local footer, err = readFooter(bs)
-    res.Footer = footer
-
-    -- if footer == false, then it's not an extended
-    -- format file.  Otherwise, the footer is returned
-    -- In either case, time to read the header
-    bs.seek(0)
-    local header, err = readHeader(bs)
-    res.Header = header
-
-    if not header then
-        res.Error = "error reading targa headder: "..tostring(err)
-        return false, res
-    end
-
-    -- We have the header, so we should be able
-    -- to read the body
-    pixbuff, err = readBody(bs, header)
-
-    res.PixelBuffer = pixbuff
-    res.Error = err
-
-    return pixbuff, header, footer
-end
-
-PixelBuffer readFromFile(filename)
+PixelBuffer * readBody(BinStream &bs, tgaHeader &header)
 {
-    local filemap, err = mmap(filename)
-    if not filemap then
-        return false, "file not mapped ()"..tostring(err)
-    end
+    //print("targa.readBody, BEGIN")
+    PixelBuffer * pb = new PixelBufferRGBA32(header.Width, header.Height);
+ 
+    if (!header.Compressed) {
+        LocIterator li(header);
+        //PixIterator pi(bs, header);
 
-    local bs, err = binstream(filemap:getPointer(), filemap:length(), 0, true )
+        while (li.moveNext()) {
+            //uncompressedPixels(bs, header)
+            Location loc = li.getCurrent();
+            printf("loc: %d,%d\n", loc.x, loc.y);
+            //if (!pi.moveNext()) {
+            //    break;
+            //}
 
-    if not bs then
-        return false, err
-    end
+            //pb->set(loc.x, loc.y, c);
+        }
+    } else {
+        //for x,y,pixel in compressedPixels(bs, header) do
+        //    pb:set(x,y,pixel)
+        //end
+    }
 
-    return readFromStream(bs)
+    return pb;
 }
+
+// read a targa image from a stream
+// This assumes other forms, like reading from a file
+// will create a stream to read from
+PixelBuffer * readFromStream(BinStream &bs, TargaMeta &res)
+{
+    // position 26 bytes from the end and try 
+    // to read the footer
+    bs.seek(bs.length()-footerSize);
+    bool success = readFooter(bs, res.footer);
+
+    printf("targaFooter.Signature: %s\n", res.footer.Signature);
+
+    // if footer == false, then it's not an extended
+    // format file.  Otherwise, the footer is returned
+    // In either case, time to read the header
+    bs.seek(0);
+    success = readHeader(bs, res.header);
+
+    if (!success) {
+        //res.Error = "error reading targa headder: "..tostring(err)
+        return false;
+    }
+
+    // We have the header, so we should be able
+    // to read the body
+    PixelBuffer *pb = readBody(bs, res.header);
+
+    //res.PixelBuffer = pixbuff
+    //res.Error = err
+
+    return pb;
+}
+
+
 
 
