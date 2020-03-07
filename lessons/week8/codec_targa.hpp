@@ -284,7 +284,7 @@ local ColorMappedCompressed = ImageType.ColorMappedCompressed
 local MonochromeCompressed = ImageType.MonochromeCompressed
 */
 /*
-bool decodeSinglePixel(PixRGBA &pix, databuff, pixelDepth, int imtype, colorMap)
+bool decodeSinglePixel(PixRGBA &pix, uint8_t *databuff, int pixelDepth, int imtype, PixRGBA *colorMap)
     //print(pix, databuff, bpp, imtype)
     if (imtype == TrueColor) || (imtype == TrueColorCompressed) then
         if pixelDepth == 24 then
@@ -417,9 +417,69 @@ public:
 };
 
 
+
+
 /*
 // An iterator which will return the uncompressed
 // pixels in row order
+*/
+class PixelsUncompressed : IEnumerator<PixRGBA>
+{
+    TargaMeta &fMeta;
+    int bytesPerPixel;
+    uint8_t databuff[16];     // Maximum number of bytes per pixel
+    int xStart, xEnd, xincr;
+    int yStart, yEnd, yincr;
+    BinStream &bs;
+    PixRGBA pix;
+
+public:
+    PixelsUncompressed(BinStream &abs, TargaMeta &meta)
+        : fMeta(meta),
+        bs(abs)
+    {
+        bytesPerPixel = meta.header.BytesPerPixel;
+
+        reset();
+    }
+
+    bool moveNext() {
+        xincr = xincr + 1;
+        if (xincr >= fMeta.header.Width) {
+            xincr = 0;
+            yincr = yincr + 1;
+            if (yincr >= fMeta.header.Height) {
+                return false;
+            }
+        }
+
+        // Get the pixel data
+        int nRead = bs.readBytes(fMeta.header.BytesPerPixel, databuff);
+        //decodeSinglePixel(pix, databuff, meta.header.PixelDepth, meta.header.ImageType, meta.header.ColorMap);
+
+        return true;
+
+        //for x,y in locations(header) do
+        //    local nRead = bs.readByteBuffer(bytesPerPixel, databuff)
+        //    decodeSinglePixel(pix, databuff, header.PixelDepth, header.ImageType, header.ColorMap)
+        //    coroutine.yield(x,y,pix)
+        //end
+    }
+
+    void reset()
+    {
+        xincr = -1;
+        yincr = 0;
+    }
+
+    PixRGBA getCurrent() const
+    {
+        return pix;
+    }
+};
+
+
+/*
 local function uncompressedPixels(bs, header)
     local function iterator()
         local bytesPerPixel = header.BytesPerPixel
@@ -477,10 +537,10 @@ PixelBuffer * readBody(BinStream &bs, tgaHeader &header)
  
     if (!header.Compressed) {
         LocIterator li(header);
-        //PixIterator pi(bs, header);
+        PixelsUncompressed pi(bs, header);
 
         while (li.moveNext()) {
-            //uncompressedPixels(bs, header)
+            //PixRGBA c = pi.uncompressedPixels(bs, header)
             Location loc = li.getCurrent();
             printf("loc: %d,%d\n", loc.x, loc.y);
             //if (!pi.moveNext()) {
