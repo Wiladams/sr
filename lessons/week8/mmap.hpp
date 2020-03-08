@@ -98,20 +98,13 @@ public:
         }
     }
     
-    virtual ~mmap() {
-        printf("mmap - DESTRUCTOR\n");
-
-        close();
-    }
+    virtual ~mmap() {close();}
 
     bool isValid() {return maphandle != INVALID_HANDLE_VALUE;}
 
-    uint8_t * getPointer(){return data;}
+    uint8_t * getPointer() {return data;}
 
-    size_t length()
-	{
-        return size;
-    }
+    size_t length() {return size;}
     
     bool close()
 	{

@@ -122,6 +122,57 @@ struct TargaMeta {
     tgaFooter footer;
 };
 
+
+bool decodeSinglePixel(PixRGBA &pix, uint8_t *databuff, int pixelDepth, int imtype, PixRGBA *colorMap)
+{
+    //printf("decodeSinglePixel: type: %d bpp:%d\n", imtype, pixelDepth);
+
+    if ((imtype == TrueColor) || (imtype == TrueColorCompressed)) {
+        if (pixelDepth == 24) {
+            pix.red = databuff[2];
+            pix.green = databuff[1];
+            pix.blue = databuff[0];
+            pix.alpha = 255;
+            return true;
+        } else if (pixelDepth == 32) {
+            pix.red = databuff[2];
+            pix.green = databuff[1];
+            pix.blue = databuff[0];
+            pix.alpha = 255;
+            //pix.alpha = databuff[3];   // We should pre-multiply the alpha?
+            return true;
+        } else if (pixelDepth == 16) {
+            uint16_t src16 = ((databuff[1] << 8) | databuff[0]);
+            pix.blue = (BITSVALUE(src16,0,4) << 3);
+            pix.green = (BITSVALUE(src16,5,9) << 3);
+            pix.red = (BITSVALUE(src16,10,14) << 3);
+            pix.alpha = 255;
+            if (BITSVALUE(src16,15,15) >= 1) {
+                pix.alpha = 0;  // 255
+            }
+        }
+
+        return true;
+    } else if ((imtype == Monochrome) || (imtype == MonochromeCompressed)) {
+        pix.red = databuff[0];
+        pix.green = databuff[0];
+        pix.blue = databuff[0];
+        pix.alpha = 0;
+
+        return true;
+    } else if ((imtype == ColorMapped) || (imtype == ColorMappedCompressed)) {
+        // lookup the color using databuff[0] as index
+        PixRGBA cpix = colorMap[databuff[0]];
+        pix.red = cpix.red;
+        pix.green = cpix.green;
+        pix.blue = cpix.blue;
+
+        return true;
+    }
+
+    return false;
+}
+
 PixRGBA * readColorMap(BinStream &bs, tgaHeader &header)
 {
     int bytespe = header.CMapDepth / 8;     // bytes per entry
@@ -132,6 +183,9 @@ PixRGBA * readColorMap(BinStream &bs, tgaHeader &header)
     for (int i= header.CMapStart; i<header.CMapLength; i++) {
         int nRead = bs.readBytes(bytespe, databuff);
         
+        // BUGBUG - this could use decodeSinglePixel()
+        decodeSinglePixel(cMap[i], databuff, header.CMapDepth, TrueColor, nullptr);
+/*
         if (bytespe == 2) {
             uint16_t src16 = (uint16_t)((databuff[1]<<8) | databuff[0]);
             cMap[i].red = (BITSVALUE(src16,0,4) << 3);
@@ -153,7 +207,7 @@ PixRGBA * readColorMap(BinStream &bs, tgaHeader &header)
             cMap[i].blue = databuff[2];
             //pix.alpha = databuff[3]   -- We should pre-multiply the alpha?
         }
-
+*/
     }
 
     return cMap;
@@ -285,55 +339,7 @@ local ColorMappedCompressed = ImageType.ColorMappedCompressed
 local MonochromeCompressed = ImageType.MonochromeCompressed
 */
 
-bool decodeSinglePixel(PixRGBA &pix, uint8_t *databuff, int pixelDepth, int imtype, PixRGBA *colorMap)
-{
-    //printf("decodeSinglePixel: type: %d bpp:%d\n", imtype, pixelDepth);
 
-    if ((imtype == TrueColor) || (imtype == TrueColorCompressed)) {
-        if (pixelDepth == 24) {
-            pix.red = databuff[2];
-            pix.green = databuff[1];
-            pix.blue = databuff[0];
-            pix.alpha = 255;
-            return true;
-        } else if (pixelDepth == 32) {
-            pix.red = databuff[2];
-            pix.green = databuff[1];
-            pix.blue = databuff[0];
-            pix.alpha = 255;
-            //pix.alpha = databuff[3];   // We should pre-multiply the alpha?
-            return true;
-        } else if (pixelDepth == 16) {
-            uint16_t src16 = ((databuff[1] << 8) | databuff[0]);
-            pix.blue = (BITSVALUE(src16,0,4) << 3);
-            pix.green = (BITSVALUE(src16,5,9) << 3);
-            pix.red = (BITSVALUE(src16,10,14) << 3);
-            pix.alpha = 255;
-            if (BITSVALUE(src16,15,15) >= 1) {
-                pix.alpha = 0;  // 255
-            }
-        }
-
-        return true;
-    } else if ((imtype == Monochrome) || (imtype == MonochromeCompressed)) {
-        pix.red = databuff[0];
-        pix.green = databuff[0];
-        pix.blue = databuff[0];
-        pix.alpha = 0;
-
-        return true;
-    } else if ((imtype == ColorMapped) || (imtype == ColorMappedCompressed)) {
-        // lookup the color using databuff[0] as index
-        PixRGBA cpix = colorMap[databuff[0]];
-        pix.red = cpix.red;
-        pix.green = cpix.green;
-        pix.blue = cpix.blue;
-
-        return true;
-    }
-
-    return false;
-}
 
 /*
 -- We want to figure out the mapping between positions as we
@@ -417,9 +423,6 @@ public:
     Location operator *() {return getCurrent();}
 };
 
-
-
-
 /*
 // An iterator which will return the uncompressed
 // pixels in row order
@@ -440,7 +443,6 @@ public:
         bs(abs)
     {
         bytesPerPixel = meta.header.BytesPerPixel;
-
         reset();
     }
 
@@ -456,45 +458,17 @@ public:
 
         // Get the pixel data
         int nRead = bs.readBytes(fMeta.header.BytesPerPixel, databuff);
-        //printf("nRead: %d\n", nRead);
+
         decodeSinglePixel(pix, databuff, fMeta.header.PixelDepth, fMeta.header.ImageType, fMeta.header.ColorMap);
         
         return true;
     }
 
-    void reset()
-    {
-        xincr = -1;
-        yincr = 0;
-    }
+    void reset() { xincr = -1; yincr = 0; }
 
-    PixRGBA getCurrent() const
-    {
-        //printf("getCurrent, pix: %d %d %d\n", pix.red, pix.green, pix.blue);
-
-        return pix;
-    }
+    PixRGBA getCurrent() const {return pix;}
 };
 
-
-/*
-local function uncompressedPixels(bs, header)
-    local function iterator()
-        local bytesPerPixel = header.BytesPerPixel
-        local pixtype = ffi.typeof("uint8_t[$]", bytesPerPixel)
-        local pix = ffi.new("struct Pixel32")
-        local databuff = pixtype()
-
-        for x,y in locations(header) do
-            local nRead = bs.readByteBuffer(bytesPerPixel, databuff)
-            decodeSinglePixel(pix, databuff, header.PixelDepth, header.ImageType, header.ColorMap)
-            coroutine.yield(x,y,pix)
-        end
-    end
-
-    return coroutine.wrap(iterator)
-end
-*/
 /*
 local function compressedPixels(bs, header)
     local function iterator()
@@ -548,9 +522,6 @@ PixelBuffer * readBody(BinStream &bs, TargaMeta &meta)
             PixRGBA c = pi.getCurrent();
 
             lpb->setPixel(loc.x, loc.y, c);
-
-            //PixRGBA cg = lpb->getPixel(loc.x, loc.y);
-            //printf("lpb: %d %d (%d,%d,%d)\n", loc.x, loc.y, cg.red, cg.green, cg.blue);
         }
     } else {
         //for x,y,pixel in compressedPixels(bs, header) do
