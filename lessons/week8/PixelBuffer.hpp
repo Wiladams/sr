@@ -58,8 +58,8 @@ public:
         int srcX, int srcY, int srcWidth, int srcHeight, 
         int destX, int destY, int destWidth, int destHeight)
     {
-        printf("blit, src size : %d X %d\n", srcWidth, srcHeight);
-        printf("blit, dst size : %d X %d\n", destWidth, destHeight);
+        //printf("blit, src size : %d X %d\n", srcWidth, srcHeight);
+        //printf("blit, dst size : %d X %d\n", destWidth, destHeight);
 
         for (int row=destY;row<(destY+destHeight-1);row++){
             for (int col=destX; col<(destX+destWidth-1); col++)

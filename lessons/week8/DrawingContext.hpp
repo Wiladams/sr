@@ -484,7 +484,7 @@ public:
         int destY = y;
         int destWidth = img.getWidth();
         int destHeight = img.getHeight();
-        printf("copyImage: %d x %d\n", destWidth, destHeight);
+        //printf("copyImage: %d x %d\n", destWidth, destHeight);
 
         pb.blit(img, 0, 0, img.getWidth(),img.getHeight(), destX, destY, destWidth, destHeight);
 

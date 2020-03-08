@@ -112,6 +112,7 @@ struct tgaHeader {
     uint8_t     * ImageIdentification;  // allocated
 
     // Calculated
+    int AttrBits;
     int HorizontalOrientation;
     int VerticalOrientation;
     int Interleave;
@@ -157,7 +158,7 @@ bool decodeSinglePixel(PixRGBA &pix, uint8_t *databuff, int pixelDepth, int imty
         pix.red = databuff[0];
         pix.green = databuff[0];
         pix.blue = databuff[0];
-        pix.alpha = 0;
+        pix.alpha = 255;
 
         return true;
     } else if ((imtype == ColorMapped) || (imtype == ColorMappedCompressed)) {
@@ -187,14 +188,6 @@ PixRGBA * readColorMap(BinStream &bs, tgaHeader &header)
     return cMap;
 }
 
-
-bool isCompressed(tgaHeader &header)
-{
-    return header.ImageType == ColorMappedCompressed ||
-        header.ImageType == TrueColorCompressed ||
-        header.ImageType == MonochromeCompressed;
-}
-
 bool readHeader(BinStream &bs, tgaHeader &res)
 {
     res.IDLength = bs.readOctet();           // 00h  Size of Image ID field
@@ -203,7 +196,9 @@ bool readHeader(BinStream &bs, tgaHeader &res)
     res.CMapStart = bs.readUInt16();         // 03h  Color map origin
     res.CMapLength = bs.readUInt16();        // 05h  Color map length
     res.CMapDepth = bs.readOctet();          // 07h  Depth of color map entries
-    res.Compressed = isCompressed(res);
+    res.Compressed = res.ImageType == ColorMappedCompressed ||
+        res.ImageType == TrueColorCompressed ||
+        res.ImageType == MonochromeCompressed;
 
     // Image Description
     res.XOffset = bs.readUInt16();           // 08h  X origin of image
@@ -212,37 +207,9 @@ bool readHeader(BinStream &bs, tgaHeader &res)
     res.Height = bs.readUInt16();            // 0Eh  Height of image - Maximum 482
     res.PixelDepth = bs.readOctet();         // 10h  Number of bits per pixel
     res.BytesPerPixel = res.PixelDepth / 8;
+    
     res.ImageDescriptor = bs.readOctet();    // 11h  Image descriptor byte
-
-
-/*
-                  Image Descriptor Byte.                        |
-      Bits 3-0 - number of attribute bits associated with each  |
-                   pixel.  For the Targa 16, this would be 0 or |
-                   1.  For the Targa 24, it should be 0.  For   |
-                   Targa 32, it should be 8.                    |
-      Bit 4    - controls left/right transfer of pixels to 
-                 the screen.
-                 0 = left to right
-                 1 = right to left
-      Bit 5    - controls top/bottom transfer of pixels to 
-                 the screen.
-                 0 = bottom to top
-                 1 = top to bottom
-                 
-                 In Combination bits 5/4, they would have these values
-                 00 = bottom left
-                 01 = bottom right
-                 10 = top left
-                 11 = top right
-                 
-      Bits 7-6 - Data storage interleaving flag.                |
-                 00 = non-interleaved.                          |
-                 01 = two-way (even/odd) interleaving.          |
-                 10 = four way interleaving.                    |
-                 11 = reserved.         
-*/
-    //res.AttrBits = (res.ImageDescriptor & 0x0F);
+    res.AttrBits = (res.ImageDescriptor & 0x0F);
     res.HorizontalOrientation = ((res.ImageDescriptor & 0x10) >> 4);
     res.VerticalOrientation = ((res.ImageDescriptor & 0x20) >> 5);
     res.Interleave = ((res.ImageDescriptor & 0xC0) >> 6);
@@ -285,8 +252,8 @@ bool readFooter(BinStream &bs, tgaFooter &rs)
 
     rs.isExtended = !strncmp(rs.Signature, targaXFileID, strlen(targaXFileID));
 
-    printf("readFooter(), signature: %s\n", rs.Signature);
-    printf("isExtended: %d\n", rs.isExtended);
+    //printf("readFooter(), signature: %s\n", rs.Signature);
+    //printf("isExtended: %d\n", rs.isExtended);
 
     if (!rs.isExtended) {
         return false;
@@ -422,73 +389,98 @@ public:
     PixRGBA getCurrent() const {return pix;}
 };
 
-/*
-local function compressedPixels(bs, header)
-    local function iterator()
-        local bytesPerPixel = header.BytesPerPixel
-        local pixtype = ffi.typeof("uint8_t[$]", bytesPerPixel)
-        local pix = ffi.new("struct Pixel32")
-        local databuff = pixtype()
+// An enumerator of compressed pixels
+class PixelsCompressed : IEnumerator<PixRGBA>
+{
+    TargaMeta &fMeta;
+    int bytesPerPixel;
+    uint8_t databuff[16];     // Maximum number of bytes per pixel
+    BinStream &bs;
+    PixRGBA pix;
+    int pixelCount;
+    bool isRLE;
+
+
+public:
+    PixelsCompressed(BinStream &abs, TargaMeta &meta)
+        : fMeta(meta),
+        bs(abs)
+    {
+        bytesPerPixel = meta.header.BytesPerPixel;
+        printf("PixelsCompressed, bpp: %d\n", bytesPerPixel);
+
+        reset();
+    }
+
+    bool moveNext()
+    {
+        if (pixelCount == 0) {
+            // read packet type to see if it's RLE or RAW
+            int packet = bs.readOctet();
+            isRLE = (packet & 0x80) > 0; // isset(repCount, 7);
+            pixelCount = BITSVALUE(packet,0,6) + 1;
+            
+            // Read at least one pixel value
+            int nRead = bs.readBytes(bytesPerPixel, databuff);
+            decodeSinglePixel(pix, databuff, fMeta.header.PixelDepth, fMeta.header.ImageType, fMeta.header.ColorMap);
+        } else {
+            // We're still in a run
+            if (!isRLE) {
+                // read another pixel
+                int nRead = bs.readBytes(bytesPerPixel, databuff);
+                decodeSinglePixel(pix, databuff, fMeta.header.PixelDepth, fMeta.header.ImageType, fMeta.header.ColorMap);
+            }
+        }
+        pixelCount = pixelCount - 1;
         
-        local pixelCount = 0
-        local repCount = 0
+        return true;
+    }
 
-        for x,y in locations(header) do
-            if pixelCount == 0 then
-                -- read repeatCount byte to see if it's RLE or RAW
-                -- and the number of repetitions                
-                repCount = bs.readOctet()
-                local isRLE = isset(repCount, 7)
-                --print("RLE: ", isRLE)
-                pixelCount = BITSVALUE(repCount,0,6) + 1
-                local nRead = bs.readByteBuffer(bytesPerPixel, databuff)
-                decodeSinglePixel(pix, databuff, header.PixelDepth, header.ImageType, header.ColorMap)
-                --print("pixelCount: ", pixelCount, pix)
-            end
+    PixRGBA getCurrent() const {return pix;}
 
-            coroutine.yield(x,y,pix)
-            pixelCount = pixelCount - 1
-        end
-    end
-
-    return coroutine.wrap(iterator)
-end
-*/
+    void reset() {
+        pixelCount = 0;
+    }
+};
 
 PixelBuffer * readBody(BinStream &bs, TargaMeta &meta)
 {
-    //printf("targa.readBody, BEGIN\n");
-
     PixelBuffer * lpb = new PixelBufferRGBA32(meta.header.Width, meta.header.Height);
- 
+    
+    LocIterator li(meta.header);
+
     if (!meta.header.Compressed) {
-        //printf("UNCOMPRESSED\n");
-        LocIterator li(meta.header);
         PixelsUncompressed pi(bs, meta);
 
         while (li.moveNext()) {
             Location loc = li.getCurrent();
-            //printf("loc: %d,%d\n", loc.x, loc.y);
             if (!pi.moveNext()) {
                 break;
             }
             
             PixRGBA c = pi.getCurrent();
-
             lpb->setPixel(loc.x, loc.y, c);
         }
     } else {
-        //for x,y,pixel in compressedPixels(bs, header) do
-        //    pb:set(x,y,pixel)
-        //end
+        PixelsCompressed pi(bs, meta);
+
+        while (li.moveNext()) {
+            Location loc = li.getCurrent();
+            //printf("loc: %d X %d\n", loc.x, loc.y);
+
+            if (!pi.moveNext()) {
+                break;
+            }
+            
+            PixRGBA c = pi.getCurrent();
+            lpb->setPixel(loc.x, loc.y, c);
+        }
     }
 
     return lpb;
 }
 
 // read a targa image from a stream
-// This assumes other forms, like reading from a file
-// will create a stream to read from
 PixelBuffer * readFromStream(BinStream &bs, TargaMeta &res)
 {
     // position 26 bytes from the end and try 
@@ -496,16 +488,11 @@ PixelBuffer * readFromStream(BinStream &bs, TargaMeta &res)
     bs.seek(bs.length()-footerSize);
     bool success = readFooter(bs, res.footer);
 
-    //printf("targaFooter.Signature: %s\n", res.footer.Signature);
-
-    // if footer == false, then it's not an extended
-    // format file.  Otherwise, the footer is returned
-    // In either case, time to read the header
+    //time to read the header
     bs.seek(0);
     success = readHeader(bs, res.header);
 
     if (!success) {
-        //res.Error = "error reading targa headder: "..tostring(err)
         return nullptr;
     }
 
@@ -513,11 +500,5 @@ PixelBuffer * readFromStream(BinStream &bs, TargaMeta &res)
     // to read the body
     PixelBuffer *apb = readBody(bs, res);
 
-    //res.PixelBuffer = apb;
-
     return apb;
 }
-
-
-
-

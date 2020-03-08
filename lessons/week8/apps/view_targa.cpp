@@ -56,23 +56,49 @@ PixelBuffer * readFromFile(const char *filename)
 void draw()
 {
     if (apb != nullptr) {
-        image(*apb, 0,0);
+        //image(*apb, 0,0);
+        gAppSurface->blit(*apb, 0, 0, apb->getWidth(), apb->getHeight(), 0, 0, width, height);
     }
     noLoop();
 }
 
+/*
+    Some files to try:
+
+    FLAG_B16.tga
+    FLAG_B24.tga
+    FLAG_B32.tga
+    
+    MARBLES.tga
+    
+    XING_T32.tga
+
+    indexed_UL.tga
+    indexed_UR.tga
+    indexed_LL.tga
+    indexed_LR.tga
+
+More from here:
+http://people.math.sc.edu/Burkardt/data/tga/tga.html
+*/
+
 void setup()
 {
-    //apb = readFromFile("data\\FLAG_B16.tga");
-    //apb = readFromFile("data\\FLAG_B24.tga");
-    //apb = readFromFile("data\\FLAG_B32.tga");
-    //apb = readFromFile("data\\MARBLES.tga");
-    apb = readFromFile("data\\XING_T32.tga");
-    //apb = readFromFile("data\\indexed_UL.tga");
+    printf("argc: %d\n", gargc);
+    if (gargc < 1) {
+        printf("You must specify a file to display.\n");
+        halt();
+    }
+
+    printf("argv[1]: %s\n", gargv[1]);
+
+    apb = readFromFile(gargv[1]);
+
 
     if (apb != nullptr) {
-        printf("Size: %d X %d\n", apb->getWidth(), apb->getHeight());
+        //printf("Size: %d X %d\n", apb->getWidth(), apb->getHeight());
         createCanvas(apb->getWidth(),apb->getHeight());
+        //createCanvas(320,240);
     } else {
         halt();
     }

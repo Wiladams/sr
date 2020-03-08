@@ -88,6 +88,9 @@ static MouseEventHandler gMouseDraggedHandler = nullptr;
 // Touch
 static WinMSGObserver gTouchHandler = nullptr;
 
+static int gargc;
+static char **gargv;
+
 static int gFPS = 15;   // Frames per second
 static Window * gAppWindow = nullptr;
 static PixelBuffer * gAppSurface = nullptr;
@@ -611,6 +614,9 @@ bool setCanvasSize(size_t aWidth, size_t aHeight)
 */
 int main(int argc, char **argv)
 {
+    gargc = argc;
+    gargv = argv;
+    
     setCanvasSize(320, 240);
 
     gAppWindow = new Window("Application Window", 320, 240, MsgHandler);
