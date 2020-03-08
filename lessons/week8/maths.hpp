@@ -15,12 +15,16 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <stdint.h>
+#include "bitbang.hpp"
 
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 
 // doesn't deal with -0 vs +0
 #define ABS(a) ((a) > 0 ? (a) : -(a))
+
+
 
 double constrain(double x, double low, double high)
 {

@@ -97,6 +97,12 @@ public:
             return ;
         }
     }
+    
+    virtual ~mmap() {
+        printf("mmap - DESTRUCTOR\n");
+
+        close();
+    }
 
     bool isValid() {return maphandle != INVALID_HANDLE_VALUE;}
 
@@ -127,10 +133,6 @@ public:
         return true;
     }
 
-    virtual ~mmap() {
-        printf("mmap - DESTRUCTOR\n");
 
-        close();
-    }
 
 };

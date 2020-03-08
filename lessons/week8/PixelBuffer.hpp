@@ -68,7 +68,7 @@ public:
                 int dy = MAP(row, destY, destY+destHeight-1, srcY, srcY+srcHeight-1);
 
                 PixRGBA pix = src.getPixel(dx,dy);
-                //printf("pixel: %d %d\n", dx, dy);
+                //printf("blit, pixel: %d %d (%d, %d, %d)\n", dx, dy, pix.red, pix.green, pix.blue);
 
                 setPixel(col, row, pix);
             }

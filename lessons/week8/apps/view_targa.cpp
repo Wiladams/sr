@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 
-PixelBuffer *pb = nullptr;
+PixelBuffer *apb = nullptr;
 
 PixelBuffer * readFromFile(const char *filename)
 {
@@ -23,25 +23,31 @@ PixelBuffer * readFromFile(const char *filename)
     }
 
     TargaMeta meta;
-    PixelBuffer *pb = readFromStream(bs, meta);
+    PixelBuffer * abuff = readFromStream(bs, meta);
 
-    return pb;
+    return abuff;
 }
 
 void draw()
 {
-    if (pb!= nullptr) {
-        image(*pb, 10,10);
+    if (apb != nullptr) {
+        printf("Imaging\n");
+        image(*apb, 0,0);
     }
+    noLoop();
 }
 
 void setup()
 {
-    createCanvas(400,400);
+    createCanvas(640,480);
 
-    pb = readFromFile("data\\FLAG_B32.tga");
+    apb = readFromFile("data\\FLAG_B16.tga");
+    //apb = readFromFile("data\\FLAG_B24.tga");
+    //apb = readFromFile("data\\FLAG_B32.tga");
 
-    if (pb != nullptr) {
-        printf("Size: %d X %d\n", pb->getWidth(), pb->getHeight());
+
+    if (apb != nullptr) {
+        printf("Size: %d X %d\n", apb->getWidth(), apb->getHeight());
+
     }
 }

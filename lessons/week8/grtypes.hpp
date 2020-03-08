@@ -17,6 +17,7 @@ typedef union PixRGBA {
     PixRGBA():intValue(0){}
 
     // Easy constructor
+    PixRGBA(const PixRGBA &rhs):red(rhs.red),blue(rhs.blue),green(rhs.green),alpha(rhs.alpha){}
     PixRGBA(uint32_t val) : intValue(val){}
     PixRGBA(int r, int g, int b, int a):red(r), green(g), blue(b), alpha(a) {}
 } PixRGBA;

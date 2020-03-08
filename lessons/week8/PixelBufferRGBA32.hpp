@@ -41,6 +41,8 @@ public:
     // Set the value of a single pixel
     bool setPixel(GRCOORD x, GRCOORD y, const PixRGBA &pix)
     {
+        //printf("setPixel: %d %d (%d,%d,%d)\n", x, y, pix.red, pix.green, pix.blue);
+
         // BUGBUG - we should quick reject if alpha == 0
         if (x>= getWidth() || y >= getHeight()  || (pix.alpha == 0)) 
         {
@@ -60,6 +62,9 @@ public:
         //printf("getPixel: %d %d, width: %d height: %d\n", x, y, getWidth(), getHeight());
 
         size_t offset = y * getWidth() + x;
+        //PixRGBA c = data[offset];
+        //printf("getPixel: (%d,%d,%d)\n", c.red, c.green, c.blue);
+        //return c;
         return this->data[offset];
     }
 
