@@ -79,6 +79,31 @@ public:
         return true;
     }
 
+    virtual bool blend(const PixelBuffer &src, 
+        int srcX, int srcY, int srcWidth, int srcHeight, 
+        int destX, int destY, int destWidth, int destHeight, const PixelTransferOp &tOp)
+    {
+        //printf("blit, src size : %d X %d\n", srcWidth, srcHeight);
+        //printf("blit, dst size : %d X %d\n", destWidth, destHeight);
+
+        for (int row=destY;row<(destY+destHeight-1);row++){
+            for (int col=destX; col<(destX+destWidth-1); col++)
+            {
+                int dx = MAP(col, destX, destX+destWidth-1, srcX, srcX+srcWidth-1);
+                int dy = MAP(row, destY, destY+destHeight-1, srcY, srcY+srcHeight-1);
+                
+                //printf("blit: %d %d\n", dx, dy);
+
+                PixRGBA pix = src.getPixel(dx,dy);
+                //printf("blit, pixel: %d %d (%d, %d, %d)\n", dx, dy, pix.red, pix.green, pix.blue);
+
+                transferPixel(col, row, pix, tOp);
+            }
+        }
+
+        return true;
+    }
+
     GRSIZE getWidth() const { return this->width;}
     GRSIZE getHeight() const { return this->height;}
     virtual const PixRGBA * getData() const = 0;

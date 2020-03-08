@@ -6,6 +6,7 @@
 
 
 PixelBuffer *apb = nullptr;
+PixelSRCOVER blendOp;
 
 void printMeta(TargaMeta &meta)
 {
@@ -57,7 +58,8 @@ void draw()
 {
     if (apb != nullptr) {
         //image(*apb, 0,0);
-        gAppSurface->blit(*apb, 0, 0, apb->getWidth(), apb->getHeight(), 0, 0, width, height);
+
+        gAppSurface->blend(*apb, 0, 0, apb->getWidth(), apb->getHeight(), 0, 0, width, height, blendOp);
     }
     noLoop();
 }
@@ -80,6 +82,10 @@ void draw()
 
 More from here:
 http://people.math.sc.edu/Burkardt/data/tga/tga.html
+https://github.com/tmyroadctfig/com.realityinteractive.imageio.tga
+https://github.com/DEF7/TGA2STL
+https://github.com/brandonprry/tga-fuzz
+
 */
 
 void setup()

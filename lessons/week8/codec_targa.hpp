@@ -136,11 +136,16 @@ bool decodeSinglePixel(PixRGBA &pix, uint8_t *databuff, int pixelDepth, int imty
             pix.alpha = 255;
             return true;
         } else if (pixelDepth == 32) {
+
+
+
+
             pix.red = databuff[2];
             pix.green = databuff[1];
             pix.blue = databuff[0];
-            pix.alpha = 255;
-            //pix.alpha = databuff[3];   // We should pre-multiply the alpha?
+            pix.alpha = databuff[3];
+            //printf("pix.alpha: %d\n", pix.alpha);
+            //pix.alpha = databuff[3];   // BUGBUG - We should pre-multiply the alpha?
             return true;
         } else if (pixelDepth == 16) {
             uint16_t src16 = ((databuff[1] << 8) | databuff[0]);
