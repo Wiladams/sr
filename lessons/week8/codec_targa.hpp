@@ -72,7 +72,7 @@ enum ImageKind : int {
 
 
 static const int footerSize = 26;
-const char * targaXFileID = "TRUEVISION-XFILE";
+const char * targaXFileID = "TRUEVISION-XFILE.";
 
 // Used for location iteration
 struct Location
@@ -162,10 +162,7 @@ bool decodeSinglePixel(PixRGBA &pix, uint8_t *databuff, int pixelDepth, int imty
         return true;
     } else if ((imtype == ColorMapped) || (imtype == ColorMappedCompressed)) {
         // lookup the color using databuff[0] as index
-        PixRGBA cpix = colorMap[databuff[0]];
-        pix.red = cpix.red;
-        pix.green = cpix.green;
-        pix.blue = cpix.blue;
+        pix = colorMap[databuff[0]];
 
         return true;
     }
@@ -185,29 +182,6 @@ PixRGBA * readColorMap(BinStream &bs, tgaHeader &header)
         
         // BUGBUG - this could use decodeSinglePixel()
         decodeSinglePixel(cMap[i], databuff, header.CMapDepth, TrueColor, nullptr);
-/*
-        if (bytespe == 2) {
-            uint16_t src16 = (uint16_t)((databuff[1]<<8) | databuff[0]);
-            cMap[i].red = (BITSVALUE(src16,0,4) << 3);
-            cMap[i].green = (BITSVALUE(src16,5,9) << 3);
-            cMap[i].blue = (BITSVALUE(src16,10,14) << 3);
-            cMap[i].alpha = 0;
-            if (BITSVALUE(src16,15,15) >= 1) {
-                cMap[i].alpha = 0;  // 255
-            }
-        } else if (bytespe == 3) {
-            cMap[i].red = databuff[0];
-            cMap[i].green = databuff[1];
-            cMap[i].blue = databuff[2];
-            cMap[i].alpha = 0;
-
-        } else if (bytespe == 4) {
-            cMap[i].red = databuff[0];
-            cMap[i].green = databuff[1];
-            cMap[i].blue = databuff[2];
-            //pix.alpha = databuff[3]   -- We should pre-multiply the alpha?
-        }
-*/
     }
 
     return cMap;
@@ -276,36 +250,30 @@ bool readHeader(BinStream &bs, tgaHeader &res)
 
     // If there's an identification section, read that next
     //print("ImageIdentification: ", res.IDLength, string.format("0x%x",bs.tell()))
-
     if (res.IDLength > 0) {
         res.ImageIdentification = {new uint8_t[res.IDLength]{}};
         bs.readBytes(res.IDLength, res.ImageIdentification);
     }
-
 
     // If there's a color map, read that next
     if (res.ColorMapType == Palette) {
         res.ColorMap = readColorMap(bs, res);
     }
 
-
     return true;
 }
-
-
 
 
 /*
      Targa images come in many different formats, and there are 
      a couple of different versions of the specification.
  
-First thing to do is determine if the file is adhereing to version 
-2.0 of the spcification.  We do that by reading a 'footer', which 
-is the last 26 bytes of the file.
+    First thing to do is determine if the file is adhereing to version 
+    2.0 of the spcification.  We do that by reading a 'footer', which 
+    is the last 26 bytes of the file.
 
-Return a PixelBuffer if we can read the file successfully
+    Return a PixelBuffer if we can read the file successfully.
 */
-
 
 bool readFooter(BinStream &bs, tgaFooter &rs)
 {
@@ -315,31 +283,18 @@ bool readFooter(BinStream &bs, tgaFooter &rs)
     rs.DeveloperDirectoryOffset = bs.readUInt32();
     bs.readBytes(18, (uint8_t *)rs.Signature);
 
-    rs.isExtended = !strcmp(rs.Signature, targaXFileID);
+    rs.isExtended = !strncmp(rs.Signature, targaXFileID, strlen(targaXFileID));
 
-    //printf("readFooter(), signature: %s\n", rs.Signature);
-    //printf("isExtended: %d\n", rs.isExtended);
+    printf("readFooter(), signature: %s\n", rs.Signature);
+    printf("isExtended: %d\n", rs.isExtended);
 
     if (!rs.isExtended) {
         return false;
     }
 
-
     //print("targa.readFooter, END")
-    
     return true;
 }
-
-/*
-local TrueColor = ImageType.TrueColor
-local Monochrome = ImageType.Monochrome
-local ColorMapped = ImageType.ColorMapped
-local TrueColorCompressed = ImageType.TrueColorCompressed
-local ColorMappedCompressed = ImageType.ColorMappedCompressed
-local MonochromeCompressed = ImageType.MonochromeCompressed
-*/
-
-
 
 /*
 -- We want to figure out the mapping between positions as we
@@ -349,10 +304,6 @@ local MonochromeCompressed = ImageType.MonochromeCompressed
 -- would do interleaving as well, but we don't have an image to test
 -- with
 */
-
-
-
-// An iterator over locations
 class LocIterator : IEnumerator<Location>
 {
     int xSign, xStart, xEnd, xincr;
@@ -447,6 +398,8 @@ public:
     }
 
     bool moveNext() {
+        // BUGBUG - really we could just count pixels
+        // the actual location doesn't matter here
         xincr = xincr + 1;
         if (xincr >= fMeta.header.Width) {
             xincr = 0;
@@ -504,7 +457,8 @@ end
 
 PixelBuffer * readBody(BinStream &bs, TargaMeta &meta)
 {
-    //print("targa.readBody, BEGIN")
+    //printf("targa.readBody, BEGIN\n");
+
     PixelBuffer * lpb = new PixelBufferRGBA32(meta.header.Width, meta.header.Height);
  
     if (!meta.header.Compressed) {
@@ -559,13 +513,7 @@ PixelBuffer * readFromStream(BinStream &bs, TargaMeta &res)
     // to read the body
     PixelBuffer *apb = readBody(bs, res);
 
-    for (int x=0;x<124;x++){
-        PixRGBA c = apb->getPixel(x,0);
-        //printf("readFromStream.pixel: (%d, %d, %d)\n", c.red, c.green, c.blue);
-    }
-
-    //res.PixelBuffer = pixbuff
-    //res.Error = err
+    //res.PixelBuffer = apb;
 
     return apb;
 }

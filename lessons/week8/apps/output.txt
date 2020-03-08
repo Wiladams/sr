@@ -1,2 +1,0 @@
-Could not map file: data\FLAG_B24.tga
-mmap - DESTRUCTOR
