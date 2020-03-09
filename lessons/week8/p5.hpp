@@ -19,6 +19,7 @@
 #include "maths.hpp"
 #include "Image.hpp"
 #include "PixelOps.hpp"
+#include "stopwatch.hpp"
 
 // RectMode, EllipseMode
 enum {
@@ -64,6 +65,7 @@ Global State
 */
 bool gUseStroke = true;
 bool gUseFill = true;
+static StopWatch SWatch;
 
 static size_t width = 0;
 static size_t height = 0;
@@ -274,6 +276,8 @@ void createCanvas(size_t aWidth, size_t aHeight)
     
     //clear();
     gAppDC->clearToBackground();
+
+    SWatch.reset();
 }
 
 void redraw(int nTimes=1)
@@ -286,4 +290,15 @@ void redraw(int nTimes=1)
 void frameRate(int newRate)
 {
     setFrameRate(newRate);
+}
+
+double seconds()
+{
+    return SWatch.seconds();
+}
+
+double millis()
+{
+    // get millis from p5 stopwatch
+    return SWatch.millis();
 }
