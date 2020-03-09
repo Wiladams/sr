@@ -56,6 +56,8 @@ PixelBuffer * readFromFile(const char *filename)
 
 void draw()
 {
+    background(0);
+    
     if (apb != nullptr) {
         //image(*apb, 0,0);
 
