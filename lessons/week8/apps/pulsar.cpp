@@ -2,6 +2,7 @@
 
 StopWatch sw;
 
+//void onLoop()
 void draw()
 {
     background(0x7f);
@@ -31,7 +32,8 @@ void draw()
     uint8_t a = MAP(s,1,5, 255,50);
     PixRGBA c = {255,0,0,a};
     fill(c);
-    rect(mouseX, mouseY, 20*s, 20*s);
+    //rect(mouseX, mouseY, 20*s, 20*s);
+    circle(mouseX, mouseY, 20*s);
 }
 
 void setup()

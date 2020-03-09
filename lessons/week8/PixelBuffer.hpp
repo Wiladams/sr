@@ -32,6 +32,12 @@ public:
     // Transfer a pixel using an operation
     virtual bool transferPixel(GRCOORD x, GRCOORD y, const PixRGBA &src, const PixelTransferOp &tOp)
     {
+        // don't render pixels out of bounds
+        if (((x < 0) || (x >= width)) ||
+            ((y< 0) || (y >= height))) {
+                return false;
+        }
+        
         PixRGBA dst = getPixel(x, y);
         PixRGBA pix = tOp(x, y, src, dst);
 
@@ -42,9 +48,10 @@ public:
     virtual PixRGBA getPixel(GRCOORD x, GRCOORD y) const = 0;
     
     // Draw a horizontal line
-    virtual void setPixels(GRCOORD x, GRCOORD y, GRSIZE width, const PixRGBA pix) {
+    virtual void horizontalLine(GRCOORD x, GRCOORD y, GRSIZE width, const PixRGBA src, const PixelTransferOp &tOp) 
+    {
         for (int col=x; col<x+width; col++) {
-            setPixel(col,y, pix);
+            transferPixel(col,y, src, tOp);
         }
     }
 

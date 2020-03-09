@@ -28,13 +28,13 @@ void fill2EllipseLines(PixelBuffer &pb, GRCOORD cx, GRCOORD cy, GRCOORD x, GRCOO
 	int y2 = cy+y;
 
 	//if (clipLine(pb->frame, x1, y1, x2, y2)) {
-        pb.setPixels(x1, y1, x2-x1, color);
+        pb.horizontalLine(x1, y1, x2-x1, color, tOp);
 	//}
 	
 	y1 = cy - y;
 	y2 = cy - y;
 	//if (clipLine(pb->frame, x1, y1, x2, y2)) {
-		pb.setPixels(x1, y2, x2 - x1, color);
+		pb.horizontalLine(x1, y2, x2 - x1, color, tOp);
 	//}
 }
 
