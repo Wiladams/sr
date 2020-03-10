@@ -1,3 +1,6 @@
+/*
+    A simple program to view Truevision Targa (.tga)
+*/
 #include "p5.hpp"
 #include "codec_targa.hpp"
 #include "mmap.hpp"

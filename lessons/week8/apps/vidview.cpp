@@ -19,11 +19,11 @@ void setup()
     //SendMessageA (hWndC, WM_CAP_SEQUENCE, 0, 0L);
     //SendMessageA (hWndC, WM_CAP_SEQUENCE_NOFILE, 0, 0L);
 
-    //hwndParent = gAppWindow->getHandle();
-    //hWndC = capCreateCaptureWindowA ( "My Own Capture Window", 
-   //     WS_CHILD | WS_VISIBLE , 0, 0, 640, 480, hwndParent, nID);
+    hwndParent = gAppWindow->getHandle();
     hWndC = capCreateCaptureWindowA ( "My Own Capture Window", 
-        WS_VISIBLE , 0, 0, 640, 480, hwndParent, nID);
+        WS_CHILD | WS_VISIBLE , 0, 0, 320, 240, hwndParent, nID);
+    //hWndC = capCreateCaptureWindowA ( "My Own Capture Window", 
+    //    WS_VISIBLE , 0, 0, 320, 240, hwndParent, nID);
 
 
 
@@ -36,9 +36,7 @@ void setup()
     res = capDlgVideoFormat(hWndC); 
     printf("capDlgVideoFormat: %d\n", res);
 
-    capPreviewRate(hWndC, 66);
+    capPreviewRate(hWndC, 33);  // 33 == ~30 fps
     capPreviewScale(hWndC,1);
     capPreview(hWndC, 1);
-
-
 }
