@@ -18,11 +18,24 @@
 
 class PixelBuffer
 {
+private:
+    // private default constructor, so this can not
+    // be an un-initialized element in an array 
+    // or otherwise default constructed
+    PixelBuffer();
+
+    // The width and height are const because
+    // you don't want them to ever change
+    const size_t width;   //how many pixels wide
+    const size_t height;  // how many pixels tall
+
 public:
-    PixelBuffer(GRCOORD awidth, GRCOORD aheight)
+    PixelBuffer(const size_t awidth, const size_t aheight)
         :width(awidth), height(aheight)
     {}
 
+    // virtual destructor here to ensure the derived class
+    // has a chance to create their own destructor
     virtual ~PixelBuffer() = 0 {};
 
     // Sub-classes MUST implement the following
@@ -47,7 +60,7 @@ public:
     // Retrieve a single pixel value from the specified location 
     virtual PixRGBA getPixel(GRCOORD x, GRCOORD y) const = 0;
     
-    // Draw a horizontal line
+    // Draw a horizontal line with transfer op
     virtual void horizontalLine(GRCOORD x, GRCOORD y, GRSIZE width, const PixRGBA src, const PixelTransferOp &tOp) 
     {
         for (int col=x; col<x+width; col++) {
@@ -56,10 +69,24 @@ public:
     }
 
     // Copy the span of pixels into the pixel buffer
+    // Like a horizontal line, but individual color values
     virtual bool setSpan(GRCOORD x, GRCOORD y, const GRSIZE width, const PixRGBA * pix) = 0;
     
     // Set all pixels within the pixel buffer to the specified value
-    virtual bool setAllPixels(const PixRGBA pix) = 0;
+    // we do a brute force implementation here so there's one less
+    // thing for a derived class to implement. 
+    virtual bool setAllPixels(const PixRGBA pix)
+    {
+        for (int row=0;row<height-1;row++)
+        {
+            for (int col=0; col<width-1; col++)
+            {
+                setPixel(col, row, pix);
+            }
+        }
+        
+        return true;
+    }
 
     virtual bool blit(const PixelBuffer &src, 
         int srcX, int srcY, int srcWidth, int srcHeight, 
@@ -115,14 +142,6 @@ public:
     GRSIZE getHeight() const { return this->height;}
     virtual const PixRGBA * getData() const = 0;
 
-private:
-    // private default constructor, so this can not
-    // be an un-initialized element in an array 
-    PixelBuffer();
 
-    // The width and height are const because
-    // you don't want them to ever change
-    const GRSIZE width;   //how many pixels wide
-    const GRSIZE height;  // how many pixels tall
 
 };

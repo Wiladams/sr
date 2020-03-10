@@ -153,6 +153,12 @@ typedef struct tagPOINTS
     SHORT   y;
 } POINTS, *PPOINTS, *LPPOINTS;
 
+typedef struct _POINTL      /* ptl  */
+{
+    LONG  x;
+    LONG  y;
+} POINTL, *PPOINTL;
+
 typedef struct tagSIZE
 {
     LONG        cx;
@@ -286,6 +292,62 @@ typedef struct _BLENDFUNCTION
     BYTE   SourceConstantAlpha;
     BYTE   AlphaFormat;
 }BLENDFUNCTION,*PBLENDFUNCTION;
+
+/* size of a device name string */
+#define CCHDEVICENAME 32
+
+/* size of a form name string */
+#define CCHFORMNAME 32
+
+typedef struct _devicemodeA {
+  BYTE  dmDeviceName[CCHDEVICENAME];
+  WORD  dmSpecVersion;
+  WORD  dmDriverVersion;
+  WORD  dmSize;
+  WORD  dmDriverExtra;
+  DWORD dmFields;
+  union {
+    struct {
+      short dmOrientation;
+      short dmPaperSize;
+      short dmPaperLength;
+      short dmPaperWidth;
+      short dmScale;
+      short dmCopies;
+      short dmDefaultSource;
+      short dmPrintQuality;
+    } DUMMYSTRUCTNAME;
+    POINTL dmPosition;
+    struct {
+      POINTL dmPosition;
+      DWORD  dmDisplayOrientation;
+      DWORD  dmDisplayFixedOutput;
+    } DUMMYSTRUCTNAME2;
+  } DUMMYUNIONNAME;
+  short dmColor;
+  short dmDuplex;
+  short dmYResolution;
+  short dmTTOption;
+  short dmCollate;
+  BYTE  dmFormName[CCHFORMNAME];
+  WORD  dmLogPixels;
+  DWORD dmBitsPerPel;
+  DWORD dmPelsWidth;
+  DWORD dmPelsHeight;
+  union {
+    DWORD dmDisplayFlags;
+    DWORD dmNup;
+  } DUMMYUNIONNAME2;
+  DWORD dmDisplayFrequency;
+  DWORD dmICMMethod;
+  DWORD dmICMIntent;
+  DWORD dmMediaType;
+  DWORD dmDitherType;
+  DWORD dmReserved1;
+  DWORD dmReserved2;
+  DWORD dmPanningWidth;
+  DWORD dmPanningHeight;
+} DEVMODEA, *PDEVMODEA, *NPDEVMODEA, *LPDEVMODEA;
 
 
 // Touch Input defines and functions

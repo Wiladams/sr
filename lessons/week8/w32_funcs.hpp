@@ -119,6 +119,8 @@ HDC BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
 int EndPaint(HWND hWnd, const PAINTSTRUCT *lpPaint);
 
 // wingdi
+HDC CreateDCA(LPCSTR pwszDriver, LPCSTR pwszDevice, LPCSTR pszPort, const DEVMODEA *pdm);
+
 HDC GetDC(HWND hWnd);
 int ReleaseDC(HWND hWnd,HDC  hDC);
 HDC CreateCompatibleDC(HDC hdc);

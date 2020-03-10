@@ -25,7 +25,7 @@ public:
     // Public constructor
     // must assign to const fields using ':'
     // mechanism.
-    PixelBufferRGBA32(GRSIZE width, GRSIZE height)
+    PixelBufferRGBA32(const size_t width, const size_t height)
         : PixelBuffer(width, height)
     {
         data = {new PixRGBA[width*height]{}};
