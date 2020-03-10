@@ -2,6 +2,19 @@
 
 StopWatch sw;
 
+void drawLines()
+{
+
+    for (int i = 1;i<=500;i++)
+    {
+        int x = MAP(mouseX, 0,width, (width/2)-200, (width/2)+200);
+        stroke(color(random(255), random(255), random(255)));
+        line(mouseX, mouseY, random(width), random(height));
+    }
+
+
+}
+
 //void onLoop()
 void draw()
 {
@@ -19,11 +32,8 @@ void draw()
     double sinx = sin(x);
     double s = MAP(sinx, 0, 1, 1, 5);
 
-    stroke(0);
-    for (int i = 1;i<=1000;i++)
-    {
-        line(random(width),random(height), random(width),random(height));
-    }
+    drawLines();
+
 
     noStroke();
     fill(colors.blue);
@@ -40,5 +50,5 @@ void setup()
 {
     sw.reset();
     createCanvas(400, 400);
-    frameRate(30);
+    frameRate(20);
 }

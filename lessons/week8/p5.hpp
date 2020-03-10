@@ -111,14 +111,20 @@ void fill(PixRGBA pix)
     gAppDC->setFill(pix);
 }
 
-void fill(uint8_t gray)
+void fill(uint8_t gray, uint8_t alpha)
 {
     PixRGBA c;
     c.red = gray;
     c.green = gray;
     c.blue = gray;
-    c.alpha = 255;
+    c.alpha = alpha;
     fill(c);
+}
+
+void fill(uint8_t gray)
+{
+    fill(gray, 255);
+
 }
 
 void noFill()
