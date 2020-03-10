@@ -49,6 +49,8 @@ static const int WS_SYSMENU          = 0x00080000;
 static const int WS_THICKFRAME       = 0x00040000;
 static const int WS_MINIMIZEBOX      = 0x00020000;
 static const int WS_MAXIMIZEBOX      = 0x00010000;
+static const int WS_VISIBLE          = 0x10000000L;
+static const int WS_CHILD            = 0x40000000L;
 static const int WS_POPUP            = 0x80000000L;
 static const int WS_OVERLAPPEDWINDOW = WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_THICKFRAME|WS_MINIMIZEBOX|WS_MAXIMIZEBOX;
 
@@ -226,6 +228,7 @@ static const int MM_JOY2BUTTONDOWN   = 0x3B6;
 static const int MM_JOY1BUTTONUP     = 0x3B7;
 static const int MM_JOY2BUTTONUP     = 0x3B8;
 
+static const int WM_USER 			= 0x0400;
 
 // Touch Window Messages
 

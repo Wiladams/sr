@@ -43,22 +43,12 @@ enum VerticalOrientation : int {
     TopToBottom = 1,
 };
 
-/*
-    Header.ImageDescriptor
-//  Bits 7-6 - Data storage interleaving flag.                |
-//             00 = non-interleaved.                          |
-//             01 = two-way (even/odd) interleaving.          |
-//             10 = four way interleaving.                    |
-//             11 = reserved.         
-*/
-
 enum Interleave : int {
     non_interleaved = 0,
     two_way = 1,
     four_way = 2,
     reserved = 3
 };
-
 
 enum ImageKind : int {
     NoImageData = 0,

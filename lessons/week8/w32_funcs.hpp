@@ -70,6 +70,7 @@ BOOL GetWindowInfo(HWND hWnd, PWINDOWINFO pwi);
 BOOL GetWindowRect(HWND hWnd, LPRECT lpRect);
 UINT GetDpiForWindow(HWND hwnd);
 int GetSystemMetrics(int nIndex);
+BOOL IsWindow(HWND hWnd);
 BOOL InvalidateRect(HWND hWnd, const RECT *lpRect, BOOL bErase);
 HICON LoadIconA(HINSTANCE hInstance,LPCSTR    lpIconName);
 BOOL RedrawWindow(HWND hWnd, const RECT *lprcUpdate, HRGN hrgnUpdate, UINT flags);
@@ -106,6 +107,7 @@ BOOL IsTouchWindow(HWND hwnd, PULONG pulFlags);
 // Regular Windows messaging
 void PostQuitMessage(int nExitCode);
 int PeekMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg);
+LRESULT SendMessageA(HWND hWnd,UINT Msg,WPARAM wParam, LPARAM lParam);
 int TranslateMessage(const MSG *lpMsg);
 LRESULT DispatchMessageA(const MSG *lpMsg);
 

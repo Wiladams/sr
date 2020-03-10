@@ -32,4 +32,4 @@
 #include "w32_types.hpp"
 #include "w32_const.hpp"
 #include "w32_funcs.hpp"
-//#include "w32_video.hpp"
+#include "w32_video.hpp"
