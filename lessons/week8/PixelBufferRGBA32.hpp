@@ -2,8 +2,10 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "PixelBuffer.hpp"
+#include "RectangleI.hpp"
 
 /*
     This is a class that represents a framebuffer.
@@ -62,6 +64,23 @@ public:
         }
     }
 
+    // We should not do the following as it allows
+    // the data pointer to escape our control
+    // it also allows unrestricted access to the data itself
+    // which breaks encapsulation.
+    // PixRGBA * getData() const {return this->data;}
+    // BUT, very convenient, and the const helps somewhat
+    virtual const PixRGBA * getData() const
+    {
+        return data;
+    }
+
+    virtual const void * getPixelPointer(int x, int y) const
+    {
+        size_t offset = y * getWidth() + x;
+        return &data[offset];
+    }
+
     // Set the value of a single pixel
     bool setPixel(GRCOORD x, GRCOORD y, const PixRGBA &pix)
     {
@@ -95,12 +114,8 @@ public:
     // setPixels()
     // 
     // set the values of a contiguous set of pixels
-    bool setSpan(GRCOORD x, GRCOORD y, const GRSIZE width, const PixRGBA * pix)
+    bool setSpan(const GRCOORD x, const GRCOORD y, const GRSIZE width, const PixRGBA * pix)
     {
-        // BUGBUG - be mindful of the size of things
-        // if you use someting too small, it will rollover
-        // uint16_t offset = y * this->width + x;
-
         // size_t is a good choice, as it's typically the machine's largest
         // unsigned int
         size_t offset = y * getWidth() + x;
@@ -109,11 +124,13 @@ public:
         // we can do clipping here by reducing width to whatever
         // is remaining on the line, rather than fulfilling the
         // entire 'width' request
+        void * destPtr = (void *)getPixelPointer(x, y);
+        memcpy(destPtr, pix, width*sizeof(PixRGBA));
 
-        for (GRSIZE i=0; i<width; i++) 
-        {
-            data[offset+i] = pix[i];
-        }
+        //for (GRSIZE i=0; i<width; i++) 
+        //{
+        //    data[offset+i] = pix[i];
+        //}
 
         return true;
     }
@@ -134,15 +151,51 @@ public:
         return true;
     }
 
-    // We should not do the following as it allows
-    // the data pointer to escape our control
-    // it also allows unrestricted access to the data itself
-    // which breaks encapsulation.
-    // PixRGBA * getData() const {return this->data;}
-    // BUT, very convenient, and the const helps somewhat
-    virtual const PixRGBA * getData() const
+//void *memcpy(void *dest, const void * src, size_t n)
+    bool blit(const PixelBuffer &src, 
+        int srcX, int srcY, int srcWidth, int srcHeight, 
+        int destX, int destY, int destWidth, int destHeight)
     {
-        return data;
+        //printf("blit, src size : %d X %d\n", srcWidth, srcHeight);
+        //printf("blit, dst size : %d X %d\n", destWidth, destHeight);
+        
+        // If the source and destination start out as the same size
+        // then we can perform some copy optimizations
+        bool isOptimal = ((destWidth == srcWidth) && (destHeight == srcHeight));    // AND formats are the same
+        
+        RectangleI myRect(0,0,getWidth(), getHeight());
+        RectangleI destRect(destX, destY, destWidth, destHeight);
+        RectangleI clipRect = RectangleI::intersection(myRect, destRect);
+
+        if (isOptimal) {
+            //printf("OPTIMAL\n");
+            for (int row=clipRect.y1; row<clipRect.y2; row++) {
+                int sx = MAP(clipRect.x1, destX, destX+destWidth-1, srcX, srcX+srcWidth-1);
+                int sy = MAP(row, destY, destY+destHeight-1, srcY, srcY+srcHeight-1);
+                // get pointer from source
+                //    virtual const void * getPixelPointer(int x, int y) const = 0;
+                const PixRGBA * pixPtr = (const PixRGBA *)src.getPixelPointer(sx, sy);
+                // setSpan on ourself
+                setSpan(clipRect.x1, row, clipRect.getWidth(), pixPtr);
+            }
+        } else {
+            for (int row=clipRect.y1; row<clipRect.y2; row++) {
+                for (int col=clipRect.x1; col<clipRect.x2; col++)
+                {
+                    int dx = MAP(col, destX, destX+destWidth-1, srcX, srcX+srcWidth-1);
+                    int dy = MAP(row, destY, destY+destHeight-1, srcY, srcY+srcHeight-1);
+                
+                    //printf("blit: %d %d\n", dx, dy);
+
+                    PixRGBA pix = src.getPixel(dx,dy);
+                    //printf("blit, pixel: %d %d (%d, %d, %d)\n", dx, dy, pix.red, pix.green, pix.blue);
+
+                    setPixel(col, row, pix);
+                }
+            }
+        }
+
+        return true;
     }
 
 

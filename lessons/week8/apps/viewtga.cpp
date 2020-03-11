@@ -1,5 +1,12 @@
 /*
     A simple program to view Truevision Targa (.tga)
+    Some files to try:
+
+    More from here:
+    http://people.math.sc.edu/Burkardt/data/tga/tga.html
+    https://github.com/tmyroadctfig/com.realityinteractive.imageio.tga
+    https://github.com/DEF7/TGA2STL
+    https://github.com/brandonprry/tga-fuzz
 */
 #include "p5.hpp"
 #include "codec_targa.hpp"
@@ -63,35 +70,15 @@ void draw()
     
     if (apb != nullptr) {
         //image(*apb, 0,0);
-
         gAppSurface->blend(*apb, 0, 0, apb->getWidth(), apb->getHeight(), 0, 0, width, height, blendOp);
+
+        // offset clipped blit
+        //gAppSurface->blit(*apb, 0, 0, apb->getWidth(), apb->getHeight(), 100, 100, width, height);
     }
     noLoop();
 }
 
-/*
-    Some files to try:
 
-    FLAG_B16.tga
-    FLAG_B24.tga
-    FLAG_B32.tga
-    
-    MARBLES.tga
-    
-    XING_T32.tga
-
-    indexed_UL.tga
-    indexed_UR.tga
-    indexed_LL.tga
-    indexed_LR.tga
-
-More from here:
-http://people.math.sc.edu/Burkardt/data/tga/tga.html
-https://github.com/tmyroadctfig/com.realityinteractive.imageio.tga
-https://github.com/DEF7/TGA2STL
-https://github.com/brandonprry/tga-fuzz
-
-*/
 
 void setup()
 {

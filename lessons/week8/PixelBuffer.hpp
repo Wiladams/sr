@@ -144,6 +144,6 @@ public:
     GRSIZE getWidth() const { return this->width;}
     GRSIZE getHeight() const { return this->height;}
     virtual const PixRGBA * getData() const = 0;
-
+    virtual const void * getPixelPointer(int x, int y) const = 0;
 
 };

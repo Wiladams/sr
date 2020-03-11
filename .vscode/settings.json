@@ -5,6 +5,7 @@
         "xstring": "cpp",
         "xutility": "cpp",
         "xlocale": "cpp",
-        "*.rh": "cpp"
+        "*.rh": "cpp",
+        "ios": "cpp"
     }
 }

@@ -19,6 +19,8 @@ void draw()
 
 void setup()
 {
-    createCanvas(1280,1080);
-    ss = new ScreenSnapshot(0, 0, 1280, 1080);
+    createCanvas(800,600);
+    frameRate(40);
+
+    ss = new ScreenSnapshot(0, 0, 800, 600);
 }

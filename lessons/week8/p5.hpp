@@ -243,7 +243,7 @@ void circle(int cx, int cy, int diameter)
 
 void image(const PixelBuffer &img, int x, int y)
 {
-    gAppDC->copyImage(x, y, img);
+    gAppDC->copyImage(img, x, y);
 }
 
 

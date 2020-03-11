@@ -478,7 +478,7 @@ public:
         strokePolygon(nPts, pts);
     }
 
-    bool copyImage(int x, int y, const PixelBuffer &img)
+    bool copyImage(const PixelBuffer &img, int x, int y)
     {
         int destX = x;
         int destY = y;
