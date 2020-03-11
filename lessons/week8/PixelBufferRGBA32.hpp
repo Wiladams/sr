@@ -21,6 +21,20 @@
     The format of a FrameBuffer is 32-bit pixels.
 */
 class PixelBufferRGBA32 : public PixelBuffer {
+private:
+    // private default constructor, so this can not
+    // be an un-initialized element in an array 
+    PixelBufferRGBA32();
+
+    PixRGBA * data;         // a pointer to the actual pixel data
+    bool fOwnsData;
+
+protected:
+    void setData(void *pData)
+    {
+        data = (PixRGBA *)pData;
+    }
+
 public:
     // Public constructor
     // must assign to const fields using ':'
@@ -29,13 +43,23 @@ public:
         : PixelBuffer(width, height)
     {
         data = {new PixRGBA[width*height]{}};
+        fOwnsData = true;
+    }
+
+    PixelBufferRGBA32(const size_t width, const size_t height, void *pixels)
+        : PixelBuffer(width, height), 
+        data((PixRGBA *)pixels)
+    {
+        fOwnsData = false;
     }
 
     // Virtual destructor so this can be sub-classed
     virtual ~PixelBufferRGBA32(){
         // must delete the data element, as we 
         // constructred it.
-        delete [] data;
+        if (fOwnsData) {
+            delete [] data;
+        }
     }
 
     // Set the value of a single pixel
@@ -122,10 +146,4 @@ public:
     }
 
 
-private:
-    // private default constructor, so this can not
-    // be an un-initialized element in an array 
-    PixelBufferRGBA32();
-
-    PixRGBA * data;         // a pointer to the actual pixel data
 };

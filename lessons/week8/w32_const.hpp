@@ -93,8 +93,9 @@ static const int  ULW_EX_NORESIZE       =  0x00000008;
 
 // GDI constants
 //static const int BI_RGB       = 0;
-static const int DIB_RGB_COLORS     = 0; /* color table in RGBs */
-static const int SRCCOPY           =  0x00CC0020; /* dest = source                   */
+static const int DIB_RGB_COLORS     = 0;                /* color table in RGBs */
+static const int SRCCOPY           =  0x00CC0020;       /* dest = source                   */
+static const int CAPTUREBLT         = 0x40000000; /* Include layered windows */
 
 
 enum  {

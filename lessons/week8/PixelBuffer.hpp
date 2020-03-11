@@ -29,6 +29,9 @@ private:
     const size_t width;   //how many pixels wide
     const size_t height;  // how many pixels tall
 
+protected:
+    virtual void setData(void *) = 0;
+
 public:
     PixelBuffer(const size_t awidth, const size_t aheight)
         :width(awidth), height(aheight)
@@ -141,7 +144,6 @@ public:
     GRSIZE getWidth() const { return this->width;}
     GRSIZE getHeight() const { return this->height;}
     virtual const PixRGBA * getData() const = 0;
-
 
 
 };

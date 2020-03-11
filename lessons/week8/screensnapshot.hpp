@@ -1,57 +1,60 @@
 #pragma once
 
 /*
-    Take a snapshot of the video display using GDI
-*/
-#include "w32.h"
-#include "PixelBufferRGBA32.hpp"
+    Take a snapshot of the video display using GDI.
 
-class ScreenSnapshot
+    Construct an instance of the object by determining
+    the location and size of the capture.  It is a fixed
+    size and location, so can not be moved.  If you want
+    to capture a different location, create another capture
+    object.
+
+    ScreenSnapshot ss(x,y, width, height);
+
+    getting an actual snapshot, call moveNext()
+
+    ss.moveNext()
+
+    And finally to get a pixelbuffer that was captured
+
+    ss.getCurrent()
+*/
+
+#include "PBDIBSection.hpp"
+#include "enumerable.hpp"
+
+class ScreenSnapshot : public IEnumerator<PixelBufferRGBA32 >
 {
-    GDIContext fContext;
-    PixelBufferRGBA32 fImage;
+    PBDIBSection fImage;
     HDC fScreenDC;
-    HDC fImageDC;
     int fOriginX;
     int fOriginY;
-    size_t fWidth;
-    size_t fHeight;
 
+public:
     ScreenSnapshot(int x, int y, size_t awidth, size_t aheight)
         : fImage(awidth, aheight),
-        fWidth(awidth),
-        fHeight(aheight)
+        fOriginX(x),
+        fOriginY(y)
     {
         // create a pixel buffer of the specified size
         fScreenDC = CreateDCA("DISPLAY", nullptr, nullptr, nullptr);
-        
-        // Create memory device context
-        fImageDC = CreateCompatibleDC(fScreenDC);
-        // Create DIB Section
-        // select fImageDC into DIB Section
-
-
-
-
     }
 
     void reset() {
         // do nothing
     }
 
-    PixelBufferRGBA32 & getCurrent() 
+    PixelBufferRGBA32 getCurrent() const
     {
         return fImage;
     }
 
     bool moveNext()
     {
-        GDIDIBSection contextImage = new GDIDIBSection(rect.Width, rect.Height, BitCount.Bits24);
-
-        BitBlt(fContext, new Point(rect.X, rect.Y), new Rectangle(0, 0, rect.Width, rect.Height),
-                (TernaryRasterOps.SRCCOPY | TernaryRasterOps.CAPTUREBLT));
+        BitBlt(fImage.getDC(), fOriginX, fOriginY, fImage.getWidth(), fImage.getHeight(),
+            fScreenDC, fOriginX, fOriginY, SRCCOPY | CAPTUREBLT);
 
         return true;
     }
 
-}
+};
