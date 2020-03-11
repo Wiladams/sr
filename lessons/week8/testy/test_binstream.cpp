@@ -16,6 +16,7 @@ void testInt()
     printf("int8: %d \n", s.readInt8());
     printf("uint8: %d \n", s.readUInt8());
 
+    printf("position: %d", s.tell());
 }
 
 void testStringZ()
@@ -54,7 +55,7 @@ void testReadline()
 
 void main()
 {
-    //testStringZ();
-    //testInt();
+    testStringZ();
+    testInt();
     testReadline();
 }
