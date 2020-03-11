@@ -36,46 +36,27 @@ void printMeta(TargaMeta &meta)
     if (meta.footer.isExtended) {
         printf("  Developer Directory Offset: 0x%x\n", meta.footer.DeveloperDirectoryOffset);
         printf("  Extension Offset: 0x%x\n", meta.footer.ExtensionAreaOffset);
-        printf("  Signature: %s\n", meta.footer.Signature);
+        //printf("  Signature: %s\n", meta.footer.Signature);
 
     }
 }
 
-PixelBuffer * readFromFile(const char *filename)
-{
-    mmap fmap = mmap(filename);
-    if (!fmap.isValid()) {
-        printf("Could not map file: %s\n", filename);
-        return nullptr;
-    }
 
-    BinStream bs(fmap.getPointer(), fmap.length(), 0, true );
-
-    if (!bs.isValid()) {
-        printf("BinaryStream not valid.\n");
-        return nullptr;
-    }
-
-    TargaMeta meta;
-
-    PixelBuffer * abuff = readFromStream(bs, meta);
-    printMeta(meta);
-
-    return abuff;
-}
 
 void draw()
 {
     background(0);
-    
+
+
     if (apb != nullptr) {
-        //image(*apb, 0,0);
-        gAppSurface->blend(*apb, 0, 0, apb->getWidth(), apb->getHeight(), 0, 0, width, height, blendOp);
+        image(*apb, 0,0);
+        //gAppSurface->blend(*apb, 0, 0, apb->getWidth(), apb->getHeight(), 0, 0, width, height, blendOp);
 
         // offset clipped blit
         //gAppSurface->blit(*apb, 0, 0, apb->getWidth(), apb->getHeight(), 100, 100, width, height);
     }
     noLoop();
+
 }
 
 
@@ -90,13 +71,16 @@ void setup()
 
     printf("argv[1]: %s\n", gargv[1]);
 
-    apb = readFromFile(gargv[1]);
+    TargaMeta meta;
+    apb = readFromFile(gargv[1], meta);
 
 
     if (apb != nullptr) {
-        //printf("Size: %d X %d\n", apb->getWidth(), apb->getHeight());
-        createCanvas(apb->getWidth(),apb->getHeight());
-        //createCanvas(320,240);
+        printMeta(meta);
+        int dx = MAX(meta.header.Width, 320);
+        int dy = MAX(meta.header.Height, 240);
+
+        createCanvas(dx,dy);
     } else {
         halt();
     }

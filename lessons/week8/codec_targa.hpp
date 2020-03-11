@@ -126,14 +126,17 @@ bool decodeSinglePixel(PixRGBA &pix, uint8_t *databuff, int pixelDepth, int imty
             pix.alpha = 255;
             return true;
         } else if (pixelDepth == 32) {
-
-
-
-
             pix.red = databuff[2];
             pix.green = databuff[1];
             pix.blue = databuff[0];
             pix.alpha = databuff[3];
+            
+            // some images use alpha as transparency
+            // some images do not
+            // when they don't use it, they might set it to '0'
+            // which will make the pixels transparent
+            // we need to be able to distinguish between these
+            // two states
             //printf("pix.alpha: %d\n", pix.alpha);
             //pix.alpha = databuff[3];   // BUGBUG - We should pre-multiply the alpha?
             return true;
@@ -497,3 +500,25 @@ PixelBuffer * readFromStream(BinStream &bs, TargaMeta &res)
 
     return apb;
 }
+
+
+PixelBuffer * readFromFile(const char *filename, TargaMeta &meta)
+{
+    mmap fmap = mmap(filename);
+    if (!fmap.isValid()) {
+        printf("Could not map file: %s\n", filename);
+        return nullptr;
+    }
+
+    BinStream bs(fmap.getPointer(), fmap.length(), 0, true );
+
+    if (!bs.isValid()) {
+        printf("BinaryStream not valid.\n");
+        return nullptr;
+    }
+
+    PixelBuffer * abuff = readFromStream(bs, meta);
+
+    return abuff;
+}
+
