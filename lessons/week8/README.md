@@ -24,6 +24,9 @@ conjunction with the BinStream as the file can be easily read.
 QueIterator has been improved upon, where filters can be chained
 together.
 
+screensnapshot has been introduced so snapshots of the screen can
+be easily incorporated into the p5 environment.
+
 As there are more windows APIs used, there has been some organization 
 of the header files.  All Windows specific routines are located
 in the files beginning with 'win32_'.
