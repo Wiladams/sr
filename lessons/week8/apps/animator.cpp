@@ -7,7 +7,44 @@
 #include "stopwatch.hpp"
 
 PixelBuffer *apb = nullptr;
+PixelSRCOVER blendOp;
 
+class ImageShard
+{
+    int srcX, srcY, srcWidth, srcHeight;
+    int x, y;
+    const PixelBuffer &fImage;
+
+public:
+    int fOriginX, fOriginY;
+    
+    ImageShard(const PixelBuffer &pb, int x, int y, int width, int height, int originX, int originY)
+        : fImage(pb),
+        srcX(x), srcY(y), srcWidth(width), srcHeight(height),
+        fOriginX(originX), fOriginY(originY)
+    {
+        this->x = x;
+        this->y = y;
+    }
+
+    int getWidth() const {return srcWidth;}
+    int getHeight() const {return srcHeight;}
+
+    int getOriginX() {return fOriginX;}
+    int getOriginY() {return fOriginY;}
+
+    void moveTo(int x, int y)
+    {
+        this->x = x;
+        this->y = y;
+    }
+
+    void draw()
+    {
+        //gAppSurface->blit(fImage, srcX, srcY, srcWidth, srcHeight, fOriginX, fOriginY, srcWidth, srcHeight);
+        gAppSurface->blend(fImage, srcX, srcY, srcWidth, srcHeight, x, y, srcWidth, srcHeight, blendOp);
+    }
+};
 
 class TimeAnimator
 {
@@ -44,62 +81,61 @@ public:
     {}
 };
 
-class RectAnimator : public TimeAnimator
+class BarnDoorsOpen : public TimeAnimator
 {
-    int x, y, w, h;
-    PixRGBA c1;
-    PixRGBA c2;
-    PixRGBA c;
+    PixelBuffer &fImage;
+    ImageShard leftDoor;
+    ImageShard rightDoor;
 
 public:
-    RectAnimator(double duration, int x, int y, int w, int h)
+    BarnDoorsOpen(PixelBuffer &image, double duration)
         :TimeAnimator(duration),
-        x(x), y(y), w(w), h(h)
-        {
-            c1 = color(random(255), random(255), random(255));
-            c2 = color(random(255), random(255), random(255));
-        }
+        fImage(image),
+        leftDoor(image, 0,0,image.getWidth()/2, image.getHeight(), 0,0),
+        rightDoor(image, image.getWidth()/2,0,image.getWidth()/2, image.getHeight(), image.getWidth()/2,0)
+    {
+    }
+
 
     void draw()
     {
         update();
+        leftDoor.draw();
+        rightDoor.draw();
 
-        noStroke();
-        fill(c);
-        rect(x, y, w, h);
     }
 
     void update(){
         double p = portion();
-        //printf("update, p: %f\n", p);
-        c.red = MAP(p, 0, 1, c1.red, c2.red);
-        c.green = MAP(p, 0, 1, c1.green, c2.green);
-        c.blue = MAP(p, 0, 1, c1.blue, c2.blue);
-        c.alpha = 255;
+
+        // update left door position
+        int x = MAP(p, 0,1, leftDoor.getOriginX(),leftDoor.getOriginX()-leftDoor.getWidth());
+        int y = leftDoor.fOriginY;
+        leftDoor.moveTo(x, y);
+
+        // update right door position
+        x = MAP(p, 0,1, rightDoor.getOriginX(), rightDoor.getOriginX() + rightDoor.getWidth());
+        //x = rightDoor.fOriginX;
+        y = rightDoor.fOriginY;
+        //printf("right door: %d %d\n", x, y);
+
+        rightDoor.moveTo(x, y);
     }
 };
 
-RectAnimator rec1(3, 100, 100, 320, 200);
-RectAnimator rec2(5, 250, 200, 320, 200);
+BarnDoorsOpen *se1 = nullptr;
 
-void mouseReleased(const MouseEvent &e)
-{
-    printf("MOUSERELEASED\n");
-    rec1.reset();
-    rec2.reset();
-}
 
 void draw()
 {
-    //printf("DRAW\n");
-    if (apb == nullptr) {
+    background(0xC0);
+
+
+    if (se1 == nullptr) {
         return ;
     }
 
-    //printf("DRAW 2\n");
-
-    rec1.draw();
-    rec2.draw();
+    se1->draw();
 }
 
 void setup()
@@ -121,8 +157,8 @@ void setup()
     }
 
 
-    createCanvas(800, 600);
+    createCanvas(apb->getWidth(), apb->getHeight());
     
-    rec1.reset();
-    rec2.reset();
+    se1 = new BarnDoorsOpen(*apb, 5);
+    se1->reset();
 }
