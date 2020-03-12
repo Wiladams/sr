@@ -5,9 +5,15 @@
 #include "p5.hpp"
 #include "codec_targa.hpp"
 #include "stopwatch.hpp"
+#include "iparametric.hpp"
+
+// A type to interpolate doubles
+typedef ValueInterpolator<double> ParamD;
 
 PixelBuffer *apb = nullptr;
 PixelSRCOVER blendOp;
+
+
 
 class ImageShard
 {
@@ -86,11 +92,15 @@ class BarnDoorsOpen : public TimeAnimator
     PixelBuffer &fImage;
     ImageShard leftDoor;
     ImageShard rightDoor;
+    ParamD fParamLeftX;
+    ParamD fParamRightX;
 
 public:
     BarnDoorsOpen(PixelBuffer &image, double duration)
         :TimeAnimator(duration),
         fImage(image),
+        fParamLeftX(0,1, 0,-((int)image.getWidth())/2.0),
+        fParamRightX(0,1, image.getWidth()/2, image.getWidth()),
         leftDoor(image, 0,0,image.getWidth()/2, image.getHeight(), 0,0),
         rightDoor(image, image.getWidth()/2,0,image.getWidth()/2, image.getHeight(), image.getWidth()/2,0)
     {
@@ -105,17 +115,19 @@ public:
 
     }
 
+    // Whenever we get a chance, update position of
+    // the doors based on the time
     void update(){
         double p = portion();
 
         // update left door position
-        int x = MAP(p, 0,1, leftDoor.getOriginX(),leftDoor.getOriginX()-leftDoor.getWidth());
+        int x = fParamLeftX(p);
         int y = leftDoor.fOriginY;
         leftDoor.moveTo(x, y);
+        //printf("left door: %d %d\n", x, y);
 
         // update right door position
-        x = MAP(p, 0,1, rightDoor.getOriginX(), rightDoor.getOriginX() + rightDoor.getWidth());
-        //x = rightDoor.fOriginX;
+        x = fParamRightX(p);
         y = rightDoor.fOriginY;
         //printf("right door: %d %d\n", x, y);
 
@@ -158,7 +170,8 @@ void setup()
 
 
     createCanvas(apb->getWidth(), apb->getHeight());
-    
-    se1 = new BarnDoorsOpen(*apb, 5);
+    frameRate(30);
+
+    se1 = new BarnDoorsOpen(*apb, 1);
     se1->reset();
 }

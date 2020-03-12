@@ -1,0 +1,41 @@
+#pragma once
+
+#include <stdio.h>
+
+template <typename T>
+inline T IMAP(T x, T olow, T ohigh, T rlow, T rhigh)
+{
+    return rlow + (x-olow)*((T)(rhigh-rlow)/(ohigh-olow));
+}
+
+template <typename T>
+class IParametric
+{
+public:
+    virtual T operator()(const double u) = 0;
+};
+
+template <typename T>
+class ValueInterpolator : public IParametric<T>
+{
+public:
+    T fInLow;
+    T fInHigh;
+    T fOutLow;
+    T fOutHigh;
+
+public:
+    ValueInterpolator(T inLow, T inHigh, T outlow, T outhigh)
+        : fInLow(inLow),
+        fInHigh(inHigh),
+        fOutLow(outlow),
+        fOutHigh(outhigh)
+    {}
+
+    T operator()(const double u)
+    {
+        //printf("VI: %f %f %f %f %f\n", u, fInLow, fInHigh, fOutLow, fOutHigh);
+        T value = IMAP(u, fInLow,fInHigh, fOutLow, fOutHigh);
+        return value;
+    }
+};
