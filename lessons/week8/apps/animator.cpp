@@ -56,22 +56,51 @@ class TimeAnimator
 {
     StopWatch clock;
     double fDuration;
+    double fRemaining;
+
 
 protected:
+    bool fIsRunning = false;
+
     TimeAnimator(double duration)
-    :fDuration(duration)
+        :fDuration(duration),
+        fIsRunning(false)
     {
-        clock.reset();
+        stop();
     }
 
 public:
+    bool isRunning() {
+        return fIsRunning;
+    }
+
+    virtual void pause()
+    {
+        fRemaining = fDuration - clock.seconds();
+    }
+
+    virtual void play()
+    {
+        fIsRunning = true;
+        // set the clock to the amount remaining
+        // and continue
+    }
+
     virtual void reset()
     {
+        // remaining should be set 
         clock.reset();
     }
 
-    virtual void draw()
-    {}
+    virtual void stop()
+    {
+        fIsRunning = false;
+        reset();
+    }
+
+
+
+
     
     virtual bool isDone()
     {
@@ -84,6 +113,9 @@ public:
     }
 
     virtual void update()
+    {}
+    
+    virtual void draw()
     {}
 };
 
@@ -101,7 +133,7 @@ public:
         fImage(image),
         fParamLeftX(0,1, 0,-((int)image.getWidth())/2.0),
         fParamRightX(0,1, image.getWidth()/2, image.getWidth()),
-        leftDoor(image, 0,0,image.getWidth()/2, image.getHeight(), 0,0),
+        leftDoor(image, 0,0,(image.getWidth()/2)+1, image.getHeight(), 0,0),
         rightDoor(image, image.getWidth()/2,0,image.getWidth()/2, image.getHeight(), image.getWidth()/2,0)
     {
     }
@@ -112,12 +144,17 @@ public:
         update();
         leftDoor.draw();
         rightDoor.draw();
-
     }
 
     // Whenever we get a chance, update position of
     // the doors based on the time
     void update(){
+        // If th animation is not running, then
+        // simply return instead of updating
+        if (!isRunning()) {
+            return ;
+        }
+
         double p = portion();
 
         // update left door position
@@ -129,14 +166,32 @@ public:
         // update right door position
         x = fParamRightX(p);
         y = rightDoor.fOriginY;
-        //printf("right door: %d %d\n", x, y);
-
         rightDoor.moveTo(x, y);
+
+        if (p >= 1.0) {
+            fIsRunning = false;
+        }
+    }
+
+    void play()
+    {
+        reset();
+        fIsRunning = true;
     }
 };
 
 BarnDoorsOpen *se1 = nullptr;
 
+
+void mouseReleased(const MouseEvent &e)
+{
+    if (se1->isRunning()) {
+        se1->stop();
+    } else {
+        se1->play();
+    }
+
+}
 
 void draw()
 {
