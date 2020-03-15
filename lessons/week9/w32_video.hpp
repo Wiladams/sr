@@ -5,6 +5,22 @@
 
 #include "w32_types.hpp"
 
+
+
+// AviFmt.h
+#ifndef mmioFOURCC
+#define mmioFOURCC( ch0, ch1, ch2, ch3 )				\
+        ( (DWORD)(BYTE)(ch0) | ( (DWORD)(BYTE)(ch1) << 8 ) |	\
+        ( (DWORD)(BYTE)(ch2) << 16 ) | ( (DWORD)(BYTE)(ch3) << 24 ) )
+#endif
+
+#ifndef MKFOURCC
+#define MKFOURCC( ch0, ch1, ch2, ch3 )                                    \
+		( (DWORD)(BYTE)(ch0) | ( (DWORD)(BYTE)(ch1) << 8 ) |	\
+		( (DWORD)(BYTE)(ch2) << 16 ) | ( (DWORD)(BYTE)(ch3) << 24 ) )
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {            /* Assume C declarations for C++ */
 #endif  /* __cplusplus */
@@ -90,8 +106,31 @@ typedef struct tWAVEFORMATEX {
   WORD  cbSize;
 } WAVEFORMATEX, *PWAVEFORMATEX, *NPWAVEFORMATEX, *LPWAVEFORMATEX;
 
+/* video data block header */
+typedef struct videohdr_tag {
+    LPBYTE      lpData;                 /* pointer to locked data buffer */
+    DWORD       dwBufferLength;         /* Length of data buffer */
+    DWORD       dwBytesUsed;            /* Bytes actually used */
+    DWORD       dwTimeCaptured;         /* Milliseconds from start of stream */
+    DWORD_PTR   dwUser;                 /* for client's use */
+    DWORD       dwFlags;                /* assorted flags (see defines) */
+    DWORD_PTR   dwReserved[4];          /* reserved for driver */
+} VIDEOHDR, *PVIDEOHDR, * LPVIDEOHDR;
+
+/* wave data block header */
+typedef struct wavehdr_tag {
+    LPSTR       lpData;                 /* pointer to locked data buffer */
+    DWORD       dwBufferLength;         /* length of data buffer */
+    DWORD       dwBytesRecorded;        /* used for input only */
+    DWORD_PTR   dwUser;                 /* for client's use */
+    DWORD       dwFlags;                /* assorted flags (see defines) */
+    DWORD       dwLoops;                /* loop control counter */
+    struct wavehdr_tag *lpNext;     /* reserved for driver */
+    DWORD_PTR   reserved;               /* reserved for driver */
+} WAVEHDR, *PWAVEHDR, *NPWAVEHDR, *LPWAVEHDR;
 
 
+// Function calls
 DWORD   VideoForWindowsVersion(void);
 
 // These no longer exist, nor need to be used
@@ -327,3 +366,15 @@ BOOL capGetDriverDescriptionA (UINT wDriverIndex,
 #define capPalettePaste(hwnd)                      ((BOOL)AVICapSM(hwnd, WM_CAP_PAL_PASTE, (WPARAM) 0, (LPARAM)0L))
 #define capPaletteAuto(hwnd, iFrames, iColors)     ((BOOL)AVICapSM(hwnd, WM_CAP_PAL_AUTOCREATE, (WPARAM)(iFrames), (LPARAM)(DWORD)(iColors)))
 #define capPaletteManual(hwnd, fGrab, iColors)     ((BOOL)AVICapSM(hwnd, WM_CAP_PAL_MANUALCREATE, (WPARAM)(fGrab), (LPARAM)(DWORD)(iColors)))
+
+
+typedef LRESULT (CALLBACK* CAPYIELDCALLBACK)  (HWND hWnd);
+//typedef LRESULT (CALLBACK* CAPSTATUSCALLBACKW) (HWND hWnd, int nID, LPCWSTR lpsz);
+//typedef LRESULT (CALLBACK* CAPERRORCALLBACKW)  (HWND hWnd, int nID, LPCWSTR lpsz);
+typedef LRESULT (CALLBACK* CAPSTATUSCALLBACKA) (HWND hWnd, int nID, LPCSTR lpsz);
+typedef LRESULT (CALLBACK* CAPERRORCALLBACKA)  (HWND hWnd, int nID, LPCSTR lpsz);
+
+typedef LRESULT (CALLBACK* CAPVIDEOCALLBACK)  (HWND hWnd, LPVIDEOHDR lpVHdr);
+typedef LRESULT (CALLBACK* CAPWAVECALLBACK)   (HWND hWnd, LPWAVEHDR lpWHdr);
+typedef LRESULT (CALLBACK* CAPCONTROLCALLBACK)(HWND hWnd, int nState);
+

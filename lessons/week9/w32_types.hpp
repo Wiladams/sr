@@ -15,6 +15,9 @@
 // Wrapping everything in this __cplusplus case is necessary because
 // various Windows APIs and structures are very C specific, so we don't
 // want the names to get C++ mangling
+
+#define CALLBACK    __stdcall
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -83,6 +86,7 @@ typedef int ( __stdcall *PROC)();
 
 typedef void *          LPVOID;
 typedef const void *    LPCVOID;
+typedef BYTE *          LPBYTE;
 typedef DWORD *         LPDWORD;
 
 
@@ -104,6 +108,7 @@ typedef BYTE *      PBYTE;
 typedef ULONG *     PULONG;
 
 // winnt
+typedef  CHAR * LPSTR;
 typedef  const CHAR *LPCSTR, *PCSTR;
 typedef  const PCSTR *PCZPCSTR;
 
@@ -486,3 +491,6 @@ typedef struct tagRAWINPUT {
 #ifdef __cplusplus
 }
 #endif
+
+
+

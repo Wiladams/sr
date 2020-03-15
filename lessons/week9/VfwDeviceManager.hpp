@@ -5,47 +5,10 @@
 #include "List.hpp"
 #include "w32.hpp"
 #include "w32_video.hpp"
+#include "VfwDriver.hpp"
 
 
 
-class VfwDeviceDriver
-{
-public:
-    int index;
-    char fName[100];
-    char fVersion[100];
-    
-    VfwDeviceDriver()
-    {
-        index = -1;
-        fName[0] = 0;
-        fVersion[0] = 0;
-    }
-
-    VfwDeviceDriver(const char *name, const char *version)
-    {
-        strncpy(fName, name, sizeof(fName)-1); 
-        strncpy(fVersion, version, sizeof(fVersion)-1);
-    }
-
-    bool isValid() {return index >= 0;}
-
-    void setName(const char *value)
-    {
-        strncpy(fName, value, sizeof(fName)-1); 
-    }
-
-    void setVersion(const char *value)
-    {
-        strncpy(fVersion, value, sizeof(fVersion)-1); 
-    }
-
-    char * toString(int n, char *buff)
-    {
-        int nWritten = snprintf (buff, n, "%s %s", fName, fVersion);
-        return buff;
-    }
-};
 
 class VfwCaptureDevice
 {
