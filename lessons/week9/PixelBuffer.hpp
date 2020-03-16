@@ -73,8 +73,16 @@ public:
 
     // Copy the span of pixels into the pixel buffer
     // Like a horizontal line, but individual color values
-    virtual bool setSpan(GRCOORD x, GRCOORD y, const GRSIZE width, const PixRGBA * pix) = 0;
-    
+    virtual bool setSpan(const GRCOORD x, const GRCOORD y, const GRSIZE width, const PixRGBA * pix)
+    {
+        for (int offset =0; offset < width; offset++)
+        {
+            setPixel(x+offset, y, pix[offset]);
+        }
+
+        return true;
+    }
+
     // Set all pixels within the pixel buffer to the specified value
     // we do a brute force implementation here so there's one less
     // thing for a derived class to implement. 
@@ -107,7 +115,7 @@ public:
                 //printf("blit: %d %d\n", dx, dy);
 
                 PixRGBA pix = src.getPixel(dx,dy);
-                //printf("blit, pixel: %d %d (%d, %d, %d)\n", dx, dy, pix.red, pix.green, pix.blue);
+                printf("blit, pixel: %d %d (%d, %d, %d)\n", dx, dy, pix.red, pix.green, pix.blue);
 
                 setPixel(col, row, pix);
             }
@@ -143,7 +151,7 @@ public:
 
     GRSIZE getWidth() const { return this->width;}
     GRSIZE getHeight() const { return this->height;}
-    virtual const PixRGBA * getData() const = 0;
+    virtual const void * getData() const = 0;
     virtual const void * getPixelPointer(int x, int y) const = 0;
 
 };

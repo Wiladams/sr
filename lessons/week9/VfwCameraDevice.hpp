@@ -68,6 +68,7 @@ public:
         // Get the settings again, and set the width
         // and height based on what was actually set
         getVideoFormat(fBitmapInfo);
+
         setWidth(fBitmapInfo.bmiHeader.biWidth);
         setHeight(fBitmapInfo.bmiHeader.biHeight);
     }
@@ -228,6 +229,12 @@ public:
         }
 */
 
+
+    bool setCallbackOnFrame(CAPVIDEOCALLBACK fpProc)
+    {
+        bool success = SendMessage(WM_CAP_SET_CALLBACK_FRAME, 0, (LPARAM)(LPVOID)fpProc) == 1;
+        return success;
+    }
 
 
 /*

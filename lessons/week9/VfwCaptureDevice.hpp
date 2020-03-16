@@ -37,7 +37,7 @@ public:
         int deviceId = 0;   
         fConnected = false;
 
-        fWindowHandle = capCreateCaptureWindowA("VfwCaptureDevice", WS_VISIBLE, 0,0,320,240, nullptr, deviceId);
+        fWindowHandle = capCreateCaptureWindowA("VfwCaptureDevice", windowStyle, 0,0,320,240, nullptr, deviceId);
         printf("VfwCaptureDevice, handle: %p\n", fWindowHandle);
 
         // Set userdata to be this so that on 

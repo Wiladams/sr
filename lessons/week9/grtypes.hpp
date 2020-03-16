@@ -4,8 +4,9 @@
 #include "maths.hpp"
 
 
-typedef union PixRGBA {
 
+
+typedef union PixRGBA {
     uint32_t intValue;
     uint8_t data[4];
     struct {
@@ -21,6 +22,20 @@ typedef union PixRGBA {
     PixRGBA(uint32_t val) : intValue(val){}
     PixRGBA(int r, int g, int b, int a):red(r), green(g), blue(b), alpha(a) {}
 } PixRGBA;
+
+typedef union PixRGB {
+    uint8_t data[3];
+    struct {
+        uint8_t blue, green, red;
+    };
+
+    // default constructor, transparent
+    PixRGB():red(0), green(0), blue(0){}
+
+    // Easy constructor
+    PixRGB(const PixRGB &rhs):red(rhs.red),blue(rhs.blue),green(rhs.green){}
+    PixRGB(int r, int g, int b):red(r), green(g), blue(b) {}
+} PixRGB;
 
 
 // Some well known types

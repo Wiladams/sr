@@ -22,41 +22,41 @@
 
     The format of a FrameBuffer is 32-bit pixels.
 */
-class PixelBufferRGBA32 : public PixelBuffer {
+class PixelBufferRGB24 : public PixelBuffer {
 private:
     // private default constructor, so this can not
     // be an un-initialized element in an array 
-    PixelBufferRGBA32();
+    PixelBufferRGB24();
 
-    PixRGBA * data;         // a pointer to the actual pixel data
+    PixRGB * data;      // a pointer to the actual pixel data
     bool fOwnsData;
 
 protected:
     void setData(void *pData)
     {
-        data = (PixRGBA *)pData;
+        data = (PixRGB *)pData;
     }
 
 public:
     // Public constructor
     // must assign to const fields using ':'
     // mechanism.
-    PixelBufferRGBA32(const size_t width, const size_t height)
+    PixelBufferRGB24(const size_t width, const size_t height)
         : PixelBuffer(width, height)
     {
-        data = {new PixRGBA[width*height]{}};
+        data = {new PixRGB[width*height]{}};
         fOwnsData = true;
     }
 
-    PixelBufferRGBA32(const size_t width, const size_t height, void *pixels)
+    PixelBufferRGB24(const size_t width, const size_t height, void *pixels)
         : PixelBuffer(width, height), 
-        data((PixRGBA *)pixels)
+        data((PixRGB *)pixels)
     {
         fOwnsData = false;
     }
 
     // Virtual destructor so this can be sub-classed
-    virtual ~PixelBufferRGBA32(){
+    virtual ~PixelBufferRGB24(){
         // must delete the data element, as we 
         // constructred it.
         if (fOwnsData) {
@@ -92,7 +92,7 @@ public:
             return false;   // outside bounds, or invisible
         }
         size_t offset = y * getWidth() + x;
-        data[offset] = pix;
+        data[offset] = PixRGB(pix.red, pix.green, pix.blue);
 
         return true;
     }
@@ -102,56 +102,16 @@ public:
     // of the FrameBuffer
     PixRGBA getPixel(GRCOORD x, GRCOORD y) const
     {
-        //printf("getPixel: %d %d, width: %d height: %d\n", x, y, getWidth(), getHeight());
+        //printf("RGB24.getPixel: %d %d, width: %d height: %d\n", x, y, getWidth(), getHeight());
 
         size_t offset = y * getWidth() + x;
         //PixRGBA c = data[offset];
         //printf("getPixel: (%d,%d,%d)\n", c.red, c.green, c.blue);
         //return c;
-        return this->data[offset];
+        return PixRGBA(data[offset].red, data[offset].green, data[offset].blue, 255);
     }
 
-    // setPixels()
-    // 
-    // set the values of a contiguous set of pixels
-    bool setSpan(const GRCOORD x, const GRCOORD y, const GRSIZE width, const PixRGBA * pix)
-    {
-        // size_t is a good choice, as it's typically the machine's largest
-        // unsigned int
-        size_t offset = y * getWidth() + x;
-        
-        // BUGBUG
-        // we can do clipping here by reducing width to whatever
-        // is remaining on the line, rather than fulfilling the
-        // entire 'width' request
-        void * destPtr = (void *)getPixelPointer(x, y);
-        memcpy(destPtr, pix, width*sizeof(PixRGBA));
-
-        //for (GRSIZE i=0; i<width; i++) 
-        //{
-        //    data[offset+i] = pix[i];
-        //}
-
-        return true;
-    }
-
-
-    // setAllPixels()
-    // Set all the pixels in the framebuffer to the value specified
-    // This is done here in case a framebuffer has a way of doing it
-    // really fast.
-    bool setAllPixels(const PixRGBA value)
-    {
-        size_t nPixels = getWidth() * getHeight();
-        while (nPixels > 0){
-            data[nPixels-1] = value;
-            nPixels = nPixels - 1;
-        }
-
-        return true;
-    }
-
-//void *memcpy(void *dest, const void * src, size_t n)
+/*
     bool blit(const PixelBuffer &src, 
         int srcX, int srcY, int srcWidth, int srcHeight, 
         int destX, int destY, int destWidth, int destHeight)
@@ -161,9 +121,8 @@ public:
         
         // If the source and destination start out as the same size
         // then we can perform some copy optimizations
-        //bool isOptimal = ((destWidth == srcWidth) && (destHeight == srcHeight));    // AND formats are the same
-        bool isOptimal = false;
-
+        bool isOptimal = ((destWidth == srcWidth) && (destHeight == srcHeight));    // AND formats are the same
+        
         RectangleI myRect(0,0,getWidth(), getHeight());
         RectangleI destRect(destX, destY, destWidth, destHeight);
         RectangleI clipRect = RectangleI::intersection(myRect, destRect);
@@ -189,7 +148,7 @@ public:
                     //printf("blit: %d %d\n", dx, dy);
 
                     PixRGBA pix = src.getPixel(dx,dy);
-                    //printf("blit, pixel: %d %d (%d, %d, %d, %d)\n", dx, dy, pix.red, pix.green, pix.blue, pix.alpha);
+                    //printf("blit, pixel: %d %d (%d, %d, %d)\n", dx, dy, pix.red, pix.green, pix.blue);
 
                     setPixel(col, row, pix);
                 }
@@ -198,6 +157,6 @@ public:
 
         return true;
     }
-
+*/
 
 };
