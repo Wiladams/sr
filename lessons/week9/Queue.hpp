@@ -19,6 +19,12 @@ public:
     int length() {return fList.length();}
 
     List<T> fList;
+
+    // Array indexing operator
+    T operator[](const int idx)
+    {
+
+    }
 };
 
 /*
