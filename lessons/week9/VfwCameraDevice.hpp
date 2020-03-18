@@ -9,11 +9,6 @@
     /// </summary>
 class VfwCameraDevice : public VfwCaptureDevice
 {
-    //VfwVideoFrameDelegate fVideoFrameDelegate;
-    //VfwcapControlCallback fControlDelegate;
-    //VfwVideoFrameDelegate fVideoStreamDelegate;
-    //VfwcapStatusCallback fStatusDelegate;
-    //VfwcapErrorCallback fErrorDelegate;
 
     // Configuration fields
     BITMAPINFO fBitmapInfo;
@@ -27,17 +22,6 @@ public:
         // bitmapinfoheader MUST be initialized
         fBitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 
-        // Setup the delegate functions that will be called
-        //fVideoStreamDelegate = StreamCallBack;            
-        //fVideoFrameDelegate = FrameCallBack;
-        //fControlDelegate = ControlCallback;
-        //fErrorDelegate = ErrorCallback;
-
-        //SetCallbackOnVideoStream(fVideoStreamDelegate);
-        //SetCallbackOnFrame(fVideoFrameDelegate);
-        //SetCallbackOnCapControl(fControlDelegate);
-        //SetCallbackOnStatus(fStatusDelegate);
-        //SetCallbackOnError(fErrorDelegate);
     }
 
     VfwCameraDevice(int width, int height)

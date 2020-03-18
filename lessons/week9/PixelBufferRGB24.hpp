@@ -42,14 +42,14 @@ public:
     // must assign to const fields using ':'
     // mechanism.
     PixelBufferRGB24(const size_t width, const size_t height)
-        : PixelBuffer(width, height)
+        : PixelBuffer(width, height, 24)
     {
         data = {new PixRGB[width*height]{}};
         fOwnsData = true;
     }
 
     PixelBufferRGB24(const size_t width, const size_t height, void *pixels)
-        : PixelBuffer(width, height), 
+        : PixelBuffer(width, height, 24), 
         data((PixRGB *)pixels)
     {
         fOwnsData = false;

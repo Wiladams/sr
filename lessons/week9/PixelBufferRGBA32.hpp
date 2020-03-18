@@ -42,14 +42,14 @@ public:
     // must assign to const fields using ':'
     // mechanism.
     PixelBufferRGBA32(const size_t width, const size_t height)
-        : PixelBuffer(width, height)
+        : PixelBuffer(width, height, 32)
     {
         data = {new PixRGBA[width*height]{}};
         fOwnsData = true;
     }
 
     PixelBufferRGBA32(const size_t width, const size_t height, void *pixels)
-        : PixelBuffer(width, height), 
+        : PixelBuffer(width, height, 32), 
         data((PixRGBA *)pixels)
     {
         fOwnsData = false;
@@ -161,8 +161,9 @@ public:
         
         // If the source and destination start out as the same size
         // then we can perform some copy optimizations
-        //bool isOptimal = ((destWidth == srcWidth) && (destHeight == srcHeight));    // AND formats are the same
-        bool isOptimal = false;
+        //bool isOptimal = false;
+        bool isOptimal = ((src.getBitsPerPixel() == getBitsPerPixel()) && 
+        ((destWidth == srcWidth) && (destHeight == srcHeight)));    // AND formats are the same
 
         RectangleI myRect(0,0,getWidth(), getHeight());
         RectangleI destRect(destX, destY, destWidth, destHeight);

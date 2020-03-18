@@ -28,18 +28,29 @@ private:
     // you don't want them to ever change
     const size_t width;   //how many pixels wide
     const size_t height;  // how many pixels tall
+    const int fBitsPerPixel;
 
 protected:
     virtual void setData(void *) = 0;
 
 public:
-    PixelBuffer(const size_t awidth, const size_t aheight)
-        :width(awidth), height(aheight)
+    PixelBuffer(const size_t awidth, const size_t aheight, const int bpp)
+        :width(awidth), height(aheight), fBitsPerPixel(bpp)
     {}
 
     // virtual destructor here to ensure the derived class
     // has a chance to create their own destructor
     virtual ~PixelBuffer() = 0 {};
+
+    // Properties
+    GRSIZE getWidth() const { return this->width;}
+    GRSIZE getHeight() const { return this->height;}
+    size_t getBitsPerPixel() const {return fBitsPerPixel;}
+    
+    virtual const void * getData() const = 0;
+    virtual const void * getPixelPointer(int x, int y) const = 0;
+
+
 
     // Sub-classes MUST implement the following
     // Set a single pixel value at the specified location
@@ -149,9 +160,5 @@ public:
         return true;
     }
 
-    GRSIZE getWidth() const { return this->width;}
-    GRSIZE getHeight() const { return this->height;}
-    virtual const void * getData() const = 0;
-    virtual const void * getPixelPointer(int x, int y) const = 0;
 
 };
