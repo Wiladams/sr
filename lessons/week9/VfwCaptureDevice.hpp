@@ -109,6 +109,9 @@ public:
     void setHeight(const int height) {fHeight = height;}
     int getHeight() {return fHeight;}
 
+    HWND getWindowHandle() {return fWindowHandle;}
+
+    
     bool connectToDriver(const VfwDeviceDriver &driver)
     {
         if (!driver.isValid()) {

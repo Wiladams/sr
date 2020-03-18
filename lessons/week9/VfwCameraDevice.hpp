@@ -156,7 +156,8 @@ public:
         /// </summary>
     bool grabSingleFrame()
     {
-        bool success = SendSimpleMessage(WM_CAP_GRAB_FRAME_NOSTOP)==1;
+        bool success = SendSimpleMessage(WM_CAP_GRAB_FRAME) == 1;
+        //bool success = SendSimpleMessage(WM_CAP_GRAB_FRAME_NOSTOP)==1;
 
         return success;
     }
@@ -175,6 +176,11 @@ public:
         return success;
     }
 
+    bool hidePreview()
+    {
+        ShowWindow(getWindowHandle(), SW_HIDE);
+        return true;
+    }
 
     int setPreviewRate(int value)
     {

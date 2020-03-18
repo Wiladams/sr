@@ -97,7 +97,7 @@ void setupCamera()
     //camera.setPreviewRate(33);
     //camera.setPreviewScale(1);
     camera.setCallbackOnFrame(onFrameGrabbed);
-
+    camera.hidePreview();
     //camera.startPreview();
 }
 
