@@ -74,6 +74,8 @@ public:
 
 protected:
     size_t fBorderWidth;
+
+
     PixRGBA fBaseColor;
     PixRGBA fForeground;
     PixRGBA fTextBackground;
@@ -84,20 +86,19 @@ protected:
     PixRGBA fBottomShadowTopLiner;
     PixRGBA fBottomShadowBottomLiner;
     PixRGBA fTopShadow;
-    PixRGBA fBackground;
+
 
 
 public:
     GUIStyle()
         : fBorderWidth(2)
     {
+        setBaseColor(colors.ltGray);
 
-        fBaseColor = colors.ltGray;
+
         fForeground = colors.ltGray;
-        fTextBackground = fBaseColor;
-        fHighlightColor = brighter(fBaseColor);
-        fShadowColor = darker(fBaseColor);
-        fBackground = brighter(fHighlightColor);
+
+
         fBottomShadow = darker(fForeground); // 0x00616161;
         fBottomShadowTopLiner = brighter(fBottomShadow); //fForeground;
         fBottomShadowBottomLiner = fBottomShadow;
@@ -105,133 +106,80 @@ public:
         fBackground = brighter(colors.darkGray); //0x009e9e9e;
     }
 
+    PixRGBA getSunkenColor() {return fForeground;}
+    PixRGBA getRaisedColor() {return fForeground;}
+    PixRGBA getBackground() {return fBackground;}
 
+    PixRGBA getBaseColor() { return fBaseColor;}
+    void setBaseColor(const PixRGBA &value)
+    {
+	    fBaseColor = value;
+	    fTextBackground =   fBaseColor;
+        fHighlightColor = brighter(fBaseColor);
+	    fShadowColor = darker(fBaseColor);
+	    fBackground = brighter(fHighlightColor);
+    }
 
+    PixRGBA getForeground() { return fForeground;}
+    void setForeground(const PixRGBA &value){fForeground = value;}
 
-    PixRGBA SunkenColor(self) {return fForeground;}
+    int getBorderWidth(){return fBorderWidth;}
+    void setBorderWidth(const int value) {fBorderWidth = value;}
 
+    PixRGBA getPadding() {return 2; }
 
-PixRGBA GUIStyle.RaisedColor(self)
-	return self.fForeground;
-end
+    void drawFrame(int x, int y, int w, int h, int style)
+    {
+        if (style == GUIStyle::Sunken) {
+            stroke(fHighlightColor);
+            for (int n=0; n<getBorderWidth(); n++) {
+                line(x+n, y+h-n, x+w-n, y+h-n);    // bottom shadow
+                line(x + w - n, y + n, x + w - n, y + h);	    // right shadow
+            }
 
-PixRGBA Background(self)
-	return self.fBackground;
-end
+            stroke(fShadowColor);
+            for (int n=0; n < getBorderWidth(); n++) {
+                line(x+n, y+n, x+w-n, y+n);     // top edge
+                line(x+n, y+n, x+n, y+h-n);     // left edge
+            }
 
-PixRGBA BaseColor(self, value)
-    if not value then
-        return self.fBaseColor;
-    end
+        } else if (style == GUIStyle::Raised) {	
 
-    -- set
-	self.fBaseColor = value;
-	self.fTextBackground = self.fBaseColor;
+            stroke(fShadowColor);
+            for (int n=0; n < getBorderWidth(); n++) {
+                line(x+n, y+h-n, x+w-n, y+h-n);      // bottom shadow
+                line(x+w-n, y+n, x+w-n, y+h);	    // right shadow
+            }
 
-    self.fHighlightColor = brighter(self.fBaseColor);
-	self.fShadowColor = darker(self.fBaseColor);
-	self.fBackground = brighter(self.fHighlightColor); 			
-end
+            if (getBorderWidth() > 0) {
+                stroke(fBottomShadowBottomLiner);
+                line(x, y + h, x + w, y + h);				// bottom shadow
+                line(x + w, y, x + w, y + h);				// right shadow
+            }
 
-PixRGBA Foreground(self, value)
-    -- get
-    if not value then
-        return self.fForeground;
-    end
-    
-	-- set
-	self.fForeground = value;
-end
+            stroke(fHighlightColor);
+            for (int n=0; n < getBorderWidth(); n++) {
+                line(x+n,y+n, x+w-n, y+n);	    // top edge
+                line(x+n, y+n, x+n, y+h-n);	    // left edge
+            }
+        }
+    }
 
-PixRGBA BorderWidth(self, value)
-    if not value then
-		return self.fBorderWidth;
-    end
-    
-    self.fBorderWidth = value;
-end
+    void drawSunkenRect(int x, int y, int w, int h)
+    {
+        fill(fBaseColor);
+        noStroke();
+        rect(x,y,w,h);
 
-PixRGBA Padding(self)
-	return 2;
-end
+        drawFrame(x, y, w, h, GUIStyle::Sunken);
+    }
 
-PixRGBA DrawFrame(self, ctx, x, y, w, h, style)
+    void drawRaisedRect(int x, int y, int w, int h)
+    {
+        noStroke();
+        fill(fBaseColor);
+        rect(x,y,w,h);
+        drawFrame(x, y, w, h, GUIStyle::Raised);
+    }
 
-	local n;
-
-    if style == GUIStyle.FrameStyle.Sunken then
-        ctx:stroke(self.fHighlightColor)
-		for n=0, self:BorderWidth()-1 do
-			ctx:line(x+n, y+h-n, x+w-n, y+h-n);    -- bottom shadow
-            ctx:line(x + w - n, y + n, x + w - n, y + h);	    -- right shadow
-        end
-
-        ctx:stroke(self.fShadowColor)
-		for n=0, self:BorderWidth()-1 do
-			ctx:line(x+n, y+n, x+w-n, y+n);	    -- top edge
-			ctx:line(x+n, y+n, x+n, y+h-n);	    -- left edge
-        end				
-
-    elseif style == GUIStyle.FrameStyle.Raised then	
-
-        ctx:stroke(self.fShadowColor)
-		for n=0, self:BorderWidth()-1 do
-			ctx:line(x+n, y+h-n, x+w-n, y+h-n);      -- bottom shadow
-			ctx:line(x+w-n, y+n, x+w-n, y+h);	    -- right shadow
-        end
-
-		if self:BorderWidth() > 0 then				
-            ctx:stroke(self.fBottomShadowBottomLiner)
-            ctx:line(x, y + h, x + w, y + h);				-- bottom shadow
-            ctx:line(x + w, y, x + w, y + h);				-- right shadow
-        end
-
-        ctx:stroke(self.fHighlightColor)
-		for n=0, self:BorderWidth()-1 do
-			ctx:line(x+n,y+n, x+w-n, y+n);	    -- top edge
-			ctx:line(x+n, y+n, x+n, y+h-n);	    -- left edge
-        end
-
-    end
-
-end
-
-PixRGBA DrawSunkenRect(self, ctx, x, y, w, h)
-    ctx:fill(self.fBaseColor)
-    ctx:fillRect(x,y,w,h)
-
-	self:DrawFrame(ctx, x, y, w, h, GUIStyle.FrameStyle.Sunken);
-end
-
-PixRGBA DrawRaisedRect(self, ctx, x, y, w, h)
-{
-    ctx:fill(self.fBaseColor)
-    ctx:fillRect(x,y,w,h)
-	self:DrawFrame(ctx, x, y, w, h, GUIStyle.FrameStyle.Raised);
-}
-
-/*
-        public virtual void DrawLine(IGraphPort aPort, int x1, int y1, int x2, int y2, int border_width)
-		{
-            // Vertical line
-			if (x1 == x2)
-			{
-				for (int n=0; n<BorderWidth; n++) 
-					aPort.DrawLine(fShadowPen, new Point2I(x1-n, y1+n), new Point2I(x1-n, y2-n));  // left part
-	    
-				for (int n=1; n<BorderWidth; n++) 
-					aPort.DrawLine(fHighlightPen, new Point2I(x1+n, y1+n), new Point2I(x1+n, y2-n));  // right part
-			} 
-			else if (y1 == y2)  // Horizontal line
-			{
-				for (int n=0; n<BorderWidth; n++) 
-					aPort.DrawLine(fShadowPen, new Point2I(x1+n, y1-n), new Point2I(x2-n, y1-n));  // top part
-
-				for (int n=1; n<BorderWidth; n++) 
-					aPort.DrawLine(fHighlightPen, new Point2I(x1+n, y1+n), new Point2I(x2-n, y1+n));  // bottom part
-			}
-		}
-	}
-}
-*/
-
+};

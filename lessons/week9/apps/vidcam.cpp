@@ -64,6 +64,16 @@ LRESULT onFrameGrabbed(HWND hWnd, LPVIDEOHDR lpVHdr)
     return 1;
 }
 
+void drawLines()
+{
+    for (int i = 1;i<=500;i++)
+    {
+        int x = MAP(mouseX, 0,width, (width/2)-200, (width/2)+200);
+        stroke(color(random(255), random(255), random(255)));
+        line(mouseX, mouseY, random(width), random(height));
+    }
+}
+
 /*
     The draw() function is called on the frameRate timer.  The only thing
     we want to do here in this particular application is tell the 
@@ -79,6 +89,13 @@ LRESULT onFrameGrabbed(HWND hWnd, LPVIDEOHDR lpVHdr)
 void draw()
 {
     camera.grabSingleFrame();
+
+    drawLines();
+
+    // draw something that follows the mouse
+    // as an overlay atop the picture
+    fill(color(200, 0, 23, 127));
+    ellipse(mouseX, mouseY, 100, 100);
 }
 
 void setupCamera()

@@ -70,12 +70,11 @@ public:
     const PixRGBA darkBlue      = {0xff00007f};
     const PixRGBA darkGreen     = {0xff007f00};
     const PixRGBA darkRed       = {0xff7f0000};
+    const PixRGBA darkCyan      = {0xff008080};
 } colors;
 
 /*
 local Colorrefs = {
-
-    DarkCyan = color(0, 0x80, 0x80);
     MidGreen = color(0,192,0);
     MidBlue = color(0,0,192);
     MidRed = color(0xC0, 0,0);

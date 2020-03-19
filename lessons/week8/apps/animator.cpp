@@ -202,6 +202,6 @@ void setup()
     createCanvas(apb->getWidth(), apb->getHeight());
     frameRate(30);
 
-    se1 = new BarnDoorsOpen(*apb, 1);
+    se1 = new BarnDoorsOpen(*apb, 2);
     se1->reset();
 }
