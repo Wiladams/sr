@@ -90,6 +90,21 @@ protected:
 
 
 public:
+    GUIStyle(const PixRGBA &baseColor, const int borderWidth)
+        : fBorderWidth(borderWidth)
+    {
+        setBaseColor(baseColor);
+
+        fForeground = colors.ltGray;
+
+
+        fBottomShadow = darker(fForeground); // 0x00616161;
+        fBottomShadowTopLiner = brighter(fBottomShadow); //fForeground;
+        fBottomShadowBottomLiner = fBottomShadow;
+        fTopShadow = brighter(fForeground);  // 0x00cbcbcb;
+
+    }
+    
     GUIStyle()
         : fBorderWidth(2)
     {
@@ -103,7 +118,6 @@ public:
         fBottomShadowTopLiner = brighter(fBottomShadow); //fForeground;
         fBottomShadowBottomLiner = fBottomShadow;
         fTopShadow = brighter(fForeground);  // 0x00cbcbcb;
-        fBackground = brighter(colors.darkGray); //0x009e9e9e;
     }
 
     PixRGBA getSunkenColor() {return fForeground;}

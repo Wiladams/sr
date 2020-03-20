@@ -2,7 +2,7 @@
     Test the guistyle object.
 
     The guistyle object draws the raised and sunken rectangles
-    that are typical of UI elements such as buttons and sliders
+    that are typical of UI elements such as buttons and sliders.
 */
 
 #include "p5.hpp"

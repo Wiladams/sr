@@ -160,10 +160,10 @@ public:
         //printf("blit, dst size : %d X %d\n", destWidth, destHeight);
         
         // If the source and destination start out as the same size
+        // AND formats are the same
         // then we can perform some copy optimizations
-        //bool isOptimal = false;
         bool isOptimal = ((src.getBitsPerPixel() == getBitsPerPixel()) && 
-        ((destWidth == srcWidth) && (destHeight == srcHeight)));    // AND formats are the same
+                ((destWidth == srcWidth) && (destHeight == srcHeight)));    
 
         RectangleI myRect(0,0,getWidth(), getHeight());
         RectangleI destRect(destX, destY, destWidth, destHeight);
@@ -184,15 +184,22 @@ public:
             for (int row=clipRect.y1; row<clipRect.y2; row++) {
                 for (int col=clipRect.x1; col<clipRect.x2; col++)
                 {
-                    int dx = MAP(col, destX, destX+destWidth-1, srcX, srcX+srcWidth-1);
-                    int dy = MAP(row, destY, destY+destHeight-1, srcY, srcY+srcHeight-1);
-                
-                    //printf("blit: %d %d\n", dx, dy);
+                    // Need to change coordinates based on horizontal
+                    // and vertical orientation
+                    int dx;
+                    int dy;
 
+                    if (getVertical() == TopToBottom) {
+                        dx = MAP(col, destX, destX+destWidth-1, srcX, srcX+srcWidth-1);
+                        dy = MAP(row, destY, destY+destHeight-1, srcY, srcY+srcHeight-1);
+                    } else {
+                        dx = MAP(col, destX, destX+destWidth-1, srcX, srcX+srcWidth-1);
+                        dy = MAP(row, destY, destY+destHeight-1, srcY, srcY+srcHeight-1);
+                    }
+                    
                     PixRGBA pix = src.getPixel(dx,dy);
-                    //printf("blit, pixel: %d %d (%d, %d, %d, %d)\n", dx, dy, pix.red, pix.green, pix.blue, pix.alpha);
-
                     setPixel(col, row, pix);
+                    //printf("blit, pixel: %d %d (%d, %d, %d, %d)\n", dx, dy, pix.red, pix.green, pix.blue, pix.alpha);
                 }
             }
         }

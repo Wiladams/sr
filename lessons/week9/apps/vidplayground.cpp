@@ -10,25 +10,16 @@
 
 #include "VfwCameraDevice.hpp"
 #include "PixelBufferRGB24.hpp"
+#include "guistyle.hpp"
 
 //VfwCameraDevice camera(640, 480);
 VfwCameraDevice camera(0, 640, 480, 30, WS_VISIBLE, nullptr);
 VfwDeviceDriver driver(0);
 
 
-void printVideoHeader(LPVIDEOHDR lpVHdr)
-{
-    printf("Data: %p\n", lpVHdr->lpData);   
-    printf("Buffer Length: %d\n", lpVHdr->dwBufferLength);
-    printf("Bytes Used: %d\n", lpVHdr->dwBytesUsed);
-    printf("Time Captured: %d\n", lpVHdr->dwTimeCaptured);    
-    printf("dwUser: %p\n", (void *)lpVHdr->dwUser);    
-    printf("dwFlags: %d\n", lpVHdr->dwFlags);    
-}
-
 // This is here to do a blit upside down.
 // by default vfw has the image bottom to top
-void BLIT(PixelBuffer &src)
+void BLIT(PixelBuffer &src, const int x, const int y)
 {
     int h = src.getHeight();
 
@@ -36,7 +27,7 @@ void BLIT(PixelBuffer &src)
     {
         for (int col=0; col<(src.getWidth()-1); col++)
         {
-            gAppSurface->setPixel(col, (h-1)-row, src.getPixel(col,row));
+            gAppSurface->setPixel(x+col, y+(h-1)-row, src.getPixel(col,row));
         }
     }
 }
@@ -56,12 +47,12 @@ LRESULT onFrameGrabbed(HWND hWnd, LPVIDEOHDR lpVHdr)
     int srcY = 0;
     int srcWidth = 640;
     int srcHeight = 480;
-    int x = 0;
-    int y = 0;
-    //BLIT(pb);
+    int x = 90;
+    int y = 6;
+    BLIT(pb, x, y);
 
     // Can't do it this way as it needs to be flipped vertically
-    gAppSurface->blit(pb, srcX, srcY, srcWidth, srcHeight, x, y, srcWidth, srcHeight);
+    //gAppSurface->blit(pb, srcX, srcY, srcWidth, srcHeight, x, y, srcWidth, srcHeight);
 
     return 1;
 }
@@ -80,6 +71,15 @@ LRESULT onFrameGrabbed(HWND hWnd, LPVIDEOHDR lpVHdr)
 */
 void draw()
 {
+    // Draw sunken rectangle on the left for tools
+    GUIStyle gs(colors.ltGray, 2);
+
+    // sunken rect for tool area
+    gs.drawSunkenRect(4,4, 80, height-8);
+
+    // sunken rect for live image
+    gs.drawSunkenRect(88,4, 648, height-8);
+
     camera.grabSingleFrame();
 }
 
@@ -94,13 +94,8 @@ void setupCamera()
 
     camera.selectVideoSource();
     camera.selectVideoFormat();
-
-    
-    //camera.setPreviewRate(33);
-    //camera.setPreviewScale(1);
     camera.setCallbackOnFrame(onFrameGrabbed);
     camera.hidePreview();
-    //camera.startPreview();
 }
 
 void setup()

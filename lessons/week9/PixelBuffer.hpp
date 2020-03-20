@@ -18,6 +18,17 @@
 
 class PixelBuffer
 {
+public:
+    enum HorizontalOrientation : int {
+        LeftToRight = 0,
+        RightToLeft = 1
+    };
+
+    enum VerticalOrientation : int {
+        BottomToTop = 0,
+        TopToBottom = 1,
+    };
+
 private:
     // private default constructor, so this can not
     // be an un-initialized element in an array 
@@ -29,20 +40,32 @@ private:
     const size_t width;   //how many pixels wide
     const size_t height;  // how many pixels tall
     const int fBitsPerPixel;
+    HorizontalOrientation fHorizontalOrientation;
+    VerticalOrientation fVerticalOrientation;
 
 protected:
     virtual void setData(void *) = 0;
 
 public:
+
     PixelBuffer(const size_t awidth, const size_t aheight, const int bpp)
         :width(awidth), height(aheight), fBitsPerPixel(bpp)
-    {}
+    {
+        fHorizontalOrientation = LeftToRight;
+        fVerticalOrientation = TopToBottom;
+    }
 
     // virtual destructor here to ensure the derived class
     // has a chance to create their own destructor
     virtual ~PixelBuffer() = 0 {};
 
     // Properties
+    void setHorizontal(HorizontalOrientation value) {fHorizontalOrientation = value;}
+    HorizontalOrientation getHorizontal() {return fHorizontalOrientation;}
+
+    void setVertical(VerticalOrientation value) {fVerticalOrientation = value;}
+    VerticalOrientation getVertical() {return fVerticalOrientation;}
+    
     GRSIZE getWidth() const { return this->width;}
     GRSIZE getHeight() const { return this->height;}
     size_t getBitsPerPixel() const {return fBitsPerPixel;}
