@@ -8,42 +8,106 @@
 
 struct BufferChunk {
     size_t fSize;
-    uint8_t *fData;
+    char *fData;
+    bool fIOwnData;
 
-    BufferChunk(int size){
-        fData = {new uint8_t[size]{}};
+    BufferChunk(char *buff, int size)
+    {
+        fData = (uint8_t *)buff;
+        fSize = size;
+        fIOwnData = false;
     }
 
-    uint8_t * getDataPointer() {return fData;}
-    size_t length() {return fSize;}
+    BufferChunk(int size)
+    {
+        fData = {new uint8_t[size]{}};
+        fSize = size;
+        fIOwnData = true;
+    }
+
+    ~BufferChunk()
+    {
+        if (fIOwnData) {
+            delete fData;
+        }
+        fSize = 0;
+    }
+
+    char * getDataPointer() {return fData;}
+    size_t size() {return fSize;}
 };
 
 class IPSocket {
+    SOCKET fSocket;
     IPAddress * fAddress;
+    bool fIsValid;
 
 public:
     
     IPSocket(const char *hostname, const char *portname)
+        : fIsValid(false),
+        fAddress(nullptr)
     {
+        IPHost * host = IPHost::create(hostname, portname);
+        if (host == nullptr)
+        {
+            printf("could not find host: %s\n", hostname);
+            return ;
+        }
 
+        // Create a socket based on the host
+        fSocket = WSASocketA(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, 0);
+
+        if (fSocket == INVALID_SOCKET) {
+            printf("INVALID_SOCKET: %Id\n", s);
+            return ;
+        }
+        
+        fAddress = host->getAddress();
+        if (fAddress == nullptr) {
+            return ;
+        }
+
+        fIsValid = true;
     }
+
+    ~IPSocket() {
+        close();
+    }
+    
+    bool isValid() {return fIsValid;}
 
     bool connect()
     {
+        int retCode = ::connect(fSocket, fAddress->fAddress, fAddress->fAddressLength);
 
+        if (retCode != 0) {
+            printf("Failed to connect: %d\n", retCode);
+            return false;
+        }
+
+        return true;
+    }
+
+    bool close() {
+        closesocket(fSocket);
+        return true;
     }
 
     bool bind()
     {
-
     }
 
-    int send(BufferChunk &chunk){
-
+    int sendChunk(BufferChunk &chunk, int flags=0)
+    {
+        int retCode = ::send(fSocket, (char *)chunk.fData, chunk.fSize, flags);
+        return retCode;
     }
 
-    int receive(BufferChunk &chunk){
-
+    int receiveChunk(BufferChunk &chunk, int flags = 0)
+    {
+        int retCode = ::recv(fSocket, (char *)chunk.fData, chunk.fSize, flags);
+        return retCode;
     }
 };
 
@@ -65,33 +129,14 @@ bool pingHttp(const char * hostname)
                      "\r\n", hostname);
 
     char * portname = "80";
-    IPHost * host = IPHost::create(hostname, portname);
 
-    if (host == nullptr)
-    {
-        printf("could not find host: %s\n", hostname);
-        return false;
-    }
+    IPSocket s(hostname, portname);
 
-    // Create a socket based on the host
-    SOCKET s = WSASocketA(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, 0);
+    s.connect();
 
-    if (s == INVALID_SOCKET) {
-        printf("INVALID_SOCKET: %Id\n", s);
-        return false;
-    }
+    BufferChunk chunk(request, strlen(request));
+    int retCode = s.sendChunk(chunk, 0);
 
-    IPAddress *addr = host->getAddress();
-    int retCode = connect(s, addr->fAddress, addr->fAddressLength);
-
-    if (retCode != 0) {
-        printf("Failed to connect: %d\n", retCode);
-        return false;
-    }
-
-    retCode = send(s, request, strlen(request), 0);
-
-    //printf("send: %d\n", retCode);
     if (retCode == SOCKET_ERROR) {
         printf("SOCKET_ERROR\n");
         return false;
@@ -99,8 +144,8 @@ bool pingHttp(const char * hostname)
 
     // Get a response back from the server
     static const int recvSize = 1024 * 64; // 64k 
-    char response[recvSize+1];
-    retCode = recv(s, response, recvSize, 0);
+    BufferChunk rchunk(recvSize+1);
+    retCode = s.receiveChunk(rchunk, 0);
     //printf("recv: %d\n", retCode);
     if (retCode == SOCKET_ERROR) {
         printf("SOCKET_ERROR\n");
@@ -109,13 +154,13 @@ bool pingHttp(const char * hostname)
 
     // Null terminate so we can print
     // as zstring
-    response[retCode] = 0;
+    rchunk.fData[retCode] = 0;
 
     printf("\n== RESPONSE BEGIN (%s)==\n", hostname);
-    printf("%s", response);
-    printf("\n== RESPONSE END ==\n");
+    printf("%s", rchunk.fData);
+    printf("\n== RESPONSE END (%s)==\n", hostname);
 
-    closesocket(s);
+
 
     return true;
 }
