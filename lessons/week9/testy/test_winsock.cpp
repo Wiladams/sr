@@ -40,7 +40,9 @@ bool test_gethost(char *hostname)
     printf("==== test_gethost ====\n");
 
     char *servicename = "http";
-	int family = AF_UNSPEC;
+	//int family = AF_UNSPEC;
+    //int family = AF_INET6;
+    int family = AF_INET;
 	int socktype = SOCK_STREAM;
 
     int  err;
@@ -59,7 +61,6 @@ bool test_gethost(char *hostname)
 
     printf("++++++++ Looking for: %s ++++++++\n", hostname);
     err = getaddrinfo(hostname, servicename, &hints, &ppResult);
-    printf("  getaddrinfo, err: %d\n", err);
 
     if (err != 0) {
         printf("getaddrinfo FAILED [%d]\n", err);
@@ -68,6 +69,8 @@ bool test_gethost(char *hostname)
 
     // enumerate some of the stuff we found out
     printHost(ppResult, 0);
+
+    freeaddrinfo(ppResult);
 
     return true;
 
@@ -98,6 +101,9 @@ void startup()
     test_gethost("google.com");
     test_gethost("amazon.com");
     test_gethost("netflix.com");
+    test_gethost("msn.com");
+    test_gethost("adafruit.com");
+    test_gethost("news.ycombinator.com");
 
     test_localhost();
 }

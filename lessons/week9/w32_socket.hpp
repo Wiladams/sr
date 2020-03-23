@@ -69,6 +69,13 @@ typedef struct in_addr {
     };
 } IN_ADDR, *PIN_ADDR, *LPIN_ADDR;
 
+typedef struct in6_addr {
+    union {
+        uint8_t       Byte[16];
+        uint16_t      Word[8];
+    } u;
+} IN6_ADDR;
+
 #ifndef FD_SETSIZE
 #define FD_SETSIZE      64
 #endif /* FD_SETSIZE */
@@ -110,6 +117,9 @@ typedef struct WSAData {
         char *				lpVendorInfo;
 } WSADATA, * LPWSADATA;
 #endif
+
+#define INVALID_SOCKET  (SOCKET)(~0)
+#define SOCKET_ERROR            (-1)
 
 /*
     Networking constants
@@ -191,6 +201,59 @@ typedef enum {
     IPPROTO_MAX           = 256,
 } IPPROTO, *PIPROTO;
 
+//
+//  Flags used in "hints" argument to getaddrinfo()
+//      - AI_ADDRCONFIG is supported starting with Vista
+//      - default is AI_ADDRCONFIG ON whether the flag is set or not
+//        because the performance penalty in not having ADDRCONFIG in
+//        the multi-protocol stack environment is severe;
+//        this defaulting may be disabled by specifying the AI_ALL flag,
+//        in that case AI_ADDRCONFIG must be EXPLICITLY specified to
+//        enable ADDRCONFIG behavior
+//
+
+#define AI_PASSIVE                  0x00000001  // Socket address will be used in bind() call
+#define AI_CANONNAME                0x00000002  // Return canonical name in first ai_canonname
+#define AI_NUMERICHOST              0x00000004  // Nodename must be a numeric address string
+#define AI_NUMERICSERV              0x00000008  // Servicename must be a numeric port number
+#define AI_DNS_ONLY                 0x00000010  // Restrict queries to unicast DNS only (no LLMNR, netbios, etc.)
+
+#define AI_ALL                      0x00000100  // Query both IP6 and IP4 with AI_V4MAPPED
+#define AI_ADDRCONFIG               0x00000400  // Resolution only if global address configured
+#define AI_V4MAPPED                 0x00000800  // On v6 failure, query v4 and convert to V4MAPPED format
+
+#define AI_NON_AUTHORITATIVE        0x00004000  // LUP_NON_AUTHORITATIVE
+#define AI_SECURE                   0x00008000  // LUP_SECURE
+#define AI_RETURN_PREFERRED_NAMES   0x00010000  // LUP_RETURN_PREFERRED_NAMES
+
+#define AI_FQDN                     0x00020000  // Return the FQDN in ai_canonname
+#define AI_FILESERVER               0x00040000  // Resolving fileserver name resolution
+#define AI_DISABLE_IDN_ENCODING     0x00080000  // Disable Internationalized Domain Names handling
+#define AI_EXTENDED                 0x80000000      // Indicates this is extended ADDRINFOEX(2/..) struct
+#define AI_RESOLUTION_HANDLE        0x40000000  // Request resolution handle
+
+
+#define INADDR_ANY              (ULONG)0x00000000
+#define INADDR_LOOPBACK         0x7f000001
+#define INADDR_BROADCAST        (ULONG)0xffffffff
+#define INADDR_NONE             0xffffffff
+
+
+typedef struct sockaddr_in {
+    ADDRESS_FAMILY sin_family;
+
+    uint16_t sin_port;
+    IN_ADDR sin_addr;
+    char sin_zero[8];
+} SOCKADDR_IN, *PSOCKADDR_IN;
+
+typedef struct sockaddr_in6 {
+        int16_t             sin6_family;
+        uint16_t            sin6_port;
+        uint32_t            sin6_flowinfo;
+        struct  in6_addr    sin6_addr;
+        uint32_t            sin6_scope_id;
+} sockaddr_in6;
 
 /*
     Berkeley Socket address
@@ -226,11 +289,8 @@ u_long  htonl(u_long hostlong);
 u_short htons(u_short hostshort);
 
 unsigned long inet_addr(const char* cp);
-
 char* inet_ntoa(struct   in_addr in);
-
 int inet_pton(int Family, const char * szAddrString, const void * pAddrBuf);
-
 const char * inet_ntop(int Family, const void *pAddr, intptr_t strptr, size_t len);
 
 int ioctlsocket(SOCKET s, long cmd, u_long* argp);
@@ -268,6 +328,7 @@ SOCKET socket(int af, int type, int protocol);
     Windows specific networking API
 */
 int WSAStartup(WORD wVersionRequired, LPWSADATA lpWSAData);
+int WSACleanup(void);
 
 int WSAAddressToStringA(
     LPSOCKADDR lpsaAddress,
