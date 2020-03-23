@@ -325,10 +325,66 @@ SOCKET socket(int af, int type, int protocol);
 
 
 /*
-    Windows specific networking API
+    Microsoft Windows networking API extensions
 */
+#define MAX_PROTOCOL_CHAIN 7
+
+#define BASE_PROTOCOL      1
+#define LAYERED_PROTOCOL   0
+
+#define WSAPROTOCOL_LEN  255
+
+typedef struct _WSAPROTOCOLCHAIN {
+    int ChainLen;                                 /* the length of the chain,     */
+                                                  /* length = 0 means layered protocol, */
+                                                  /* length = 1 means base protocol, */
+                                                  /* length > 1 means protocol chain */
+    DWORD ChainEntries[MAX_PROTOCOL_CHAIN];       /* a list of dwCatalogEntryIds */
+} WSAPROTOCOLCHAIN, * LPWSAPROTOCOLCHAIN;
+
+
+typedef struct _WSAPROTOCOL_INFOA {
+    DWORD dwServiceFlags1;
+    DWORD dwServiceFlags2;
+    DWORD dwServiceFlags3;
+    DWORD dwServiceFlags4;
+    DWORD dwProviderFlags;
+    GUID ProviderId;
+    DWORD dwCatalogEntryId;
+    WSAPROTOCOLCHAIN ProtocolChain;
+    int iVersion;
+    int iAddressFamily;
+    int iMaxSockAddr;
+    int iMinSockAddr;
+    int iSocketType;
+    int iProtocol;
+    int iProtocolMaxOffset;
+    int iNetworkByteOrder;
+    int iSecurityScheme;
+    DWORD dwMessageSize;
+    DWORD dwProviderReserved;
+    CHAR   szProtocol[WSAPROTOCOL_LEN+1];
+} WSAPROTOCOL_INFOA, * LPWSAPROTOCOL_INFOA;
+
+/*
+ * WinSock 2 extension -- manifest constants for WSASocket()
+ */
+#define WSA_FLAG_OVERLAPPED           0x01
+#define WSA_FLAG_MULTIPOINT_C_ROOT    0x02
+#define WSA_FLAG_MULTIPOINT_C_LEAF    0x04
+#define WSA_FLAG_MULTIPOINT_D_ROOT    0x08
+#define WSA_FLAG_MULTIPOINT_D_LEAF    0x10
+#define WSA_FLAG_ACCESS_SYSTEM_SECURITY 0x40
+#define WSA_FLAG_NO_HANDLE_INHERIT    0x80
+#define WSA_FLAG_REGISTERED_IO       0x100
+
+
 int WSAStartup(WORD wVersionRequired, LPWSADATA lpWSAData);
 int WSACleanup(void);
+int WSAGetLastError(void);
+void WSASetLastError(int iError);
+
+BOOL WSAIsBlocking(void);
 
 int WSAAddressToStringA(
     LPSOCKADDR lpsaAddress,
@@ -337,6 +393,11 @@ int WSAAddressToStringA(
     LPSTR lpszAddressString,
     LPDWORD             lpdwAddressStringLength
     );
+
+SOCKET WSASocketA(int af, int type, int protocol,
+    LPWSAPROTOCOL_INFOA lpProtocolInfo, 
+    GROUP g,DWORD dwFlags);
+
 
 #ifdef __cplusplus
 }

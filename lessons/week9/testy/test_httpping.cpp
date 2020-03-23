@@ -6,47 +6,6 @@
 //#include "sites.hpp"
 #include "httpsites.hpp"
 
-struct BufferChunk {
-    size_t fSize;
-    uint8_t *fData;
-
-    BufferChunk(int size){
-        fData = {new uint8_t[size]{}};
-    }
-
-    uint8_t * getDataPointer() {return fData;}
-    size_t length() {return fSize;}
-};
-
-class IPSocket {
-    IPAddress * fAddress;
-
-public:
-    
-    IPSocket(const char *hostname, const char *portname)
-    {
-
-    }
-
-    bool connect()
-    {
-
-    }
-
-    bool bind()
-    {
-
-    }
-
-    int send(BufferChunk &chunk){
-
-    }
-
-    int receive(BufferChunk &chunk){
-
-    }
-};
-
 void preload()
 {
     uint16_t version = MAKEWORD(2,2);
@@ -54,6 +13,13 @@ void preload()
 
     int res = WSAStartup(version, &lpWSAData);
     printf("WSAStartup: %d\n", res);
+    printf(" Max Sockets: %d\n", lpWSAData.iMaxSockets);
+    printf("  Max Udp Dg: %d\n", lpWSAData.iMaxUdpDg);
+    printf("      Vendor: %s\n", lpWSAData.lpVendorInfo);
+    printf(" Description: %s\n", lpWSAData.szDescription);
+    printf("      Status: %s\n", lpWSAData.szSystemStatus);
+    
+
 }
 
 bool pingHttp(const char * hostname)
@@ -74,6 +40,7 @@ bool pingHttp(const char * hostname)
     }
 
     // Create a socket based on the host
+    //SOCKET s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     SOCKET s = WSASocketA(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, 0);
 
     if (s == INVALID_SOCKET) {
