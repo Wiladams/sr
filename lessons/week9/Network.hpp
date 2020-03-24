@@ -10,6 +10,40 @@ https://www.winsocketdotnetworkprogramming.com/winsock2programming/winsock2advan
 
 #include "w32_socket.hpp"
 
+/*
+    This should live somewhere else, higher in the stack
+*/
+struct BufferChunk {
+    size_t fSize;
+    char *fData;
+    bool fIOwnData;
+
+    BufferChunk(char *buff, int size)
+    {
+        fData = buff;
+        fSize = size;
+        fIOwnData = false;
+    }
+
+    BufferChunk(int size)
+    {
+        fData = {new char[size]{}};
+        fSize = size;
+        fIOwnData = true;
+    }
+
+    ~BufferChunk()
+    {
+        if (fIOwnData) {
+            delete fData;
+        }
+        fSize = 0;
+    }
+
+    char * getDataPointer() {return fData;}
+    size_t size() {return fSize;}
+};
+
 
 struct IPAddress {
 private:
@@ -135,47 +169,78 @@ public:
     }
 };
 
-
-
-/*
-class IPEndpoint {
+class IPSocket {
+    SOCKET fSocket;
+    IPAddress * fAddress;
+    bool fIsValid;
 
 public:
-    IPAddress *fAddress;
-
-
-    static IPEndpoint create(const char * hostname, const char * portname, int family, int socktype)
+    
+    IPSocket(const char *hostname, const char *portname)
+        : fIsValid(false),
+        fAddress(nullptr)
     {
-        //print("IPEndpoint:create(): ", hostname, portname);
-
-
-	    //local hostportoffset = hostname:find(':')
-	    //if hostportoffset then
-	    //	port = tonumber(hostname:sub(hostportoffset+1))
-	    //	hostname = hostname:sub(1,hostportoffset-1)
-	    //	print("CreateSocketAddress() - Modified: ", hostname, port)
-	    //end
-        IPHost entry;
-        if (!host_serv(hostname, portname, entry, family, socktype))
+        IPHost * host = IPHost::create(hostname, portname);
+        if (host == nullptr)
         {
             printf("could not find host: %s\n", hostname);
+            return ;
+        }
+
+        // Create a socket based on the host
+        fSocket = WSASocketA(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, 0);
+
+        if (fSocket == INVALID_SOCKET) {
+            printf("INVALID_SOCKET: %Id\n", fSocket);
+            return ;
+        }
+        
+        fAddress = host->getAddress();
+        if (fAddress == nullptr) {
+            return ;
+        }
+
+        fIsValid = true;
+    }
+
+    virtual ~IPSocket() {
+        close();
+    }
+
+    bool isValid() {return fIsValid;}
+
+    bool connect()
+    {
+        int retCode = ::connect(fSocket, fAddress->fAddress, fAddress->fAddressLength);
+
+        if (retCode != 0) {
+            printf("Failed to connect: %d\n", retCode);
             return false;
         }
 
-        return new 
-        fAddress = entry.getAddress();
-	    // clone one of the addresses
-	    //local oneaddress = newSocketAddress(addressinfo.ai_addr, addressinfo.ai_addrlen)
-	    //oneaddress:SetPort(port)
-
-
-        return false;
-
+        return true;
     }
 
-    IPEndpoint(const IPAddress &addr, int port)
-        : fAddress(addr)
+    bool close() {
+        closesocket(fSocket);
+        return true;
+    }
+
+    bool bind()
     {
     }
+
+    int sendChunk(BufferChunk &chunk, int flags=0)
+    {
+        int retCode = ::send(fSocket, (char *)chunk.fData, chunk.fSize, flags);
+        return retCode;
+    }
+
+    int receiveChunk(BufferChunk &chunk, int flags = 0)
+    {
+        int retCode = ::recv(fSocket, (char *)chunk.fData, chunk.fSize, flags);
+        return retCode;
+    }
 };
-*/
+
+
