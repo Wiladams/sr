@@ -56,8 +56,6 @@ bool pingHttp(const char * hostname)
     printf("%s", rchunk.fData);
     printf("\n== RESPONSE END (%s)==\n", hostname);
 
-
-
     return true;
 }
 

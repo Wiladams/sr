@@ -7,8 +7,16 @@
 #include "PixelBufferRGBA32.hpp"
 #include "binstream.hpp"
 
-#define PORT 9090
-static const int  MAXBUFF = 1024 * 2048;
+//#define PORT 9090
+static const int  MAXBUFF = 1024 * 2048; // (800x600 maximum)
+IPSocket * s = nullptr;
+IPHost * host = nullptr;
+IPAddress *servaddr = nullptr;
+char *msg = "GET / HTTP/1.1\r\n";
+char inBuff[MAXBUFF];
+char hostname[256];
+char *portname = "9090";
+
 
 void preload()
 {
@@ -26,42 +34,34 @@ void onExit()
     WSACleanup();
 }
 
-
-
-IPSocket * s = nullptr;
-IPHost * host = nullptr;
-IPAddress *servaddr = nullptr;
-char *msg = "GET / HTTP/1.1\r\n";
-char inBuff[MAXBUFF];
-
+// Receive a chunk of stuff back from the server
+// Do this in a loop until the chunk size is 0
 bool receiveChunk(IPSocket *s, struct sockaddr * addrFrom, int *addrLen, BinStream &pixs)
 {
-    char packet[1600];
-    BinStream packetStream(packet, 1600);
     int packetCount = 0;
 
+    // make sure we don't run off the end
+    // of the chunk buffer
     while (!pixs.isEOF()) {
         packetCount = packetCount + 1;
 
-        //packetStream.seek(0);
-        // receive a single packet
+        // First step is to receive back a 32-bit uint32
+        // this indicates the size of the payload
         int payloadSize;
         int recvLen = s->receiveFrom(addrFrom, addrLen, (char *)&payloadSize, 4);
         //printf("Message Received: (%d) [%d]  Payload Size: %d\n", packetCount, recvLen, payloadSize);
 
+        // if we had an error in receiving, then we return immediately
+        // indicating we did not read anything
         if (recvLen < 0) {
             return false;
         }
 
-        // Read the payload size out of the packet
-        // payload size is a 32-bit unsigned integer at the
-        // beginning of the packet
-        //int payloadSize = packetStream.readUInt32();
-        //printf("Payload size: (%d) %d\n", packetCount, payloadSize);
 
-        // We've reached the end of the whole message
-        // with a zero sized payload
         if (payloadSize == 0) {
+            // We've reached a zero sized payload
+            // we're at the end of message
+            // so break out of the loop
             //printf("== EOM ==");
             break;
         }
@@ -70,18 +70,20 @@ bool receiveChunk(IPSocket *s, struct sockaddr * addrFrom, int *addrLen, BinStre
         // pixs stream
         recvLen = s->receiveFrom(addrFrom, addrLen, (char *)pixs.getPositionPointer(), payloadSize);
         pixs.skip(recvLen);
-        //pixs.writeBytes(payloadSize, (const uint8_t *)packetStream.getPositionPointer());
         //printf("  Payload: (%d) [%d]  Payload Size: %d\n", packetCount, recvLen, payloadSize);
-
     }
 
     return true;
 }
 
+/*
+    For each frame as per frameRate
+*/
 void draw()
 {
-    // Send a command to the server to grab
-    // a snapshot of the screen
+    // First send a command to the server to get things going
+    // the message should cause the server to respond by sending
+    // back a current screen snapshot
     int msgLen = strlen(msg);
     int sentCode = s->sendTo(servaddr->fAddress, servaddr->fAddressLength, msg, msgLen);
     //printf("Message Sent: %d ==> %d\n", sentCode, WSAGetLastError());
@@ -92,7 +94,7 @@ void draw()
     int servLen = servaddr->fAddressLength;
     if (receiveChunk(s, servaddr->fAddress, &servLen, pixs)) {
         // Wrap the data in a PixelBuffer interface
-        PixelBufferRGBA32 pb(640, 480, inBuff);
+        PixelBufferRGBA32 pb(800, 600, inBuff);
 
         // display it
         image(pb, 0,0);
@@ -104,9 +106,16 @@ void setup()
     preload();
 
     createCanvas(800,600);
+    frameRate(15);
 
-    char *hostname = "DESKTOP-UUUQ00U";
-    char *portname = "9090";
+    if (gargc > 1) {
+        strcpy(hostname, gargv[1]);
+    } else
+    {
+        strcpy(hostname, "localhost");
+    }
+    
+    printf("HOST: %s\n", hostname);
 
     // Create socket object
     s = new IPSocket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);

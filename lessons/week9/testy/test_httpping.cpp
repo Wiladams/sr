@@ -26,9 +26,12 @@ bool pingHttp(const char * hostname)
 {
     char request[512];
     sprintf(request, "GET / HTTP/1.1\r\n"
-                     "User-Agent: My Fake Agent\r\n"
                      "Host: %s\r\n"
                      "\r\n", hostname);
+    //sprintf(request, "GET / HTTP/1.1\r\n"
+    //                 "User-Agent: My Fake Agent\r\n"
+    //                 "Host: %s\r\n"
+    //                 "\r\n", hostname);
 
     char * portname = "80";
     IPHost * host = IPHost::create(hostname, portname);

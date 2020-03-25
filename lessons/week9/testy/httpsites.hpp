@@ -1,5 +1,6 @@
 char * sites[] = {
 "baidu.com",
+
 "icio.us",
 "go.com",
 "technorati.com",
@@ -16,9 +17,10 @@ char * sites[] = {
 "example.com",
 "twitpic.com",
 "ovh.net",
-
+/*
 "illinois.edu",
 "www.google.com",
 "www.blogger.com",
 "www.w3.org",
+*/
 };

@@ -5,7 +5,6 @@ https://www.geeksforgeeks.org/udp-server-client-implementation-c/
 
 #include <cstdio>
 
-//#include "w32.hpp"
 #include "Network.hpp"
 #include "binstream.hpp"
 #include "screensnapshot.hpp"
@@ -15,10 +14,8 @@ https://www.geeksforgeeks.org/udp-server-client-implementation-c/
 static const int MAXBUFF = 1024*2048;
 
 char inbuff[512];
-char outbuff[MAXBUFF];
 
-ScreenSnapshot *ss = nullptr;
-
+ScreenSnapshot *snapper = nullptr;
 
 void preload()
 {
@@ -30,10 +27,8 @@ void preload()
 }
 
 
-
 // When we're about to exit
 // do any cleanup
-
 void onExit()
 {
     WSACleanup();
@@ -57,21 +52,14 @@ bool sendChunk(IPSocket &s, BufferChunk &bc, struct sockaddr *addrTo, const int 
         // start by writing the number of bytes
         // into the packet header
         int payloadSize = MIN(1400, chunkStream.remaining());
-        //int packetSize = payloadSize + 4; 
-        //packetStream.seek(0);
+
 
         // Write payload size into packet header
-        //packetStream.writeUInt32(payloadSize);
-        // send the packet size out
         int sentCode = s.sendTo(addrTo, addrToLen, (const char *)&payloadSize, 4);
 
         // Write the payload out and advance
-        //packetStream.writeBytes(payloadSize, (const uint8_t *)chunkStream.getPositionPointer());
         sentCode = s.sendTo(addrTo, addrToLen, (char *)chunkStream.getPositionPointer(), payloadSize);
         chunkStream.skip(payloadSize);
-
-        //int sentCode = s.sendTo(addrTo, addrToLen, packet, packetSize);
-        //printf("SENDING (%d) %d ==> %d  Error: %d\n", packetCount, payloadSize, sentCode, WSAGetLastError());
     }
 
     // Send one more packet of size 0
@@ -84,7 +72,7 @@ bool sendChunk(IPSocket &s, BufferChunk &bc, struct sockaddr *addrTo, const int 
 
 void setup()
 {
-    ss = new ScreenSnapshot(0, 0, 640, 480);
+    snapper = new ScreenSnapshot(0, 0, 800, 600);
 
     // Create the socket we'll be serving from
     IPSocket s(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -124,8 +112,8 @@ void setup()
 
 
         // take a snapshot
-        ss->moveNext();
-        PixelBufferRGBA32 current = ss->getCurrent();
+        snapper->moveNext();
+        PixelBufferRGBA32 current = snapper->getCurrent();
         int outLength = current.getDataLength();
 
         // Send data chunked
@@ -133,8 +121,6 @@ void setup()
         BufferChunk bc(current.getData(), current.getDataLength());
         sendChunk(s, bc, &addrFrom, addrFromLen);
     }
-
-
 }
 
 void main()
