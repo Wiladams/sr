@@ -29,12 +29,14 @@ private:
     PixelBufferRGB24();
 
     PixRGB * data;      // a pointer to the actual pixel data
+    int fDataLength;
     bool fOwnsData;
 
 protected:
-    void setData(void *pData)
+    void setData(void *pData, const int length)
     {
         data = (PixRGB *)pData;
+        fDataLength = length;
     }
 
 public:
@@ -74,7 +76,8 @@ public:
     {
         return data;
     }
-
+    virtual const int getDataLength() const {return fDataLength;}
+    
     virtual const void * getPixelPointer(int x, int y) const
     {
         size_t offset = y * getWidth() + x;

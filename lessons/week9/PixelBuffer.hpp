@@ -44,7 +44,7 @@ private:
     VerticalOrientation fVerticalOrientation;
 
 protected:
-    virtual void setData(void *) = 0;
+    virtual void setData(void *, int length) = 0;
 
 public:
 
@@ -71,6 +71,7 @@ public:
     size_t getBitsPerPixel() const {return fBitsPerPixel;}
     
     virtual const void * getData() const = 0;
+    virtual const int getDataLength() const = 0;
     virtual const void * getPixelPointer(int x, int y) const = 0;
 
 
@@ -88,10 +89,11 @@ public:
                 return false;
         }
         
-        PixRGBA dst = getPixel(x, y);
-        PixRGBA pix = tOp(x, y, src, dst);
+        //PixRGBA dst = getPixel(x, y);
+        //PixRGBA pix = tOp(x, y, src, dst);
+        //return setPixel(x, y, pix);
 
-        return setPixel(x, y, pix);
+        return setPixel(x, y, tOp(x, y, src, getPixel(x, y)));
     }
 
     // Retrieve a single pixel value from the specified location 

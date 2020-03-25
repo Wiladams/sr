@@ -33,7 +33,7 @@ public:
     
         void * pData;
         fGDIHandle = CreateDIBSection(nullptr, &fBMInfo, DIB_RGB_COLORS,(void **)&pData,nullptr,0);
-        setData(pData);
+        setData(pData, fBMInfo.bmiHeader.biSizeImage);
         
         // memory Device Context
         fBitmapDC = CreateCompatibleDC(nullptr);

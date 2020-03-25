@@ -21,9 +21,9 @@
 */
 
 #include "PBDIBSection.hpp"
-#include "enumerable.hpp"
+//#include "enumerable.hpp"
 
-class ScreenSnapshot : public IEnumerator<PixelBufferRGBA32>
+class ScreenSnapshot //: public IEnumerator<PixelBufferRGBA32>
 {
     PBDIBSection fImage;
     HDC fScreenDC;

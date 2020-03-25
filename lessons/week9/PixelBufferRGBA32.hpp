@@ -29,12 +29,14 @@ private:
     PixelBufferRGBA32();
 
     PixRGBA * data;         // a pointer to the actual pixel data
+    int fDataLength;
     bool fOwnsData;
 
 protected:
-    void setData(void *pData)
+    void setData(void *pData, int length)
     {
         data = (PixRGBA *)pData;
+        fDataLength = length;
     }
 
 public:
@@ -73,6 +75,11 @@ public:
     virtual const void * getData() const
     {
         return data;
+    }
+
+    virtual const int getDataLength() const
+    {
+        return fDataLength;
     }
 
     virtual const void * getPixelPointer(int x, int y) const

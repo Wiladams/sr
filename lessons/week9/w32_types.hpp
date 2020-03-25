@@ -84,6 +84,7 @@ typedef int ( __stdcall *NEARPROC)();
 typedef int ( __stdcall *PROC)();
 #endif
 
+typedef void *          PVOID;
 typedef void *          LPVOID;
 typedef const void *    LPCVOID;
 typedef BYTE *          LPBYTE;
@@ -494,6 +495,20 @@ typedef struct _GUID {
     unsigned char  Data4[ 8 ];
 } GUID;
 
+typedef struct _OVERLAPPED {
+    ULONG_PTR Internal;
+    ULONG_PTR InternalHigh;
+    union {
+        struct {
+            DWORD Offset;
+            DWORD OffsetHigh;
+        };
+
+        PVOID Pointer;
+    };
+
+    HANDLE hEvent;
+} OVERLAPPED, *LPOVERLAPPED;
 
 #ifdef __cplusplus
 }

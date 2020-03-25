@@ -238,7 +238,14 @@ typedef enum {
 #define INADDR_BROADCAST        (ULONG)0xffffffff
 #define INADDR_NONE             0xffffffff
 
-
+#define MSG_OOB         0x1
+#define MSG_PEEK        0x2
+#define MSG_DONTROUTE   0x4
+#define MSG_WAITALL     0x8
+#define MSG_INTERRUPT   0x10
+#define MSG_MAXIOVLEN   16
+#define MSG_PUSH_IMMEDIATE 0x20
+#define MSG_PARTIAL     0x8000
 typedef struct sockaddr_in {
     ADDRESS_FAMILY sin_family;
 

@@ -175,12 +175,25 @@ class IPSocket {
     bool fIsValid;
 
 public:
-    
-    IPSocket(const char *hostname, const char *portname)
+    IPSocket(int family, int socktype, int protocol = 0)
         : fIsValid(false),
         fAddress(nullptr)
     {
-        IPHost * host = IPHost::create(hostname, portname);
+        fSocket = WSASocketA(family, socktype, protocol, nullptr, 0, 0);
+
+        if (fSocket == INVALID_SOCKET) {
+            printf("INVALID_SOCKET: %Id\n", fSocket);
+            return ;
+        }
+
+        fIsValid = true;
+    }
+
+    IPSocket(const char *hostname, const char *portname, int family, int socktype, int protocol = 0)
+        : fIsValid(false),
+        fAddress(nullptr)
+    {
+        IPHost * host = IPHost::create(hostname, portname, family, socktype);
         if (host == nullptr)
         {
             printf("could not find host: %s\n", hostname);
@@ -188,7 +201,7 @@ public:
         }
 
         // Create a socket based on the host
-        fSocket = WSASocketA(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, 0);
+        fSocket = WSASocketA(family, socktype, protocol, nullptr, 0, 0);
 
         if (fSocket == INVALID_SOCKET) {
             printf("INVALID_SOCKET: %Id\n", fSocket);
@@ -201,6 +214,11 @@ public:
         }
 
         fIsValid = true;
+    }
+
+    IPSocket(const char *hostname, const char *portname)
+        :IPSocket(hostname, portname, AF_INET, SOCK_STREAM)
+    {
     }
 
     virtual ~IPSocket() {
@@ -222,20 +240,52 @@ public:
     }
 
     bool close() {
-        closesocket(fSocket);
+        ::closesocket(fSocket);
         return true;
     }
 
-    bool bind()
+    int bind()
     {
+        return ::bind(fSocket, fAddress->fAddress, fAddress->fAddressLength);
     }
 
+    int bindTo(const sockaddr *addr, const int addrLen)
+    {
+        return ::bind(fSocket, addr, addrLen);
+    }
+
+    // Typically when you're creating a server, you will 
+    // need to tell the socket to start listening for
+    // connections.  This is as opposed to be active, like
+    // a client connection.
+    int makePassive(const int backlog=5)
+    {
+        return ::listen(fSocket, backlog);
+    }
+
+    // Send to a specific address
+    // The address was specified when we 
+    // created the socket
+    int sendTo(const struct sockaddr *addrTo, int addrToLen, const char *buff, const int bufflen)
+    {
+        return ::sendto(fSocket, buff, bufflen, 0, addrTo, addrToLen);
+    }
+
+    int receiveFrom(struct sockaddr *addrFrom, int *addrFromLen, char *buff, int bufflen)
+    {
+        return ::recvfrom(fSocket, buff, bufflen, 0, addrFrom, addrFromLen);
+    }
+
+    // Send a chunk of memory
+    // return the number of octets sent
     int sendChunk(BufferChunk &chunk, int flags=0)
     {
         int retCode = ::send(fSocket, (char *)chunk.fData, chunk.fSize, flags);
         return retCode;
     }
 
+    // receive a chunk of memmory
+    // return number of octets received
     int receiveChunk(BufferChunk &chunk, int flags = 0)
     {
         int retCode = ::recv(fSocket, (char *)chunk.fData, chunk.fSize, flags);

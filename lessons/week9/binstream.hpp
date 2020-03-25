@@ -405,7 +405,7 @@ size_t readLine(const size_t bufflen, char * buff)
         return writeInt(n, 2);
     }
 
-    size_t writeUint16(uint16_t n)
+    size_t writeUInt16(uint16_t n)
     {
         return writeInt(n, 2);
     }
