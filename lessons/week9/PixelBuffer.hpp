@@ -70,7 +70,8 @@ public:
     GRSIZE getHeight() const { return this->height;}
     size_t getBitsPerPixel() const {return fBitsPerPixel;}
     
-    virtual const void * getData() const = 0;
+    virtual void * getData() = 0;
+    virtual const void * getConstData() {return (const void *) getData();}
     virtual const int getDataLength() const = 0;
     virtual const void * getPixelPointer(int x, int y) const = 0;
 

@@ -2,16 +2,23 @@
 https://www.geeksforgeeks.org/udp-server-client-implementation-c/
 */
 
-#include "p5.hpp"
 
 #include <cstdio>
 
-#include "w32.hpp"
+//#include "w32.hpp"
 #include "Network.hpp"
-
+#include "binstream.hpp"
 #include "screensnapshot.hpp"
 
+
+#define PORT 9090
+static const int MAXBUFF = 1024*2048;
+
+char inbuff[512];
+char outbuff[MAXBUFF];
+
 ScreenSnapshot *ss = nullptr;
+
 
 void preload()
 {
@@ -20,30 +27,64 @@ void preload()
 
     int res = WSAStartup(version, &lpWSAData);
     printf("WSAStartup: %d\n", res);
-    printf(" Max Sockets: %d\n", lpWSAData.iMaxSockets);
-    printf("  Max Udp Dg: %d\n", lpWSAData.iMaxUdpDg);
-    printf("      Vendor: %s\n", lpWSAData.lpVendorInfo);
-    printf(" Description: %s\n", lpWSAData.szDescription);
-    printf("      Status: %s\n", lpWSAData.szSystemStatus);
-    
-
 }
 
-#define PORT 9090
-#define MAXBUFF 1024*2048;
+
 
 // When we're about to exit
 // do any cleanup
+
 void onExit()
 {
     WSACleanup();
 }
 
+bool sendChunk(IPSocket &s, BufferChunk &bc, struct sockaddr *addrTo, const int addrToLen)
+{
+    char packet[1600];
+    // Get a stream on the chunk
+    BinStream chunkStream(bc.fData, bc.fSize);
+
+    // Get a stream on the packet
+    BinStream packetStream(packet, 1600);
+
+    int packetCount = 0;
+
+    while (!chunkStream.isEOF()) {
+        packetCount = packetCount + 1;
+
+        // we'll write 1400 bytes at a time
+        // start by writing the number of bytes
+        // into the packet header
+        int payloadSize = MIN(1400, chunkStream.remaining());
+        //int packetSize = payloadSize + 4; 
+        //packetStream.seek(0);
+
+        // Write payload size into packet header
+        //packetStream.writeUInt32(payloadSize);
+        // send the packet size out
+        int sentCode = s.sendTo(addrTo, addrToLen, (const char *)&payloadSize, 4);
+
+        // Write the payload out and advance
+        //packetStream.writeBytes(payloadSize, (const uint8_t *)chunkStream.getPositionPointer());
+        sentCode = s.sendTo(addrTo, addrToLen, (char *)chunkStream.getPositionPointer(), payloadSize);
+        chunkStream.skip(payloadSize);
+
+        //int sentCode = s.sendTo(addrTo, addrToLen, packet, packetSize);
+        //printf("SENDING (%d) %d ==> %d  Error: %d\n", packetCount, payloadSize, sentCode, WSAGetLastError());
+    }
+
+    // Send one more packet of size 0
+    packetStream.seek(0);
+    packetStream.writeUInt32(0);
+    int sentCode = s.sendTo(addrTo, addrToLen, packet, 4);
+
+    return true;
+}
+
 void setup()
 {
-    preload();
-
-    ss = new ScreenSnapshot(0, 0, 1024, 1080);
+    ss = new ScreenSnapshot(0, 0, 640, 480);
 
     // Create the socket we'll be serving from
     IPSocket s(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -64,33 +105,41 @@ void setup()
     int bindCode = s.bindTo((const sockaddr *)&servaddr, (const int)sizeof(servaddr));
     printf("Bind code: %d\n", bindCode);
 
-    char outbuff[512];
-    char inbuff[512];
+
     struct sockaddr addrFrom;
-    int addrFromLen;
+    int addrFromLen = sizeof(addrFrom);
 
     while (true)
     {
         // Client sends us a command
         memset(inbuff, 0, 512);
         int inLen = s.receiveFrom(&addrFrom, &addrFromLen, inbuff, 512);
-        printf("UDP Server Received [%d]:\n", inLen);
+        if (inLen < 0) {
+            printf("UDPReceived ERROR: %d\n", WSAGetLastError());
+            continue;
+        } else {
+            inbuff[inLen] = 0;
+            //printf("COMMAND: %s\n", inbuff);
+        }
 
 
-        // decode the command
-        // execute the command
         // take a snapshot
         ss->moveNext();
         PixelBufferRGBA32 current = ss->getCurrent();
         int outLength = current.getDataLength();
-        memcpy(outbuff, current.getData(), outLength);
 
-        // send it out
-        s.sendTo(&addrFrom, addrFromLen, outbuff, inLen);
+        // Send data chunked
+        // create binstream on outbuff
+        BufferChunk bc(current.getData(), current.getDataLength());
+        sendChunk(s, bc, &addrFrom, addrFromLen);
     }
 
-    onExit();
+
 }
 
-
-
+void main()
+{
+    preload();
+    setup();
+    onExit();
+}

@@ -6,6 +6,10 @@
         "xutility": "cpp",
         "xlocale": "cpp",
         "*.rh": "cpp",
-        "ios": "cpp"
+        "ios": "cpp",
+        "istream": "cpp",
+        "memory": "cpp",
+        "type_traits": "cpp",
+        "xlocnum": "cpp"
     }
 }

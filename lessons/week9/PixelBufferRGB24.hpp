@@ -72,7 +72,7 @@ public:
     // which breaks encapsulation.
     // PixRGBA * getData() const {return this->data;}
     // BUT, very convenient, and the const helps somewhat
-    virtual const void * getData() const
+    virtual void * getData()
     {
         return data;
     }

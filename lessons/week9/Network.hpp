@@ -18,9 +18,9 @@ struct BufferChunk {
     char *fData;
     bool fIOwnData;
 
-    BufferChunk(char *buff, int size)
+    BufferChunk(void *buff, const int size)
     {
-        fData = buff;
+        fData = (char *)buff;
         fSize = size;
         fIOwnData = false;
     }
