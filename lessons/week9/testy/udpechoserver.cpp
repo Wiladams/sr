@@ -73,14 +73,14 @@ void setup()
     while (true)
     {
         memset(inbuff, 0, 512);
-        int inLen = s.receiveFrom(&addrFrom, &addrFromLen, inbuff, 512);
+        int inLength = s.receiveFrom(&addrFrom, &addrFromLen, inbuff, 512);
 
         // copy to output buffer
-        printf("UDP Server Received [%d]:\n", inLen);
-        memcpy(outbuff, inbuff, inLen);
+        printf("UDP Server Received [%d]:\n", inLength);
+        memcpy(outbuff, inbuff, inLength);
 
         // send it out
-        s.sendTo(&addrFrom, addrFromLen, outbuff, inLen);
+        s.sendTo(&addrFrom, addrFromLen, outbuff, inLength);
     }
 }
 
