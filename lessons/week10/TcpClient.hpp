@@ -5,29 +5,31 @@
 class TcpClient {
 private:
     IPSocket fSocket;
+    IPHost  * fHost;
     IPAddress *fAddress;
     bool    fIsValid;
     int fLastError;
 
 public:
     TcpClient(const char *hostname, const char * portname)
-        : fIsValid(false)
+        : fSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
+        , fIsValid(false)
     {
-        // Create a socket
-        fSocket = IPSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        // check if the socket was created
         if (!fSocket.isValid()) {
+            fLastError = fSocket.getLastError();
             return ;
         }
 
         // Get address to host
-        IPHost * host = IPHost::create(hostname, portname, AF_INET, SOCK_STREAM);
-        if (host == nullptr)
+        fHost = IPHost::create(hostname, portname, AF_INET, SOCK_STREAM);
+        if (fHost == nullptr)
         {
             printf("could not find host: %s\n", hostname);
             return ;
         }
 
-        fAddress = host->getAddress();
+        fAddress = fHost->getAddress();
         if (fAddress == nullptr) {
             return ;
         }
@@ -35,12 +37,16 @@ public:
         fIsValid = true;
     }
 
+    bool isValid() const {return fIsValid;}
+    int getLastError() const {return fLastError;}
+
     bool connect()
     {
         int retCode = ::connect(fSocket.fSocket, fAddress->fAddress, fAddress->fAddressLength);
 
         if (retCode != 0) {
-            printf("TcpClient.connect, Failed to connect: %d\n", retCode);
+            fLastError = WSAGetLastError();
+
             return false;
         }
 

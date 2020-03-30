@@ -3,15 +3,16 @@
 #include <cstdio>
 #include <cstring>
 
-#include "Network.hpp"
+
 #include "PixelBufferRGBA32.hpp"
 #include "binstream.hpp"
+#include "TcpClient.hpp"
 
+
+
+TcpClient * s = nullptr;
 
 static const int  MAXBUFF = 1024 * 2048; // (800x600 maximum)
-IPSocket * s = nullptr;
-IPHost * host = nullptr;
-IPAddress *servaddr = nullptr;
 char *msg = "GET / HTTP/1.1\r\n";
 char inBuff[MAXBUFF];
 char hostname[256];
@@ -21,7 +22,7 @@ char *portname = "9090";
 // Receive a chunk of stuff back from the server
 // Do this in a loop until the chunk size is 0
 // or we've exhausted space in the binstream
-bool receiveChunk(IPSocket *s, BinStream &pixs)
+bool receiveChunk(TcpClient *s, BinStream &pixs)
 {
     int packetCount = 0;
 
@@ -101,10 +102,18 @@ void setup()
     printf("HOST: %s\n", hostname);
 
     // Create socket object
+    s = new TcpClient(hostname, portname);
+    if (!s->isValid()) {
+        printf("TcpClient ERROR: %d", s->getLastError());
+        halt();
+        return ;
+    }
 
-    s = new IPSocket(hostname, portname);
-    s->connect();
-
+    bool success = s->connect();
+    if (!success) {
+        printf("could not connect to server: %d\n", s->getLastError());
+        halt();
+    }
 }
 
 

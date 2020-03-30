@@ -173,39 +173,45 @@ class IPSocket {
 public:
     SOCKET fSocket;
 private:
-    IPAddress * fAddress;
+//    IPAddress * fAddress;
     bool fIsValid;
+    int fLastError;
+    bool fAutoClose;
 
 public:
-    // Default constructor will initially be invalid
-    IPSocket()
-        : fSocket(INVALID_SOCKET),
-        fIsValid(false)
-    {
-    }
-
     // Construct with an existing native socket
-    IPSocket(SOCKET s)
-        : fSocket(s)
+    IPSocket(SOCKET s, const bool autoclose=false)
+        : fSocket(s),
+        fLastError(0), 
+        fAutoClose(autoclose)
     {
         fIsValid = (s != INVALID_SOCKET);
     }
+    
+        // Default constructor will initially be invalid
+    IPSocket()
+        : IPSocket(INVALID_SOCKET)
+    {
+    }
+
+
 
     // Construct a particular kind of socket
     IPSocket(int family, int socktype, int protocol = 0)
-        : fIsValid(false),
-        fAddress(nullptr)
+        : fIsValid(false)
+//        ,fAddress(nullptr)
     {
         fSocket = WSASocketA(family, socktype, protocol, nullptr, 0, 0);
 
         if (fSocket == INVALID_SOCKET) {
             printf("INVALID_SOCKET: %Id\n", fSocket);
+            fLastError = WSAGetLastError();
             return ;
         }
 
         fIsValid = true;
     }
-
+/*
     IPSocket(const char *hostname, const char *portname, int family, int socktype, int protocol = 0)
         : fIsValid(false),
         fAddress(nullptr)
@@ -237,13 +243,18 @@ public:
         :IPSocket(hostname, portname, AF_INET, SOCK_STREAM)
     {
     }
-
+*/
+    // There should be a flag to autoclose
+    // otherwise, if you create one of these on the 
+    // stack, or copy it, it will close
     virtual ~IPSocket() {
-        close();
+        if (fAutoClose) {
+            close();
+        }
     }
 
-    bool isValid() {return fIsValid;}
-
+    bool isValid() const {return fIsValid;}
+    int getLastError() const {return fLastError;}
 
     IPSocket accept()
     {
@@ -259,34 +270,28 @@ public:
 
         return IPSocket(res);
     }
-
+/*
     int bind()
     {
         return ::bind(fSocket, fAddress->fAddress, fAddress->fAddressLength);
     }
-
+*/
     int bindTo(const sockaddr *addr, const int addrLen)
     {
         return ::bind(fSocket, addr, addrLen);
     }
 
-    bool connect()
-    {
-        int retCode = ::connect(fSocket, fAddress->fAddress, fAddress->fAddressLength);
-
-        if (retCode != 0) {
-            printf("Failed to connect: %d\n", retCode);
+    // Closing a socket should include a shutdown
+    // so the socket isn't lingering
+    bool close() {
+        int result = ::closesocket(fSocket);
+        if (result != 0) {
+            fLastError = WSAGetLastError();
             return false;
         }
 
         return true;
     }
-
-    bool close() {
-        ::closesocket(fSocket);
-        return true;
-    }
-
 
 
     // Typically when you're creating a server, you will 
