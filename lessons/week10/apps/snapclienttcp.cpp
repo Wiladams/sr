@@ -20,6 +20,7 @@ char *portname = "9090";
 
 // Receive a chunk of stuff back from the server
 // Do this in a loop until the chunk size is 0
+// or we've exhausted space in the binstream
 bool receiveChunk(IPSocket *s, BinStream &pixs)
 {
     int packetCount = 0;
