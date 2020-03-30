@@ -303,28 +303,6 @@ public:
 
 
 
-    bool DlgVideoFormat()
-    {
-        return 1 == SendSimpleMessage(WM_CAP_DLG_VIDEOFORMAT);
-    }
-
-    bool DlgVideoSource()
-    {
-        return 1 == SendSimpleMessage(WM_CAP_DLG_VIDEOSOURCE);
-    }
-
-    bool DlgVideoDisplay()
-    {
-        return 1 == SendSimpleMessage(WM_CAP_DLG_VIDEODISPLAY);
-    }
-
-    bool DlgVideoCompression()
-    {
-        return 1 == SendSimpleMessage(WM_CAP_DLG_VIDEOCOMPRESSION);
-    }
-
-
-
     bool Preview(bool f)
     {
         int BOOL = f == true ? 1 : 0;
