@@ -71,15 +71,15 @@ public:
         free(fAddress);
     }
 
-/*
-    int toString(int addressStringLength, char *addressString)
+
+    int toString(char *addressBuff, int addressBuffLen)
     {
-        int returnLength=addressStringLength;
-        int res = WSAAddressToStringA(fAddress, fAddressLength, nullptr,addressString, &returnLength);
+        DWORD consumedLength = addressBuffLen;
+        int res = WSAAddressToStringA(fAddress, fAddressLength, nullptr,addressBuff, &consumedLength);
         
-        return returnLength;
+        return consumedLength;
     }
-*/
+
 };
 
 class IPHost {
@@ -109,6 +109,7 @@ public:
         err = getaddrinfo(hostname, portname, &hints, &ppResult);
 
         if (err != 0) {
+            printf("IPHost.create(), getaddrinfo ERROR: %d\n", WSAGetLastError());
             return nullptr;
         }
 

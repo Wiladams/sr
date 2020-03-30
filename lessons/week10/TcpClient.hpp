@@ -11,7 +11,20 @@ private:
     int fLastError;
 
 public:
-    TcpClient(const char *hostname, const char * portname)
+    TcpClient(IPAddress *address)
+        :fSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
+        , fAddress(address)
+        , fLastError(0)
+    {
+        if (!fSocket.isValid()) {
+            fLastError = fSocket.getLastError();
+            return ;
+        }
+
+        fIsValid = true;
+    }
+
+    TcpClient(const char *hostname, const char * portname, bool hostNumeric=false)
         : fSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
         , fIsValid(false)
     {
@@ -22,7 +35,7 @@ public:
         }
 
         // Get address to host
-        fHost = IPHost::create(hostname, portname, AF_INET, SOCK_STREAM);
+        fHost = IPHost::create(hostname, portname, AF_INET, SOCK_STREAM, hostNumeric);
         if (fHost == nullptr)
         {
             printf("could not find host: %s\n", hostname);
@@ -40,6 +53,15 @@ public:
     bool isValid() const {return fIsValid;}
     int getLastError() const {return fLastError;}
 
+    bool close()
+    {
+        if (!fSocket.close()) {
+            fLastError = fSocket.getLastError();
+            return false;
+        } 
+        return true;
+    }
+
     bool connect()
     {
         int retCode = ::connect(fSocket.fSocket, fAddress->fAddress, fAddress->fAddressLength);
@@ -55,7 +77,12 @@ public:
 
     int send(const char *buff, const int buffLen, int flags = 0)
     {
-        return fSocket.send(buff, buffLen, flags);
+        int result = fSocket.send(buff, buffLen, flags);
+        if (result == SOCKET_ERROR) {
+            fLastError = WSAGetLastError();
+        }
+
+        return result;
     }
 
     int receive(char *buff, int buffLen, int flags=0)
