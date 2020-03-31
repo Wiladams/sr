@@ -174,7 +174,6 @@ class IPSocket {
 public:
     SOCKET fSocket;
 private:
-//    IPAddress * fAddress;
     bool fIsValid;
     int fLastError;
     bool fAutoClose;
@@ -200,7 +199,6 @@ public:
     // Construct a particular kind of socket
     IPSocket(int family, int socktype, int protocol = 0)
         : fIsValid(false)
-//        ,fAddress(nullptr)
     {
         fSocket = WSASocketA(family, socktype, protocol, nullptr, 0, 0);
 
@@ -212,39 +210,7 @@ public:
 
         fIsValid = true;
     }
-/*
-    IPSocket(const char *hostname, const char *portname, int family, int socktype, int protocol = 0)
-        : fIsValid(false),
-        fAddress(nullptr)
-    {
-        IPHost * host = IPHost::create(hostname, portname, family, socktype);
-        if (host == nullptr)
-        {
-            printf("could not find host: %s\n", hostname);
-            return ;
-        }
 
-        // Create a socket based on the host
-        fSocket = WSASocketA(family, socktype, protocol, nullptr, 0, 0);
-
-        if (fSocket == INVALID_SOCKET) {
-            printf("INVALID_SOCKET: %Id\n", fSocket);
-            return ;
-        }
-        
-        fAddress = host->getAddress();
-        if (fAddress == nullptr) {
-            return ;
-        }
-
-        fIsValid = true;
-    }
-
-    IPSocket(const char *hostname, const char *portname)
-        :IPSocket(hostname, portname, AF_INET, SOCK_STREAM)
-    {
-    }
-*/
     // There should be a flag to autoclose
     // otherwise, if you create one of these on the 
     // stack, or copy it, it will close
@@ -263,20 +229,15 @@ public:
         int clientAddrLen;
 
         int res = ::accept(fSocket,&clientAddr,&clientAddrLen);
-        printf("accept(): %d\n", res);
 
         if (res == INVALID_SOCKET) {
+            fLastError = WSAGetLastError();
             return IPSocket();
         }
 
         return IPSocket(res);
     }
-/*
-    int bind()
-    {
-        return ::bind(fSocket, fAddress->fAddress, fAddress->fAddressLength);
-    }
-*/
+
     int bindTo(const sockaddr *addr, const int addrLen)
     {
         return ::bind(fSocket, addr, addrLen);
@@ -294,15 +255,17 @@ public:
         return true;
     }
 
-
-    // Typically when you're creating a server, you will 
-    // need to tell the socket to start listening for
-    // connections.  This is as opposed to be active, like
-    // a client connection.
-    int makePassive(const int backlog=5)
+    bool listen(int backlog=5)
     {
-        return ::listen(fSocket, backlog);
+        int result = ::listen(fSocket, backlog);
+        if (result != 0) {
+            fLastError = WSAGetLastError();
+            return false;
+        }
+
+        return true;
     }
+
 
     // Send to a specific address
     // The address was specified when we 

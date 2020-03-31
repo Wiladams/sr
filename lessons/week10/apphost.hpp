@@ -63,6 +63,7 @@ typedef void (* VOIDROUTINE)();
 // Application routines
 static VOIDROUTINE gDrawHandler = nullptr;
 static VOIDROUTINE gLoopHandler = nullptr;
+static VOIDROUTINE gPreloadHandler = nullptr;
 static VOIDROUTINE gSetupHandler = nullptr;
 static VOIDROUTINE gPreSetupHandler = nullptr;
 
@@ -398,6 +399,7 @@ void setupHandlers()
     gPaintHandler = HandlePaintEvent;
 
     // Get the general app routines
+    gPreloadHandler = (VOIDROUTINE)GetProcAddress(hInst, "preload");
     gSetupHandler = (VOIDROUTINE)GetProcAddress(hInst, "setup");
     gPreSetupHandler = (VOIDROUTINE)GetProcAddress(hInst, "presetup");
     gDrawHandler = (VOIDROUTINE)GetProcAddress(hInst, "draw");
@@ -513,10 +515,16 @@ void halt() {
     PostQuitMessage(0);
 }
 
-void loop() {gLooping = true;}
+// turn looping on
+void loop() {
+    gLooping = true;
+    setFrameRate(gFPS);
+}
+
+// turn looping off
+// we still need to process the windows events
+// but we stop calling draw() on a timer
 void noLoop() {
-    // stop calling looping handler
-    // but still run event loop
     gLooping = false;
 
     // turn off timer
@@ -532,6 +540,10 @@ void run()
 {
     // Make sure we have all the event handlers connected
     setupHandlers();
+
+    if (gPreloadHandler != nullptr) {
+        gPreloadHandler();
+    }
 
     // Call a setup routine if the user specified one
     if (gSetupHandler != nullptr) {

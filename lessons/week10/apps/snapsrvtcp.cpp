@@ -6,19 +6,18 @@ https://www.geeksforgeeks.org/udp-server-client-implementation-c/
 #include <cstdio>
 
 #include "apphost.hpp"
-#include "Network.hpp"
+#include "TcpServer.hpp"
 #include "binstream.hpp"
 #include "screensnapshot.hpp"
 
 
-#define PORT 9090
 static const int MAXBUFF = 1024*2048;
+static const char *portname = "9090";
+#define PORT 9090
 
 char inbuff[512];
 
 ScreenSnapshot *snapper = nullptr;
-
-
 
 
 bool sendChunk(IPSocket &s, BufferChunk &bc)
@@ -61,32 +60,35 @@ void setup()
 {
     snapper = new ScreenSnapshot(0, 0, 800, 600);
 
+    // Create a server address
+    //struct sockaddr_in servaddr;
+    //memset(&servaddr, 0, sizeof(servaddr));
+    //servaddr.sin_family = AF_INET;
+    //servaddr.sin_addr.S_addr = INADDR_ANY;  // we don't care about address
+    //servaddr.sin_port = htons(PORT);
+
     // Create the socket we'll be serving from
-    IPSocket s(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (!s.isValid()) {
+    TcpServer srvr("localhost", PORT);
+
+    if (!srvr.isValid()) {
         // Could not create socket
-        printf("Could not create socket: %d\n", WSAGetLastError());
+        printf("Could not create server: %d\n", srvr.getLastError());
         return;
     }
 
-    // Create a server address
-    struct sockaddr_in servaddr;
-    memset(&servaddr, 0, sizeof(servaddr));
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.S_addr = INADDR_ANY;  // we don't care about address
-    servaddr.sin_port = htons(PORT);
+    if (!srvr.bind()) {
+        printf("failed to bind: %d\n", srvr.getLastError());
+        halt();
+        return ;
+    };
 
-    // Bind the socket with the server address
-    int bindCode = s.bindTo((const sockaddr *)&servaddr, (const int)sizeof(servaddr));
-    printf("Bind code: %d\n", bindCode);
-
-    s.makePassive();    // listen
+    srvr.makePassive();    // listen
 
 
-    IPSocket clientSock = s.accept(); // wait for a connection
+    IPSocket clientSock = srvr.accept(); // wait for a connection
 
     if (!clientSock.isValid()) {
-        printf("clientSock, not valid: %Id\n", clientSock.fSocket);
+        printf("clientSock, not valid: %d\n", srvr.getLastError());
         halt();
         return ;
     }
@@ -98,6 +100,7 @@ void setup()
         int inLen = clientSock.receive(inbuff, 512);
         if (inLen < 0) {
             printf("TCPReceived ERROR: %d\n", WSAGetLastError());
+            halt();
             break;
         } else {
             inbuff[inLen] = 0;
