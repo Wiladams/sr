@@ -10,6 +10,47 @@ https://www.winsocketdotnetworkprogramming.com/winsock2programming/winsock2advan
 
 #include "w32_socket.hpp"
 
+
+// Implementation of network byte ordering functions
+namespace IPUtils {
+
+// return isLE() ? swapUInt16((uint16_t)value) : value;
+int16_t htons(int16_t value) 
+{
+    if (isLE()) {
+        return swapUInt16((uint16_t)value);
+    }
+    return value;
+} 
+
+// return isLE() ? swapUInt16((uint16_t)value);
+int16_t ntohs(short value) {
+    if (isLE())
+        return swapUInt16((uint16_t)value);
+
+    return value;
+}
+
+int32_t htonl(int32_t value) {
+    if (isLE()) {
+        return swapUInt32((uint32_t)value);
+    }
+    return value;
+}
+
+int32_t ntohl(int32_t value)
+{
+    if (isLE()) {
+        return swapUInt32(value);
+    }
+    return value;
+}
+
+};
+
+
+
+
 /*
     This should live somewhere else, higher in the stack
 */

@@ -63,7 +63,7 @@ inline int sgn(double val) { return ((0 < val) - (val < 0)); }
 
 inline double sq(double x) {return x*x;}
 
-#define swap16(a, b) { int16_t t = a; a = b; b = t; }
+#define swap2(a, b) { int16_t t = a; a = b; b = t; }
 
 // Math constants
 static const float  PI32 = 3.14159265359f;
