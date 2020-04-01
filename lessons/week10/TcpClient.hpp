@@ -21,6 +21,12 @@ public:
             return ;
         }
 
+        // Try to connect, if failure
+        // return immediately
+        if (!connect()) {
+            return;
+        }
+        
         fIsValid = true;
     }
 
@@ -45,6 +51,12 @@ public:
         fAddress = fHost->getAddress();
         if (fAddress == nullptr) {
             return ;
+        }
+        
+        // Try to connect, if failure
+        // return immediately
+        if (!connect()) {
+            return;
         }
 
         fIsValid = true;

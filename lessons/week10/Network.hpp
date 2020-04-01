@@ -12,39 +12,15 @@ https://www.winsocketdotnetworkprogramming.com/winsock2programming/winsock2advan
 
 
 // Implementation of network byte ordering functions
+// These routines are typically provided by the OS
+// these routines here just show you how they can be implemented
 namespace IPUtils {
 
-// return isLE() ? swapUInt16((uint16_t)value) : value;
-int16_t htons(int16_t value) 
-{
-    if (isLE()) {
-        return swapUInt16((uint16_t)value);
-    }
-    return value;
-} 
+inline int16_t htons(int16_t value) {return isLE() ? swapUInt16((uint16_t)value) : value;}
+inline int16_t ntohs(int16_t value) {return isLE() ? swapUInt16((uint16_t)value) : value;}
 
-// return isLE() ? swapUInt16((uint16_t)value);
-int16_t ntohs(short value) {
-    if (isLE())
-        return swapUInt16((uint16_t)value);
-
-    return value;
-}
-
-int32_t htonl(int32_t value) {
-    if (isLE()) {
-        return swapUInt32((uint32_t)value);
-    }
-    return value;
-}
-
-int32_t ntohl(int32_t value)
-{
-    if (isLE()) {
-        return swapUInt32(value);
-    }
-    return value;
-}
+inline int32_t htonl(int32_t value) {return isLE() ? swapUInt32((uint32_t)value) : value;}
+inline int32_t ntohl(int32_t value) {return isLE() ? swapUInt32((uint32_t)value) : value;}
 
 };
 
@@ -269,7 +245,8 @@ public:
         struct sockaddr clientAddr;
         int clientAddrLen;
 
-        int res = ::accept(fSocket,&clientAddr,&clientAddrLen);
+        //int res = ::accept(fSocket,&clientAddr,&clientAddrLen);
+        int res = ::accept(fSocket,nullptr,nullptr);
 
         if (res == INVALID_SOCKET) {
             fLastError = WSAGetLastError();

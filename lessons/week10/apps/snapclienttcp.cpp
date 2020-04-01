@@ -90,7 +90,7 @@ void draw()
 void setup()
 {
     createCanvas(800,600);
-    frameRate(20);
+    frameRate(15);
 
     if (gargc > 1) {
         strcpy(hostname, gargv[1]);
@@ -103,17 +103,14 @@ void setup()
 
     // Create socket object
     s = new TcpClient(hostname, portname);
+
     if (!s->isValid()) {
         printf("TcpClient ERROR: %d", s->getLastError());
         halt();
         return ;
     }
 
-    bool success = s->connect();
-    if (!success) {
-        printf("could not connect to server: %d\n", s->getLastError());
-        halt();
-    }
+
 }
 
 

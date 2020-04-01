@@ -400,7 +400,20 @@ int WSAAddressToStringA(
     LPSTR lpszAddressString,
     LPDWORD             lpdwAddressStringLength
     );
-
+/*
+int
+WSAIoctl(
+     SOCKET s,
+     DWORD dwIoControlCode,
+    LPVOID lpvInBuffer,
+     DWORD cbInBuffer,
+    LPVOID lpvOutBuffer,
+     DWORD cbOutBuffer,
+     LPDWORD lpcbBytesReturned,
+     LPWSAOVERLAPPED lpOverlapped,
+     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
+    );
+*/
 SOCKET WSASocketA(int af, int type, int protocol,
     LPWSAPROTOCOL_INFOA lpProtocolInfo, 
     GROUP g,DWORD dwFlags);

@@ -4,18 +4,15 @@
 
 class TcpServer {
 private:
-    IPSocket fSocket;
-    //IPHost  * fHost;
-    //IPAddress fAddress;
+    IPSocket fSocket;   // socket used to listen
     
     struct sockaddr_in fServerAddress;
     int fServerAddressLen;
-
-    bool    fIsValid;
+    bool fIsValid;
     int fLastError;
 
 public:
-    TcpServer(const char * hostname, int PORT)
+    TcpServer(int porto, const char * interface = "localhost")
         :fSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
     {
         if (!fSocket.isValid()) {
@@ -32,8 +29,17 @@ public:
         memset(&fServerAddress, 0, fServerAddressLen);
         fServerAddress.sin_family = AF_INET;
         fServerAddress.sin_addr.S_addr = htonl(INADDR_ANY);  // we don't care about address
-        fServerAddress.sin_port = htons(PORT);
+        fServerAddress.sin_port = htons(porto);
 
+        if (!bind()) {
+            return;
+        }
+
+        // listen
+        if (!makePassive())
+        {
+            return ;
+        }
 
         fIsValid = true;
     }
@@ -48,6 +54,7 @@ public:
     IPSocket accept()
     {
         IPSocket s = fSocket.accept();
+        printf("TcpServer.accept(): %Id %d\n", s.fSocket, s.getLastError());
         if (!s.isValid()) {
             fLastError = fSocket.getLastError();
         }
