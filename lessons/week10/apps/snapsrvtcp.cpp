@@ -34,7 +34,7 @@ bool sendChunk(IPSocket &s, BufferChunk &bc)
         // we'll write 32K bytes at a time
         // start by writing the number of bytes
         // into the packet header
-        int payloadSize = MIN(1024*32, chunkStream.remaining());
+        int payloadSize = MIN(1400, chunkStream.remaining());
 
 
         // Write payload size into packet header
